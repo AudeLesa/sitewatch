@@ -17,7 +17,8 @@ npm run build         # 2. assemble dist/    (minified GeoJSON + the map)
 dist/
   index.html          the map app
   data/texas.geojson  the sites (minified; hosts gzip it ~5× smaller over the wire)
-  _redirects          SPA fallback (ignored by hosts that don't use it)
+  404.html            real not-found page (deep links are hash-based, so no SPA fallback is needed)
+  project/ where/ …   ~16k static SEO pages + sitemap.xml/robots.txt (see scripts/seo.mjs)
 ```
 
 ## Put it online (pick one)
