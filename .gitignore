@@ -13,3 +13,6 @@ data/*
 !data/geocode-cache.json
 !data/tabs-detail-cache.json
 !data/history.json
+
+# wrangler's local cache (created by wrangler login/deploy)
+.wrangler/
