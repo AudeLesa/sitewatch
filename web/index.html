@@ -4,159 +4,204 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SiteWatch — Texas Commercial Construction, Live</title>
+  <meta name="description" content="A live map of every commercial construction site in Texas — filter by category, value, and stage; see the owner and architect for every project. Free, updated daily from TDLR TABS." />
+  <meta name="theme-color" content="#f2dcd8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <style>
     :root {
-      --bg: #0a0e16; --panel: #0f1722; --panel2: #0d141f; --border: #1e2a3a;
-      --text: #e6eef8; --muted: #8499b3; --faint: #56697f; --accent: #38bdf8;
-      --new: #fde047; --good: #34d399;
-      --sidebar-w: 340px; --detail-w: 380px;
+      --bg: #f2dcd8;            /* blush ground */
+      --panel: #fdf6f0;         /* cream card */
+      --card: #ffffff;
+      --tint: #f8e9e0;          /* blush row / chip tint */
+      --border: #efdcd3;
+      --ink: #232a52;           /* deep navy text */
+      --muted: #7a7f9e;
+      --faint: #aab0c8;
+      --primary: #313f9f;       /* deep indigo */
+      --primary-soft: #e4e7f8;
+      --pink: #ef9fab;
+      --good: #3f9d77;
+      --new: #e9a23b;
+      --shadow: 0 18px 44px rgba(49, 63, 159, .13);
+      --sidebar-w: 348px; --detail-w: 384px;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-    #app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; height: 100%; transition: grid-template-columns .25s ease; }
-    #app.collapsed { --sidebar-w: 0px; }
-    #map { height: 100%; background: var(--bg); }
-    #sb-toggle { position: fixed; top: 12px; left: calc(var(--sidebar-w) + 10px); z-index: 1100; width: 30px; height: 32px;
-      border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer;
-      font-size: 18px; line-height: 1; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0,0,0,.4); transition: left .25s ease; }
-    #sb-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+      font-family: Poppins, "Segoe UI", system-ui, -apple-system, sans-serif; }
+    button { font-family: inherit; }
+    :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
+    #app { height: 100%; }
+    #map { position: absolute; inset: 0; background: #ead9d4; z-index: 0; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-    /* sidebar */
-    #sidebar { background: var(--panel); border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-    #brand { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); }
-    #brand h1 { margin: 0; font-size: 17px; letter-spacing: .2px; }
-    #brand h1 .dot { color: var(--accent); }
+    /* floating sidebar card */
+    #sidebar { position: fixed; left: 16px; top: 16px; bottom: 16px; width: var(--sidebar-w); z-index: 1050;
+      background: var(--panel); border-radius: 26px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+      transition: transform .28s ease; }
+    #app.collapsed #sidebar { transform: translateX(calc(-100% - 28px)); }
+    #sb-toggle { position: fixed; top: 24px; left: calc(16px + var(--sidebar-w) + 12px); z-index: 1100;
+      width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--card); color: var(--primary);
+      cursor: pointer; font-size: 18px; line-height: 1; display: grid; place-items: center;
+      box-shadow: 0 8px 24px rgba(49,63,159,.18); transition: left .28s ease; }
+    #app.collapsed #sb-toggle { left: 28px; }
+    #sb-toggle:hover { background: var(--primary); color: #fff; }
+
+    #brand { padding: 18px 20px 14px; }
+    #brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: .1px; }
+    #brand h1 .dot { color: var(--pink); }
     .meta-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-    #badge { font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
-    #badge.live { color: var(--good); border-color: #1f513c; background: rgba(52,211,153,.08); }
-    #badge.demo { color: #fbbf24; border-color: #5b4708; background: rgba(251,191,36,.08); }
+    #badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--tint); color: var(--muted); }
+    #badge.live { color: #1e7d59; background: #ddefe6; }
+    #badge.demo { color: #9a6a12; background: #f7e8cd; }
+    #badge.stale { color: #a35d17; background: #f7e3cd; }
     #through { font-size: 11px; color: var(--faint); }
 
-    .controls { padding: 12px 16px; border-bottom: 1px solid var(--border); overflow-y: auto; }
-    .controls::-webkit-scrollbar { width: 8px; } .controls::-webkit-scrollbar-thumb { background: #1c2838; border-radius: 8px; }
-    label.lbl { display: block; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin: 14px 0 6px; }
-    label.lbl:first-child { margin-top: 0; }
-    #search { width: 100%; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); font-size: 13px; }
+    .controls { padding: 4px 20px 14px; overflow-y: auto; }
+    .controls::-webkit-scrollbar { width: 8px; } .controls::-webkit-scrollbar-thumb { background: #e8d3c9; border-radius: 8px; }
+    label.lbl { display: block; font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; margin: 15px 0 7px; }
+    #search { width: 100%; padding: 11px 14px; border-radius: 14px; border: 1px solid transparent; background: var(--card);
+      color: var(--ink); font-size: 13px; font-family: inherit; box-shadow: 0 3px 12px rgba(49,63,159,.07); }
     #search::placeholder { color: var(--faint); }
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 9px; border-radius: 999px;
-      border: 1px solid var(--border); cursor: pointer; user-select: none; color: var(--text); transition: opacity .12s; }
+    #search:focus { outline: none; border-color: var(--primary); }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 6px 12px;
+      border-radius: 999px; border: none; background: var(--card); color: var(--ink); cursor: pointer; user-select: none;
+      box-shadow: 0 2px 8px rgba(49,63,159,.07); transition: opacity .12s, background .12s; }
     .chip .sw { width: 9px; height: 9px; border-radius: 50%; }
-    .chip.off { opacity: .32; }
-    input[type=range] { width: 100%; accent-color: var(--accent); }
-    .rangeval { font-size: 12px; color: var(--text); }
-    select { width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); font-size: 12.5px; }
-    .toggle { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text); cursor: pointer; margin-top: 4px; }
-    .toggle input { accent-color: var(--new); }
-    #reset { background: none; border: none; color: var(--accent); font-size: 12px; cursor: pointer; padding: 0; margin-top: 12px; }
+    .chip.off { opacity: .38; background: transparent; box-shadow: inset 0 0 0 1px var(--border); }
+    input[type=range] { width: 100%; accent-color: var(--primary); }
+    .rangeval { font-size: 12px; color: var(--primary); font-weight: 600; text-transform: none; letter-spacing: 0; }
+    select { width: 100%; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card);
+      color: var(--ink); font-size: 12.5px; font-family: inherit; }
+    .toggle { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink); cursor: pointer; margin-top: 6px; }
+    .toggle input { accent-color: var(--primary); }
+    #reset { background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; margin-top: 13px; }
 
-    #stats { display: flex; gap: 16px; padding: 11px 16px; border-bottom: 1px solid var(--border); }
-    .stat .n { font-size: 19px; font-weight: 700; } .stat .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+    #stats { display: flex; gap: 10px; padding: 4px 20px 12px; }
+    .stat { flex: 1; background: var(--card); border-radius: 16px; padding: 10px 14px; box-shadow: 0 3px 12px rgba(49,63,159,.06); }
+    .stat .n { font-size: 19px; font-weight: 700; color: var(--primary); }
+    .stat .l { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
 
     /* list */
-    .list-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 16px 6px; }
+    .list-head { display: flex; justify-content: space-between; align-items: center; padding: 0 20px 6px; }
     .list-head .cnt { font-size: 11px; color: var(--faint); }
-    .list-head select { width: auto; font-size: 11px; padding: 3px 6px; }
-    #list { flex: 1; overflow-y: auto; min-height: 0; }
-    #list::-webkit-scrollbar { width: 8px; } #list::-webkit-scrollbar-thumb { background: #1c2838; border-radius: 8px; }
-    .item { padding: 9px 16px; border-bottom: 1px solid #141d2a; cursor: pointer; }
-    .item:hover, .item.active { background: var(--panel2); }
+    .list-head select { width: auto; font-size: 11px; padding: 4px 8px; }
+    #list { flex: 1; overflow-y: auto; min-height: 0; padding: 0 14px 14px; }
+    #list::-webkit-scrollbar { width: 8px; } #list::-webkit-scrollbar-thumb { background: #e8d3c9; border-radius: 8px; }
+    .item { padding: 10px 12px; margin: 0 0 7px; border-radius: 14px; background: var(--tint); cursor: pointer; transition: background .12s; }
+    .item:hover { background: var(--card); }
+    .item.active { background: var(--card); box-shadow: inset 0 0 0 2px var(--primary-soft); }
     .item .t { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
     .item .t .sw { width: 8px; height: 8px; border-radius: 50%; flex: none; }
     .item .t .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .item .t .newdot { font-size: 9px; color: var(--bg); background: var(--new); border-radius: 3px; padding: 1px 4px; font-weight: 700; flex: none; }
+    .item .t .newdot { font-size: 9px; color: #fff; background: var(--new); border-radius: 999px; padding: 2px 7px; font-weight: 700; flex: none; }
     .item .s { font-size: 11.5px; color: var(--muted); margin-top: 3px; display: flex; gap: 8px; }
     .item .s .v { color: var(--good); font-weight: 600; }
+    .empty { margin: 8px 6px; padding: 18px 16px; border-radius: 16px; background: var(--tint); color: var(--muted); font-size: 12.5px; line-height: 1.5; text-align: center; }
+    .empty button { background: none; border: none; color: var(--primary); font-weight: 600; font-size: 12.5px; cursor: pointer; padding: 0; }
 
-    /* detail panel */
-    #detail { position: absolute; top: 0; right: 0; height: 100%; width: var(--detail-w); background: var(--panel);
-      border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .22s ease; z-index: 1200;
-      display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,.5); }
+    /* floating detail card */
+    #detail { position: fixed; top: 16px; right: 16px; bottom: 16px; width: var(--detail-w); background: var(--panel);
+      border-radius: 26px; transform: translateX(calc(100% + 28px)); transition: transform .24s ease; z-index: 1200;
+      display: flex; flex-direction: column; box-shadow: var(--shadow); overflow: hidden; }
     #detail.open { transform: translateX(0); }
-    #detail .dh { padding: 16px 18px; border-bottom: 1px solid var(--border); position: relative; }
-    #detail .dh .close { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
-    #detail .dh .cat { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
-    #detail .dh h2 { margin: 6px 36px 4px 0; font-size: 17px; line-height: 1.25; }
-    #detail .dh .desc { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
-    #detail .db { padding: 14px 18px; overflow-y: auto; flex: 1; }
-    .confbar { height: 7px; border-radius: 4px; background: #1c2838; overflow: hidden; margin: 2px 0 4px; }
-    .confbar > span { display: block; height: 100%; background: var(--good); }
-    .conftxt { font-size: 11.5px; color: var(--muted); margin-bottom: 14px; }
-    .kv { display: grid; grid-template-columns: 96px 1fr; gap: 6px 10px; font-size: 13px; }
+    #detail .dh { padding: 20px 22px 14px; position: relative; }
+    #detail .dh .close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%;
+      background: var(--tint); border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+    #detail .dh .close:hover { background: var(--primary-soft); color: var(--primary); }
+    #detail .dh .cat { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+    #detail .dh h2 { margin: 7px 40px 4px 0; font-size: 17px; line-height: 1.3; }
+    #detail .dh .desc { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+    #detail .db { padding: 4px 22px 20px; overflow-y: auto; flex: 1; }
+    .confbar { height: 8px; border-radius: 999px; background: var(--primary-soft); overflow: hidden; margin: 2px 0 5px; }
+    .confbar > span { display: block; height: 100%; border-radius: 999px; background: var(--primary); }
+    .conftxt { font-size: 11.5px; color: var(--muted); margin-bottom: 15px; }
+    .kv { display: grid; grid-template-columns: 96px 1fr; gap: 7px 10px; font-size: 13px; }
     .kv .k { color: var(--muted); }
-    .kv .v { color: var(--text); }
+    .kv .v { color: var(--ink); overflow-wrap: anywhere; }
     .kv .v.big { color: var(--good); font-weight: 700; }
-    .dactions { display: flex; gap: 8px; margin-top: 16px; }
-    .dactions a, .dactions button { flex: 1; text-align: center; font-size: 12px; padding: 8px; border-radius: 8px;
-      border: 1px solid var(--border); background: var(--panel2); color: var(--text); cursor: pointer; text-decoration: none; }
-    .dactions a:hover, .dactions button:hover { border-color: var(--accent); }
+    .kv a { color: var(--primary); }
+    .dactions { display: flex; gap: 8px; margin-top: 18px; }
+    .dactions a, .dactions button { flex: 1; text-align: center; font-size: 12px; font-weight: 600; padding: 10px 8px;
+      border-radius: 999px; border: none; background: var(--card); color: var(--primary); cursor: pointer; text-decoration: none;
+      box-shadow: 0 2px 8px rgba(49,63,159,.08); font-family: inherit; }
+    .dactions a:first-child { background: var(--primary); color: #fff; }
+    .dactions a:hover, .dactions button:hover { filter: brightness(.97); }
 
     /* accounts + alerts */
     #account { margin-top: 10px; font-size: 12px; }
-    .seolinks { margin-top: 8px; font-size: 11px; } .seolinks a { color: var(--muted); text-decoration: none; } .seolinks a:hover { color: var(--accent); }
-    .btn { background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 11px; font-size: 12px; cursor: pointer; }
-    .btn:hover { border-color: var(--accent); }
-    .btn.primary { background: var(--accent); color: #042130; border-color: var(--accent); font-weight: 700; }
-    .link-btn { background: none; border: none; color: var(--accent); cursor: pointer; font: inherit; padding: 0; }
-    .protag { background: var(--good); color: #04241a; font-weight: 700; font-size: 10px; padding: 1px 6px; border-radius: 4px; letter-spacing: .5px; }
-    #account .who { color: var(--muted); } #account .who b { color: var(--text); }
-    #alertme { width: 100%; margin-top: 12px; background: rgba(56,189,248,.12); border: 1px solid #20506a; color: var(--accent);
-      border-radius: 9px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    #alertme:hover { background: rgba(56,189,248,.22); }
-    #modal { position: fixed; inset: 0; background: rgba(2,6,12,.62); display: none; place-items: center; z-index: 2000; }
+    .seolinks { margin-top: 8px; font-size: 11px; } .seolinks a { color: var(--muted); text-decoration: none; } .seolinks a:hover { color: var(--primary); }
+    .btn { background: var(--card); border: none; color: var(--primary); border-radius: 999px; padding: 8px 14px;
+      font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(49,63,159,.1); font-family: inherit; }
+    .btn:hover { filter: brightness(.97); }
+    .btn.primary { background: var(--primary); color: #fff; }
+    .link-btn { background: none; border: none; color: var(--primary); cursor: pointer; font: inherit; font-weight: 600; padding: 0; }
+    .protag { background: var(--good); color: #fff; font-weight: 700; font-size: 10px; padding: 2px 8px; border-radius: 999px; letter-spacing: .5px; }
+    #account .who { color: var(--muted); } #account .who b { color: var(--ink); }
+    #alertme { width: 100%; margin-top: 14px; background: var(--primary); border: none; color: #fff;
+      border-radius: 999px; padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 20px rgba(49,63,159,.25); }
+    #alertme:hover { filter: brightness(1.08); }
+    #modal { position: fixed; inset: 0; background: rgba(35,42,82,.4); display: none; place-items: center; z-index: 2000; }
     #modal.open { display: grid; }
-    .sheet { position: relative; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; width: min(420px, 92vw);
-      padding: 22px; box-shadow: 0 24px 64px rgba(0,0,0,.55); }
+    .sheet { position: relative; background: var(--panel); border-radius: 24px; width: min(430px, 92vw);
+      padding: 26px; box-shadow: 0 30px 80px rgba(35,42,82,.35); }
     .sheet h3 { margin: 0 0 6px; font-size: 17px; }
-    .sheet p { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.4; }
-    .sheet input { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); font-size: 13px; margin-bottom: 11px; }
+    .sheet p { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .sheet input { width: 100%; padding: 11px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--card);
+      color: var(--ink); font-size: 13px; font-family: inherit; margin-bottom: 11px; }
     .sheet .muted { color: var(--muted); font-size: 12px; }
-    .sheet .close { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
-    .alertrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #141d2a; font-size: 13px; }
-    .alertrow .x { color: #f87171; background: none; border: none; cursor: pointer; font-size: 12px; }
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border);
-      color: var(--text); padding: 11px 16px; border-radius: 10px; font-size: 13px; z-index: 2100; box-shadow: 0 8px 30px rgba(0,0,0,.5); max-width: 90vw; }
+    .sheet .close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
+    .alertrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .alertrow .x { color: #d05a5a; background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--ink);
+      color: #fff; padding: 12px 18px; border-radius: 999px; font-size: 13px; z-index: 2100; box-shadow: 0 10px 30px rgba(35,42,82,.35); max-width: 90vw; }
 
-    /* clusters / markers */
-    .marker-cluster div { font-weight: 700; }
-    /* dark-themed Leaflet controls + hover tooltip + legend */
-    .leaflet-control-layers, .leaflet-bar a { background: var(--panel); color: var(--text); border-color: var(--border) !important; }
-    .leaflet-bar a { border-bottom: 1px solid var(--border); } .leaflet-bar a:hover { background: var(--panel2); }
-    .leaflet-control-layers-toggle { background-color: var(--panel); filter: invert(0.92); }
-    .leaflet-control-layers-expanded { padding: 8px 12px 8px 10px; color: var(--text); font-size: 13px; }
+    /* map furniture */
+    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: rgba(49,63,159,.18); }
+    .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+      background: var(--primary); color: #fff; font-weight: 600; font-family: Poppins, "Segoe UI", sans-serif; }
+    .marker-cluster div { border-radius: 50%; }
+    .leaflet-control-layers, .leaflet-bar a { background: var(--card); color: var(--ink); border-color: #f0e4dd !important; }
+    .leaflet-bar a:hover { background: var(--tint); }
+    .leaflet-control-layers-expanded { padding: 8px 12px 8px 10px; font-size: 13px; border-radius: 14px; font-family: inherit; }
+    .leaflet-control-layers { border-radius: 14px; box-shadow: 0 6px 20px rgba(49,63,159,.14); }
     .leaflet-control-layers label { margin: 4px 0; cursor: pointer; }
-    .leaflet-control-attribution { background: rgba(15,23,34,.75) !important; color: var(--muted) !important; }
-    .leaflet-control-attribution a { color: var(--accent) !important; }
-    .leaflet-tooltip.sw-tip { background: var(--panel); border: 1px solid var(--border); color: var(--text); font-size: 12px;
-      font-weight: 600; padding: 4px 8px; border-radius: 7px; box-shadow: 0 4px 14px rgba(0,0,0,.45); }
-    .leaflet-tooltip.sw-tip::before { border-top-color: var(--border); }
-    #legend { position: fixed; bottom: 14px; left: calc(var(--sidebar-w) + 14px); z-index: 1000; background: var(--panel);
-      border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 11.5px; color: var(--muted);
-      box-shadow: 0 6px 20px rgba(0,0,0,.4); transition: left .25s ease; }
+    .leaflet-touch .leaflet-bar, .leaflet-touch .leaflet-control-layers { border: none; box-shadow: 0 6px 20px rgba(49,63,159,.14); }
+    .leaflet-control-attribution { background: rgba(255,255,255,.72) !important; color: var(--muted) !important; }
+    .leaflet-control-attribution a { color: var(--primary) !important; }
+    .leaflet-tooltip.sw-tip { background: var(--card); border: none; color: var(--ink); font-size: 12px; font-family: Poppins, "Segoe UI", sans-serif;
+      font-weight: 600; padding: 5px 10px; border-radius: 10px; box-shadow: 0 6px 18px rgba(49,63,159,.18); }
+    .leaflet-tooltip.sw-tip::before { display: none; }
+    #legend { position: fixed; bottom: 16px; left: calc(16px + var(--sidebar-w) + 12px); z-index: 1000; background: var(--card);
+      border-radius: 16px; padding: 10px 14px; font-size: 11.5px; color: var(--muted);
+      box-shadow: 0 8px 24px rgba(49,63,159,.12); transition: left .28s ease; }
+    #app.collapsed #legend { left: 28px; }
     #legend .lr { display: flex; align-items: center; gap: 7px; margin: 2px 0; }
     #legend .sw { width: 9px; height: 9px; border-radius: 50%; flex: none; }
     #legend .hr { height: 1px; background: var(--border); margin: 6px 0; }
-    @media (max-width: 760px) { #legend { display: none; } }
-    #loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1500; color: var(--muted); font-size: 14px; pointer-events: none; }
+    #loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1500; pointer-events: none; }
+    #loading span { background: var(--panel); color: var(--muted); font-size: 13.5px; padding: 14px 22px; border-radius: 999px; box-shadow: var(--shadow); }
 
     @media (max-width: 760px) {
-      #app { grid-template-columns: 1fr; grid-template-rows: 44vh 1fr; }
-      #sidebar { order: 2; border-right: none; border-top: 1px solid var(--border); }
-      #map { order: 1; }
-      #detail { width: 100%; }
-      #sb-toggle { display: none; }
+      #legend, #sb-toggle { display: none; }
+      #map { bottom: 46vh; }
+      #sidebar { left: 0; right: 0; top: auto; bottom: 0; width: auto; height: 46vh; border-radius: 26px 26px 0 0; transform: none !important; }
+      #detail { top: 8vh; left: 10px; right: 10px; bottom: 0; width: auto; border-radius: 26px 26px 0 0; }
+      #search, select, .sheet input { font-size: 16px; } /* prevent iOS focus zoom */
+      .chip { padding: 8px 14px; }
     }
   </style>
 </head>
 <body>
   <h2 class="sr-only">SiteWatch: a live map of commercial construction sites across Texas, filterable by category, value, and likelihood of active construction.</h2>
   <div id="app">
+    <main id="map"></main>
     <aside id="sidebar">
       <div id="brand">
         <h1><span class="dot">●</span> SiteWatch — <span id="region">Texas</span></h1>
@@ -194,8 +239,8 @@
           <option value="365">Last year</option>
         </select>
 
-        <label class="toggle"><input type="checkbox" id="newonly" /> Only show new this week <span id="newcnt" style="color:var(--new)"></span></label>
-        <label class="toggle"><input type="checkbox" id="startedonly" /> 🚧 Just started construction <span id="startedcnt" style="color:var(--good)"></span></label>
+        <label class="toggle"><input type="checkbox" id="newonly" /> Only show new this week <span id="newcnt" style="color:var(--new);font-weight:600"></span></label>
+        <label class="toggle"><input type="checkbox" id="startedonly" /> 🚧 Just started construction <span id="startedcnt" style="color:var(--good);font-weight:600"></span></label>
         <button id="reset">Reset filters</button>
         <button id="alertme" hidden>🔔 Alert me about this search</button>
       </div>
@@ -216,7 +261,6 @@
       <div id="list"></div>
     </aside>
 
-    <main id="map"></main>
     <button id="sb-toggle" aria-label="Toggle panel" title="Hide panel">‹</button>
     <div id="legend"></div>
   </div>
@@ -241,7 +285,7 @@
   </aside>
 
   <div id="modal"><div class="sheet" id="sheet"></div></div>
-  <div id="loading">Loading construction sites…</div>
+  <div id="loading"><span>Loading construction sites…</span></div>
 
   <script>
     // ── Accounts + alerts (optional) ────────────────────────────────────────
@@ -252,9 +296,10 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script>
-    const COLORS = { commercial:'#38bdf8', industrial:'#fb923c', institutional:'#a78bfa', multifamily:'#34d399', residential:'#94a3b8', unknown:'#64748b' };
+    const COLORS = { commercial:'#4356c0', industrial:'#e2984a', institutional:'#e58a9e', multifamily:'#5cae8d', residential:'#9ba3c4', unknown:'#a6adbf' };
     const CAT_LABELS = { commercial:'Commercial', industrial:'Industrial', institutional:'Institutional', multifamily:'Multifamily', residential:'Residential', unknown:'Unknown' };
     const WORK_LABELS = { new_construction:'New construction', addition:'Addition', shell:'Shell', remodel:'Renovation', other:'Other', unknown:'Other' };
+    const RING_STARTED = '#3f9d77', RING_NEW = '#e9a23b';
     const DAY = 864e5;
 
     const fmtUSD = (n) => !n ? '—' : '$' + Number(n).toLocaleString();
@@ -262,20 +307,22 @@
     const fmtSqft = (n) => !n ? null : Number(n).toLocaleString()+' ft²';
     const statusText = (p) => { const m = /\(([^)]+)\)\s*$/.exec(p.description||''); return m ? m[1] : (p.status||'—'); };
 
-    const map = L.map('map', { zoomControl: true, preferCanvas: true }).setView([31.2, -98.5], 6);
+    const map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([31.2, -98.5], 6);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     const ATTR = '&copy; OpenStreetMap &copy; CARTO · data: TDLR TABS';
     const baseLayers = {
-      'Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: ATTR, subdomains: 'abcd', maxZoom: 20 }),
+      'Soft': L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: ATTR, subdomains: 'abcd', maxZoom: 20 }),
       'Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: ATTR, subdomains: 'abcd', maxZoom: 20 }),
+      'Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: ATTR, subdomains: 'abcd', maxZoom: 20 }),
       'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery &copy; Esri · data: TDLR TABS', maxZoom: 19 }),
     };
-    baseLayers['Dark'].addTo(map);
+    baseLayers['Soft'].addTo(map);
     L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
 
     const cluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 55, spiderfyOnMaxZoom: true, showCoverageOnHover: false });
     map.addLayer(cluster);
 
-    let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now();
+    let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now(), DATA_AGE_DAYS = null;
     const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, sort:'new' };
     const radius = (v) => (!v || v<=0) ? 4 : Math.max(4.5, Math.min(20, Math.sqrt(v)/340));
     const isNew = (p) => p.issuedDate && (now - Date.parse(p.issuedDate)) <= 7*DAY;
@@ -306,13 +353,21 @@
     }
 
     function renderList(visible) {
+      const el = document.getElementById('list');
+      if (!visible.length) {
+        document.getElementById('list-cnt').textContent = '0 sites';
+        const staleNote = DATA_AGE_DAYS != null && DATA_AGE_DAYS > 3
+          ? `<br>Heads up: the data was last updated ${DATA_AGE_DAYS} days ago, so time-based filters like “new this week” may be empty.` : '';
+        el.innerHTML = `<div class="empty">No sites match these filters.${staleNote}<br><button id="empty-reset">Reset filters</button></div>`;
+        document.getElementById('empty-reset').onclick = () => document.getElementById('reset').click();
+        return;
+      }
       const sort = state.sort;
       visible.sort((a,b) => sort==='value' ? (b._p.valuation||0)-(a._p.valuation||0)
         : sort==='sqft' ? (b._p.squareFeet||0)-(a._p.squareFeet||0)
         : (Date.parse(b._p.issuedDate||0)||0)-(Date.parse(a._p.issuedDate||0)||0));
       const cap = 250, shown = visible.slice(0, cap);
       document.getElementById('list-cnt').textContent = visible.length > cap ? `showing ${cap} of ${visible.length.toLocaleString()}` : `${visible.length.toLocaleString()} sites`;
-      const el = document.getElementById('list');
       el.innerHTML = shown.map(v => { const p = v._p; const c = COLORS[p.category]||COLORS.unknown;
         return `<div class="item" data-id="${p.permitNumber}">
           <div class="t"><span class="sw" style="background:${c}"></span><span class="name">${esc(p.facilityName || p.address || 'Unknown')}</span>${p.justStarted?'<span class="newdot" style="background:var(--good)">STARTED</span>':isNew(p)?'<span class="newdot">NEW</span>':''}</div>
@@ -324,9 +379,9 @@
     function makeMarker(f) {
       const p = f.properties, [lng, lat] = f.geometry.coordinates;
       const c = COLORS[p.category] || COLORS.unknown;
-      const ring = p.justStarted ? '#86efac' : isNew(p) ? '#fff7c2' : null; // green=started, yellow=new
+      const ring = p.justStarted ? RING_STARTED : isNew(p) ? RING_NEW : null; // green=started, amber=new
       const m = L.circleMarker([lat, lng], { radius: radius(p.valuation),
-        color: ring || c, weight: ring ? 2.5 : 1.1, fillColor: c, fillOpacity: .62 });
+        color: ring || c, weight: ring ? 2.5 : 1.1, fillColor: c, fillOpacity: .68 });
       const tip = p.facilityName || p.address || 'Project';
       m.bindTooltip(p.valuation ? `${tip} · ${fmtShort(p.valuation)}` : tip, { direction: 'top', offset: [0, -2], className: 'sw-tip' });
       m.on('click', () => openDetail(p, false));
@@ -353,7 +408,7 @@
       document.getElementById('d-conftxt').textContent = `${pct}% likely under active construction · status: ${statusText(p)}`;
       const rows = [];
       const add = (k, v) => { if (v != null && v !== '' && v !== '—') rows.push(`<div class="k">${k}</div><div class="v${k==='Value'?' big':''}">${v}</div>`); };
-      const tel = (n) => { const d = String(n||'').replace(/[^0-9+]/g,''); return d ? `<a href="tel:${d}" style="color:var(--accent)">${esc(n)}</a>` : ''; };
+      const tel = (n) => { const d = String(n||'').replace(/[^0-9+]/g,''); return d ? `<a href="tel:${d}">${esc(n)}</a>` : ''; };
       const party = (name, phone) => { let s = esc(name||''); if (phone) s += (s?' · ':'') + tel(phone); return s || null; };
       add('Value', p.valuation ? fmtUSD(p.valuation) : null);
       add('Size', fmtSqft(p.squareFeet));
@@ -390,9 +445,11 @@
     function buildChips(containerId, values, labels, stateSet, colored) {
       const el = document.getElementById(containerId); el.innerHTML='';
       for (const v of values) { stateSet.add(v);
-        const chip = document.createElement('span'); chip.className='chip';
+        const chip = document.createElement('button'); chip.type = 'button'; chip.className='chip'; chip.setAttribute('aria-pressed','true');
         chip.innerHTML = (colored ? `<span class="sw" style="background:${COLORS[v]||COLORS.unknown}"></span>` : '') + (labels[v]||v);
-        chip.onclick = () => { if (stateSet.has(v)) { stateSet.delete(v); chip.classList.add('off'); } else { stateSet.add(v); chip.classList.remove('off'); } apply(); };
+        chip.onclick = () => { const on = stateSet.has(v);
+          if (on) { stateSet.delete(v); chip.classList.add('off'); } else { stateSet.add(v); chip.classList.remove('off'); }
+          chip.setAttribute('aria-pressed', String(!on)); apply(); };
         el.appendChild(chip); }
     }
 
@@ -404,11 +461,10 @@
         try { const r = await fetch(url); if (r.ok) { loaded = { url, fc: await r.json() }; break; } } catch (e) {}
       }
       const badge = document.getElementById('badge');
-      if (!loaded) { document.getElementById('loading').textContent = 'No data. Run `npm run pull:texas` (or `npm run demo`).'; badge.textContent='no data'; return; }
+      if (!loaded) { document.querySelector('#loading span').textContent = 'No data. Run `npm run pull:texas` (or `npm run demo`).'; badge.textContent='no data'; return; }
       FEATURES = (loaded.fc.features||[]).filter(f => f.geometry && f.geometry.coordinates);
       document.getElementById('region').textContent = loaded.url.includes('texas') ? 'Texas' : 'Houston';
       const isDemo = loaded.url.includes('-demo');
-      badge.textContent = isDemo ? 'demo data' : 'live · TDLR'; badge.className = isDemo ? 'demo' : 'live';
 
       // build markers + indexes
       let maxVal = 0, through = 0, newCount = 0, startedCount = 0;
@@ -419,6 +475,12 @@
         if (isNew(f.properties)) newCount++;
         if (f.properties.justStarted) startedCount++;
       }
+      // Honest freshness: "live" only when the newest registration is recent;
+      // otherwise say exactly how old the data is instead of pretending.
+      DATA_AGE_DAYS = through ? Math.max(0, Math.floor((now - through) / DAY)) : null;
+      if (isDemo) { badge.textContent = 'demo data'; badge.className = 'demo'; }
+      else if (DATA_AGE_DAYS != null && DATA_AGE_DAYS > 3) { badge.textContent = `updated ${DATA_AGE_DAYS} days ago`; badge.className = 'stale'; }
+      else { badge.textContent = 'live · TDLR'; badge.className = 'live'; }
       document.getElementById('through').textContent = through ? `data through ${new Date(through).toISOString().slice(0,10)} · ${FEATURES.length.toLocaleString()} sites` : `${FEATURES.length.toLocaleString()} sites`;
       if (newCount) document.getElementById('newcnt').textContent = `(${newCount})`;
       if (startedCount) document.getElementById('startedcnt').textContent = `(${startedCount})`;
@@ -429,8 +491,8 @@
       buildChips('works', works, WORK_LABELS, state.works, false);
       document.getElementById('legend').innerHTML =
         cats.map((c) => `<div class="lr"><span class="sw" style="background:${COLORS[c] || COLORS.unknown}"></span>${CAT_LABELS[c] || c}</div>`).join('') +
-        `<div class="hr"></div><div class="lr"><span class="sw" style="background:transparent;box-shadow:0 0 0 2px #86efac"></span>just started</div>` +
-        `<div class="lr"><span class="sw" style="background:transparent;box-shadow:0 0 0 2px #fff7c2"></span>new this week</div>` +
+        `<div class="hr"></div><div class="lr"><span class="sw" style="background:transparent;box-shadow:0 0 0 2px ${RING_STARTED}"></span>just started</div>` +
+        `<div class="lr"><span class="sw" style="background:transparent;box-shadow:0 0 0 2px ${RING_NEW}"></span>new this week</div>` +
         `<div class="lr">○ &nbsp;size ∝ value</div>`;
 
       const val = document.getElementById('val'); val.max = String(maxVal); val.step = String(Math.max(100000, Math.round(maxVal/100/100000)*100000));
@@ -452,10 +514,20 @@
 
       document.getElementById('loading').style.display = 'none';
       apply();
-      if (FEATURES.length) map.fitBounds(cluster.getBounds().pad(0.05));
 
-      // deep link
-      const m = /#p=([^&]+)/.exec(location.hash); if (m) { const id = decodeURIComponent(m[1]); if (byId.has(id)) setTimeout(()=>focusProject(id, true), 300); }
+      // Deep link FIRST — it must not depend on anything below succeeding.
+      const m = /#p=([^&]+)/.exec(location.hash);
+      const linked = m ? decodeURIComponent(m[1]) : null;
+      if (linked && byId.has(linked)) setTimeout(() => focusProject(linked, true), 300);
+      // Fit to the data. cluster.getBounds() is unreliable under chunkedLoading
+      // (layers add asynchronously → empty bounds → .pad() throws and used to
+      // kill the whole load, deep links included) — compute from the features.
+      else if (FEATURES.length) {
+        try {
+          const b = L.latLngBounds(FEATURES.map(f => [f.geometry.coordinates[1], f.geometry.coordinates[0]]));
+          if (b.isValid()) map.fitBounds(b.pad(0.05));
+        } catch (e) { /* keep the default Texas view */ }
+      }
     }
     // ---- accounts + saved-search alerts (optional, Supabase) ----------------
     const SUPA = window.SITEWATCH || {};
@@ -463,6 +535,11 @@
     let sb = null, user = null, isPro = false;
     const closeModal = () => modal.classList.remove('open');
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    window.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (modal.classList.contains('open')) closeModal();
+      else if (document.getElementById('detail').classList.contains('open')) closeDetail();
+    });
     function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2800); }
     function openSheet(html) { sheet.innerHTML = `<button class="close" id="x-close">×</button>` + html; modal.classList.add('open'); document.getElementById('x-close').onclick = closeModal; }
 
@@ -565,7 +642,9 @@
         <button class="btn primary" id="al-save" style="width:100%">Create alert</button>`);
       document.getElementById('al-save').onclick = async () => {
         const name = document.getElementById('al-name').value.trim() || sum;
-        const { error } = await sb.from('saved_searches').insert({ name, email: user.email, filters: f });
+        // user_id: schema.sql also defaults it to auth.uid(); sent explicitly so
+        // the insert works on databases created before that default existed.
+        const { error } = await sb.from('saved_searches').insert({ user_id: user.id, name, email: user.email, filters: f });
         closeModal(); toast(error ? error.message : "Alert created — we'll email you when new sites match ✓");
       };
     }
@@ -580,14 +659,14 @@
       sheet.querySelectorAll('.x').forEach((btn) => (btn.onclick = async () => { await sb.from('saved_searches').delete().eq('id', btn.dataset.id); btn.closest('.alertrow').remove(); toast('Alert deleted'); }));
     }
 
-    // collapsible left panel (MarineTraffic-style) — more map when you want it
+    // collapsible floating panel — more map when you want it
     const appEl = document.getElementById('app'), sbToggle = document.getElementById('sb-toggle');
     function setCollapsed(c) {
       appEl.classList.toggle('collapsed', c);
       sbToggle.textContent = c ? '›' : '‹';
       sbToggle.title = c ? 'Show panel' : 'Hide panel';
       try { localStorage.setItem('sw-collapsed', c ? '1' : '0'); } catch (e) {}
-      setTimeout(() => map.invalidateSize(), 280); // let Leaflet fill the new size after the animation
+      // map is full-bleed behind the floating panel — no resize needed
     }
     sbToggle.onclick = () => setCollapsed(!appEl.classList.contains('collapsed'));
     setCollapsed((() => { try { return localStorage.getItem('sw-collapsed') === '1'; } catch (e) { return false; } })());

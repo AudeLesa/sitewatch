@@ -242,22 +242,24 @@ function directoryPage(cityList, site) {
 </main>` + foot(site);
 }
 
-const CSS = `:root{--bg:#0a0e16;--panel:#0f1722;--border:#1e2a3a;--text:#e6eef8;--muted:#8499b3;--accent:#38bdf8;--good:#34d399}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+// Soft/pastel identity shared with the map app (web/index.html): blush ground,
+// cream cards, deep indigo primary, pill buttons, large radii, soft shadows.
+const CSS = `:root{--bg:#f2dcd8;--panel:#fdf6f0;--card:#fff;--border:#efdcd3;--text:#232a52;--muted:#7a7f9e;--accent:#313f9f;--good:#3f9d77}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 Poppins,Segoe UI,system-ui,-apple-system,Roboto,sans-serif}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-header{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+header{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:16px 22px;flex-wrap:wrap;background:var(--panel);box-shadow:0 6px 24px rgba(49,63,159,.08)}
 .logo{font-weight:700;color:var(--text)}.logo:hover{text-decoration:none}header nav{font-size:14px;color:var(--muted)}
-main{max-width:760px;margin:0 auto;padding:28px 20px 40px}
-h1{font-size:26px;line-height:1.2;margin:0 0 6px}h2{font-size:16px;margin:26px 0 10px}.sub{color:var(--muted);margin:0 0 20px}
-table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:top}
+main{max-width:760px;margin:0 auto;padding:30px 20px 44px}
+h1{font-size:26px;line-height:1.25;margin:0 0 6px}h2{font-size:16px;margin:28px 0 10px}.sub{color:var(--muted);margin:0 0 20px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(49,63,159,.08)}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:top}
 th{color:var(--muted);font-weight:500;width:160px;white-space:nowrap}tr:last-child th,tr:last-child td{border-bottom:none}
-.cta{margin:22px 0}.btn{display:inline-block;background:var(--accent);color:#042130;font-weight:700;padding:10px 16px;border-radius:9px}.btn:hover{text-decoration:none}
+.cta{margin:22px 0}.btn{display:inline-block;background:var(--accent);color:#fff;font-weight:600;padding:11px 20px;border-radius:999px;box-shadow:0 8px 20px rgba(49,63,159,.25)}.btn:hover{text-decoration:none;filter:brightness(1.08)}
 .cta a:not(.btn){margin-left:12px;font-size:14px}.rel{color:var(--muted);font-size:14px;margin-top:18px}
-ul.projlist,ul.dirlist{list-style:none;padding:0;margin:18px 0;border:1px solid var(--border);border-radius:12px;background:var(--panel);overflow:hidden}
-ul.projlist li,ul.dirlist li{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px}
+ul.projlist,ul.dirlist{list-style:none;padding:0;margin:18px 0;border-radius:18px;background:var(--panel);overflow:hidden;box-shadow:0 10px 30px rgba(49,63,159,.08)}
+ul.projlist li,ul.dirlist li{display:flex;justify-content:space-between;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);font-size:14px}
 ul.projlist li:last-child,ul.dirlist li:last-child{border-bottom:none}.m{color:var(--muted);white-space:nowrap}
 .bars{display:flex;flex-direction:column;gap:7px;margin:14px 0}
 .bar{display:grid;grid-template-columns:180px 1fr auto;align-items:center;gap:10px;font-size:13px}
-.bar .bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar .bt{height:14px;background:var(--accent);border-radius:4px;min-width:4px}.bar .bv{color:var(--muted);white-space:nowrap}
-footer{max-width:760px;margin:0 auto;padding:20px;border-top:1px solid var(--border);color:var(--muted);font-size:13px}`;
+.bar .bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar .bt{height:14px;background:var(--accent);border-radius:999px;min-width:4px}.bar .bv{color:var(--muted);white-space:nowrap}
+footer{max-width:760px;margin:0 auto;padding:20px;color:var(--muted);font-size:13px}`;
