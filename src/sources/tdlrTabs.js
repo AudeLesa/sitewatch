@@ -1,7 +1,7 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
 import { config, activeCity } from '../config.js';
 import { projectRoot } from '../util/env.js';
+import { writeFileAtomic, loadStateFile } from '../util/fsafe.js';
 import { fetchWithRetry, fetchText, mapLimit } from '../util/http.js';
 import { makeRecord, CATEGORY, WORK_CLASS, STATUS } from '../schema.js';
 
@@ -76,6 +76,12 @@ export async function fetchPermits({ log = console.error } = {}) {
 
   // 1. One page load establishes a session cookie and gives us the code lookups.
   const session = await openSession(cfg, log);
+  // Schema-drift tripwire: empty lookups mean the search page markup changed.
+  // Without city names every address loses its city and geocoding collapses —
+  // better to fail the run than publish a silently degraded dataset.
+  if (!Object.keys(session.lookup.CITIES).length || !Object.keys(session.lookup.COUNTIES).length) {
+    throw new Error('TABS search page no longer exposes the CITIES/COUNTIES lookups — markup drift, aborting.');
+  }
   const from = mmddyyyy(monthsAgo(config.lookbackMonths));
   const to = mmddyyyy(new Date());
 
@@ -118,7 +124,11 @@ export async function fetchPermits({ log = console.error } = {}) {
   await mapLimit(toFetch, cfg.detailConcurrency, async (row) => {
     const detail = await fetchDetail(cfg, session, row.ProjectNumber).catch(() => null);
     row._detail = detail;
-    if (detail) detailCache[row.ProjectNumber] = detail;
+    // Only cache parses that actually captured content: an empty {} here means
+    // the page markup drifted (or an error page slipped through), and the cache
+    // never expires — caching it would freeze this project as address-less even
+    // after the parser is fixed. Uncached rows retry on the next run.
+    if (detail && (detail['location address'] || detail['owner name'])) detailCache[row.ProjectNumber] = detail;
     else failed++;
     done++;
     if (done % 100 === 0) log(`[tdlr_tabs] details ${done}/${toFetch.length}`);
@@ -173,8 +183,17 @@ async function searchCounty(cfg, session, county, from, to, log) {
 
   // First page also returns the total, so we can fetch the rest in parallel.
   const first = await searchPage(cfg, session, county, from, to, 0, log);
-  if (!first) return [];
+  if (!first) {
+    // Can't even fetch page one after retries: fail loudly rather than let the
+    // run "succeed" with zero rows for this scope.
+    throw new Error(`TABS search failed for ${label} after retries.`);
+  }
+  // Schema-drift tripwire: DataTables always returns a numeric total; anything
+  // else means the response shape changed and pagination would silently stop.
   const found = first.total ?? first.rows.length;
+  if (!Number.isFinite(Number(found)) || (first.rows.length > 0 && !first.rows[0].ProjectNumber)) {
+    throw new Error('TABS SearchProjects response shape changed (no total / no ProjectNumber) — aborting.');
+  }
   // Statewide is bounded only by the result count; per-county respects maxPerCounty.
   const limit = county == null ? found : Math.min(found, cfg.maxPerCounty);
 
@@ -189,13 +208,21 @@ async function searchCounty(cfg, session, county, from, to, log) {
     else failed.push(start); // collect to retry — never silently drop a page
   });
   // Retry any pages that failed under concurrency (transient errors), serially.
+  const stillFailed = [];
   for (const start of failed) {
     const page = await searchPage(cfg, session, county, from, to, start, log);
     if (page) out.push(...page.rows);
+    else stillFailed.push(start);
   }
+  // `found` is sampled once and the registry moves under us, so tolerate a few
+  // rows of drift — but a genuinely lost page is up to pageSize rows, way past it.
   const expected = Math.min(limit, found);
-  if (out.length < expected - cfg.pageSize) {
-    log(`[tdlr_tabs] ⚠ ${label}: collected ${out.length} of ~${expected} — ${failed.length} page(s) still failing; data may be incomplete.`);
+  if (stillFailed.length || out.length < expected - 3) {
+    // A permanently-missing page means we'd publish a silently short dataset.
+    // Finish the run (caches still fill in), but exit non-zero so CI treats it
+    // as a failure and does not deploy the shrunken output.
+    log(`[tdlr_tabs] ⚠ ${label}: collected ${out.length} of ~${expected} — ${stillFailed.length} page(s) permanently failed; marking run incomplete.`);
+    process.exitCode = 1;
   }
 
   log(`[tdlr_tabs] ${label}: ${out.length} projects (registered ${from}–${to}).`);
@@ -406,13 +433,8 @@ function decodeEntities(s) {
 const DETAIL_CACHE_PATH = join(projectRoot, config.output.dir, 'tabs-detail-cache.json');
 
 function loadDetailCache() {
-  try {
-    return JSON.parse(readFileSync(DETAIL_CACHE_PATH, 'utf8'));
-  } catch {
-    return {};
-  }
+  return loadStateFile(DETAIL_CACHE_PATH);
 }
 function saveDetailCache(cache) {
-  mkdirSync(dirname(DETAIL_CACHE_PATH), { recursive: true });
-  writeFileSync(DETAIL_CACHE_PATH, JSON.stringify(cache));
+  writeFileAtomic(DETAIL_CACHE_PATH, JSON.stringify(cache));
 }

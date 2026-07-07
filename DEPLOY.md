@@ -27,10 +27,12 @@ dist/
 npm i -g wrangler          # one time
 wrangler login             # one time
 npm run build
-wrangler pages deploy dist --project-name sitewatch
+wrangler pages deploy dist --project-name sitewatch-eyt
 ```
-You get a `https://sitewatch.pages.dev` URL immediately; add a custom domain in the
-Cloudflare dashboard.
+(`sitewatch-eyt` is the existing Pages project — the same name package.json and the
+GitHub workflow use; a different name here would create a second, orphaned site.)
+You get a `https://sitewatch-eyt.pages.dev` URL immediately; add a custom domain in
+the Cloudflare dashboard.
 
 ### Netlify
 ```bash

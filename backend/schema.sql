@@ -70,7 +70,9 @@ create index if not exists projects_value_idx       on projects (valuation desc)
 -- ---------------------------------------------------------------------------
 create table if not exists saved_searches (
   id            uuid primary key default gen_random_uuid(),
-  user_id       uuid not null references auth.users (id) on delete cascade,
+  -- default auth.uid(): the client insert doesn't (and shouldn't) send user_id;
+  -- without the default every insert fails the not-null constraint.
+  user_id       uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name          text not null,
   email         text,                             -- notify-to address (set from the user's email at save time)
   filters       jsonb not null default '{}',      -- {categories, workClasses, minValue, minConfidence, q, center:{lat,lng}, radiusMi}
@@ -79,6 +81,9 @@ create table if not exists saved_searches (
   last_alert_at timestamptz not null default now(),
   created_at    timestamptz not null default now()
 );
+
+-- (idempotent for databases created before the default existed)
+alter table saved_searches alter column user_id set default auth.uid();
 
 create index if not exists saved_searches_user_idx on saved_searches (user_id);
 

@@ -1,7 +1,8 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { projectRoot } from '../util/env.js';
 import { config } from '../config.js';
+import { writeFileAtomic } from '../util/fsafe.js';
 
 /**
  * Write the run's outputs:
@@ -16,14 +17,29 @@ export async function writeOutputs(cityId, records) {
   const geocoded = records.filter((r) => r.location);
   const ungeocoded = records.filter((r) => !r.location);
 
+  // Publish guard: a partial upstream failure (TDLR outage, expired session)
+  // must never silently replace a good dataset with a shrunken one. Compare
+  // against whatever we published last; a big drop needs an explicit override.
+  const geojsonPath = join(dir, `${cityId}.geojson`);
+  let prevCount = 0;
+  try {
+    prevCount = JSON.parse(await readFile(geojsonPath, 'utf8')).features?.length ?? 0;
+  } catch {} // no previous output — first run, nothing to guard
+  if (prevCount >= 500 && geocoded.length < prevCount * 0.7 && process.env.SITEWATCH_FORCE_PUBLISH !== '1') {
+    throw new Error(
+      `Refusing to publish ${cityId}: ${geocoded.length} mapped sites vs ${prevCount} previously (>30% drop — ` +
+        `likely a partial pull). Set SITEWATCH_FORCE_PUBLISH=1 to override.`
+    );
+  }
+
   const geojson = {
     type: 'FeatureCollection',
     features: geocoded.map(toFeature),
   };
 
-  await writeFile(join(dir, `${cityId}.geojson`), JSON.stringify(geojson, null, 2));
-  await writeFile(join(dir, `${cityId}.json`), JSON.stringify(records, null, 2));
-  await writeFile(join(dir, `${cityId}.ungeocoded.json`), JSON.stringify(ungeocoded, null, 2));
+  writeFileAtomic(geojsonPath, JSON.stringify(geojson, null, 2));
+  writeFileAtomic(join(dir, `${cityId}.json`), JSON.stringify(records, null, 2));
+  writeFileAtomic(join(dir, `${cityId}.ungeocoded.json`), JSON.stringify(ungeocoded, null, 2));
 
   return {
     dir,

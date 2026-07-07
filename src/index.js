@@ -46,6 +46,9 @@ async function pull(sources, { cityId, outputId } = {}) {
       records.push(...got);
     } catch (err) {
       log(`[${src.id}] ERROR: ${err.message}`);
+      // A source that *threw* (vs. returning []) is a real failure. Finish the
+      // run with whatever we have, but exit non-zero so CI won't deploy it.
+      process.exitCode = 1;
     }
   }
   log(`\nFetched ${records.length} raw records.`);

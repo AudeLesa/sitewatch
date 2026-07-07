@@ -1,7 +1,7 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
 import { config } from '../config.js';
 import { projectRoot } from '../util/env.js';
+import { writeFileAtomic, loadStateFile } from '../util/fsafe.js';
 
 // ---------------------------------------------------------------------------
 // Project history & "new starts" detection.
@@ -74,9 +74,8 @@ function daysBetween(a, b) {
   return Math.abs(Date.parse(b) - Date.parse(a)) / 86400000;
 }
 function load() {
-  try { return JSON.parse(readFileSync(HISTORY_PATH, 'utf8')); } catch { return {}; }
+  return loadStateFile(HISTORY_PATH);
 }
 function save(hist) {
-  mkdirSync(dirname(HISTORY_PATH), { recursive: true });
-  writeFileSync(HISTORY_PATH, JSON.stringify(hist));
+  writeFileAtomic(HISTORY_PATH, JSON.stringify(hist));
 }

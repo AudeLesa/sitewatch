@@ -1,8 +1,8 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
 import { config, activeCity } from '../config.js';
 import { projectRoot } from '../util/env.js';
 import { fetchJson, mapLimit, sleep } from '../util/http.js';
+import { writeFileAtomic, loadStateFile } from '../util/fsafe.js';
 import { oneLine } from '../util/address.js';
 
 // ---------------------------------------------------------------------------
@@ -176,15 +176,10 @@ function inBbox(hit, bbox) {
 }
 
 function loadCache() {
-  try {
-    return JSON.parse(readFileSync(CACHE_PATH, 'utf8'));
-  } catch {
-    return {};
-  }
+  return loadStateFile(CACHE_PATH);
 }
 function saveCache(cache) {
-  mkdirSync(dirname(CACHE_PATH), { recursive: true });
-  writeFileSync(CACHE_PATH, JSON.stringify(cache));
+  writeFileAtomic(CACHE_PATH, JSON.stringify(cache));
 }
 
 /** Geocode a single address through the full chain (used by `geocode-test`). */
