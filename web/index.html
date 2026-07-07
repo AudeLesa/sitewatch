@@ -174,10 +174,24 @@
       color: #fff; padding: 12px 18px; border-radius: 999px; font-size: 13px; z-index: 2100; box-shadow: 0 10px 30px rgba(35,42,82,.35); max-width: 90vw; }
 
     /* map furniture */
-    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: rgba(49,63,159,.18); }
-    .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
-      background: var(--primary); color: #fff; font-weight: 600; font-family: Poppins, "Segoe UI", sans-serif; }
-    .marker-cluster div { border-radius: 50%; }
+    /* project pins: a soft rounded chip carrying the category glyph */
+    .pin { display: grid; place-items: center; width: 100%; height: 100%; background: var(--c, var(--primary));
+      border-radius: 32%; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.4), 0 3px 9px rgba(35,42,82,.3);
+      transition: transform .1s ease; }
+    .pin svg { width: 64%; height: 64%; fill: #fff; display: block; }
+    .pin:hover { transform: scale(1.18); }
+    .pin.ring-new { box-shadow: 0 0 0 2.5px var(--new), inset 0 0 0 1.5px rgba(255,255,255,.4), 0 3px 9px rgba(35,42,82,.3); }
+    .pin.ring-started { box-shadow: 0 0 0 2.5px var(--good), inset 0 0 0 1.5px rgba(255,255,255,.4), 0 3px 9px rgba(35,42,82,.3); }
+    /* clusters: a quiet white chip with the count — no heavy traffic-light circles */
+    .cl { display: grid; place-items: center; width: 100%; height: 100%; background: var(--card); color: var(--primary);
+      font-family: Poppins, "Segoe UI", sans-serif; font-weight: 600; border-radius: 50%;
+      box-shadow: 0 0 0 5px rgba(49,63,159,.14), 0 5px 16px rgba(35,42,82,.22); }
+    .cl span { font-size: 12px; letter-spacing: -.02em; }
+    .cl.m span { font-size: 13px; }
+    .cl.l span { font-size: 14px; }
+    /* legend chips reuse the pin look at a small size */
+    .legend-pin { width: 15px; height: 15px; border-radius: 32%; display: inline-grid; place-items: center; flex: none; }
+    .legend-pin svg { width: 10px; height: 10px; fill: #fff; display: block; }
     .leaflet-control-layers, .leaflet-bar a { background: var(--card); color: var(--ink); border-color: #f0e4dd !important; }
     .leaflet-bar a:hover { background: var(--tint); }
     .leaflet-control-layers-expanded { padding: 8px 12px 8px 10px; font-size: 13px; border-radius: 14px; font-family: inherit; }
@@ -319,6 +333,17 @@
   <script>
     const COLORS = { commercial:'#4356c0', industrial:'#e2984a', institutional:'#e58a9e', multifamily:'#5cae8d', residential:'#9ba3c4', unknown:'#a6adbf' };
     const CAT_LABELS = { commercial:'Commercial', industrial:'Industrial', institutional:'Institutional', multifamily:'Multifamily', residential:'Residential', unknown:'Unknown' };
+    // One simple silhouette per category — a storefront, a factory, a columned
+    // civic building, an apartment block, a house. Inline SVG: no requests.
+    const GLYPHS = {
+      commercial:    'M4 3h16v3H4zM5 7h14l1 4a3 3 0 01-3 3 3 3 0 01-3-2.5A3 3 0 0112 14a3 3 0 01-3-2.5A3 3 0 016 14a3 3 0 01-3-3zM5 15.6A5 5 0 006 16a4.6 4.6 0 003-1 4.6 4.6 0 006 0 4.6 4.6 0 003 1 5 5 0 001-.4V21H5z',
+      industrial:    'M4 8h3V4h2v4h1l4 3V8l6 4v9H3V11zM6 15h2v2H6zm5 0h2v2h-2zm5 0h2v2h-2z',
+      institutional: 'M12 2l9 6H3zM4.5 9.5h2V17h-2zM11 9.5h2V17h-2zM17.5 9.5h2V17h-2zM3.5 18h17v3h-17z',
+      multifamily:   'M5 21V3h9v18h-3.2v-3.5H8.2V21zM7 6h2v2H7zm3.5 0h2v2h-2zM7 10h2v2H7zm3.5 0h2v2h-2zM16 21V8h3.5v13zm1-11h1.6v2H17zm0 4h1.6v2H17z',
+      residential:   'M12 3.5l8.5 7.5H18v9h-4v-5.5h-4V20H6v-9H3.5z',
+      unknown:       'M12 6a6 6 0 110 12 6 6 0 010-12z',
+    };
+    const pinSvg = (cat) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${GLYPHS[cat] || GLYPHS.unknown}"/></svg>`;
     const WORK_LABELS = { new_construction:'New construction', addition:'Addition', shell:'Shell', remodel:'Renovation', other:'Other', unknown:'Other' };
     const RING_STARTED = '#3f9d77', RING_NEW = '#e9a23b';
     const DAY = 864e5;
@@ -340,12 +365,22 @@
     baseLayers['Soft'].addTo(map);
     L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
 
-    const cluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 55, spiderfyOnMaxZoom: true, showCoverageOnHover: false });
+    const cluster = L.markerClusterGroup({
+      chunkedLoading: true, maxClusterRadius: 55, spiderfyOnMaxZoom: true, showCoverageOnHover: false,
+      iconCreateFunction(c) {
+        const n = c.getChildCount();
+        const tier = n >= 500 ? ['l', 48] : n >= 50 ? ['m', 40] : ['s', 33];
+        const label = n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n);
+        return L.divIcon({ html: `<div class="cl ${tier[0]}"><span>${label}</span></div>`, className: '', iconSize: [tier[1], tier[1]] });
+      },
+    });
     map.addLayer(cluster);
 
     let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now(), DATA_AGE_DAYS = null;
     const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, sort:'new' };
-    const radius = (v) => (!v || v<=0) ? 4 : Math.max(4.5, Math.min(20, Math.sqrt(v)/340));
+    // Three size tiers by declared value — enough to read hierarchy at a glance
+    // without the mushy continuum the old radius formula produced.
+    const pinSize = (v) => (v >= 25e6 ? 30 : v >= 2e6 ? 24 : 19);
     const isNew = (p) => p.issuedDate && (now - Date.parse(p.issuedDate)) <= 7*DAY;
 
     function passes(p) {
@@ -428,13 +463,19 @@
     function makeMarker(f) {
       const p = f.properties, [lng, lat] = f.geometry.coordinates;
       const c = COLORS[p.category] || COLORS.unknown;
-      const ring = p.justStarted ? RING_STARTED : isNew(p) ? RING_NEW : null; // green=started, amber=new
+      const ring = p.justStarted ? 'ring-started' : isNew(p) ? 'ring-new' : ''; // green=started, amber=new
+      const size = pinSize(p.valuation);
       // Opacity encodes confidence: a pin we believe is actively building reads
       // solid; a decayed/past-due one visibly fades instead of lying.
-      const m = L.circleMarker([lat, lng], { radius: radius(p.valuation),
-        color: ring || c, weight: ring ? 2.5 : 1.1, fillColor: c, fillOpacity: .25 + .45 * (p.confidence ?? .5) });
+      const op = (.45 + .55 * (p.confidence ?? .5)).toFixed(2);
+      const m = L.marker([lat, lng], {
+        icon: L.divIcon({
+          html: `<div class="pin ${ring}" style="--c:${c};opacity:${op}">${pinSvg(p.category)}</div>`,
+          className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+        }),
+      });
       const tip = p.facilityName || p.address || 'Project';
-      m.bindTooltip(p.valuation ? `${tip} · ${fmtShort(p.valuation)}` : tip, { direction: 'top', offset: [0, -2], className: 'sw-tip' });
+      m.bindTooltip(p.valuation ? `${tip} · ${fmtShort(p.valuation)}` : tip, { direction: 'top', offset: [0, -size / 2], className: 'sw-tip' });
       m.on('click', () => openDetail(p, false));
       return { marker: m, _p: p };
     }
@@ -542,10 +583,10 @@
       buildChips('cats', cats, CAT_LABELS, state.cats, true);
       buildChips('works', works, WORK_LABELS, state.works, false);
       document.getElementById('legend').innerHTML =
-        cats.map((c) => `<div class="lr"><span class="sw" style="background:${COLORS[c] || COLORS.unknown}"></span>${CAT_LABELS[c] || c}</div>`).join('') +
+        cats.map((c) => `<div class="lr"><span class="legend-pin" style="background:${COLORS[c] || COLORS.unknown}">${pinSvg(c)}</span>${CAT_LABELS[c] || c}</div>`).join('') +
         `<div class="hr"></div><div class="lr"><span class="sw" style="background:transparent;box-shadow:0 0 0 2px ${RING_STARTED}"></span>just started</div>` +
         `<div class="lr"><span class="sw" style="background:transparent;box-shadow:0 0 0 2px ${RING_NEW}"></span>new this week</div>` +
-        `<div class="lr">○ &nbsp;size ∝ value</div>`;
+        `<div class="lr">larger pin = higher value · faded = likely done</div>`;
 
       const val = document.getElementById('val'); val.max = String(maxVal); val.step = String(Math.max(100000, Math.round(maxVal/100/100000)*100000));
       val.oninput = () => { state.minVal = +val.value; document.getElementById('valout').textContent = fmtShort(state.minVal)+'+'; debounce(apply); };
