@@ -42,19 +42,26 @@ const WORK_TYPE = {
   9005: WORK_CLASS.OTHER, // Public Right of Way
 };
 
-// ProjectStatus code -> { status, confidence } where confidence ≈ P(actively
-// being built) along the lifecycle: registered → reviewed → inspected → closed.
+// ProjectStatus code -> { status, stage prior, lifecycle stage }. The prior is
+// P(actively being built) *for the stage alone*; src/pipeline/lifecycle.js then
+// adjusts it with the declared start/end dates and expires finished projects.
+//
+// Stage semantics (Gov. Code ch. 469): registration precedes construction; RAS
+// plan review happens before/early in the build; the accessibility INSPECTION
+// happens at/after COMPLETION (§469.105) — so inspection stages mean the
+// project is finishing or finished, not peak-active (the pre-2026-07 mapping
+// had this inverted, scoring finished buildings 0.9).
 const STATUS_MAP = {
-  3008: { status: STATUS.ISSUED, confidence: 0.3, label: 'Project Registered' },
-  3010: { status: STATUS.ISSUED, confidence: 0.35, label: 'Review Pending' },
-  3004: { status: STATUS.ISSUED, confidence: 0.4, label: 'Preliminary Plan Review' },
-  3006: { status: STATUS.ISSUED, confidence: 0.4, label: 'Preliminary Review Pending' },
-  3005: { status: STATUS.ISSUED, confidence: 0.5, label: 'Miscellaneous' },
-  3009: { status: STATUS.ISSUED, confidence: 0.55, label: 'Review Complete' },
-  3003: { status: STATUS.ACTIVE, confidence: 0.8, label: 'Inspection Scheduled' },
-  3002: { status: STATUS.ACTIVE, confidence: 0.85, label: 'Inspection Process' },
-  3001: { status: STATUS.ACTIVE, confidence: 0.9, label: 'Inspection Completed' },
-  3007: { status: STATUS.FINALIZED, confidence: 1, label: 'Project Closed' },
+  3008: { status: STATUS.ISSUED, confidence: 0.55, stage: 'pre',       label: 'Project Registered' },
+  3010: { status: STATUS.ISSUED, confidence: 0.6,  stage: 'review',    label: 'Review Pending' },
+  3004: { status: STATUS.ISSUED, confidence: 0.6,  stage: 'review',    label: 'Preliminary Plan Review' },
+  3006: { status: STATUS.ISSUED, confidence: 0.6,  stage: 'review',    label: 'Preliminary Review Pending' },
+  3005: { status: STATUS.ISSUED, confidence: 0.5,  stage: 'review',    label: 'Miscellaneous' },
+  3009: { status: STATUS.ACTIVE, confidence: 0.7,  stage: 'building',  label: 'Review Complete' },
+  3003: { status: STATUS.ACTIVE, confidence: 0.35, stage: 'finishing', label: 'Inspection Scheduled' },
+  3002: { status: STATUS.ACTIVE, confidence: 0.3,  stage: 'finishing', label: 'Inspection Process' },
+  3001: { status: STATUS.ACTIVE, confidence: 0.12, stage: 'finished',  label: 'Inspection Completed' },
+  3007: { status: STATUS.FINALIZED, confidence: 0, stage: 'closed',    label: 'Project Closed' },
 };
 
 export async function fetchPermits({ log = console.error } = {}) {
@@ -315,7 +322,7 @@ function mapProject(row, lookup) {
   const d = row._detail || {};
   const cityName = lookup.CITIES?.[String(row.City)] || null;
   const line1 = cleanLine(d['location address']) || null;
-  const st = STATUS_MAP[row.ProjectStatus] || { status: STATUS.UNKNOWN, confidence: null, label: null };
+  const st = STATUS_MAP[row.ProjectStatus] || { status: STATUS.UNKNOWN, confidence: null, stage: null, label: null };
   const facility = row.FacilityName || d['facility name'] || null;
 
   return makeRecord({
@@ -326,6 +333,7 @@ function mapProject(row, lookup) {
     workClass: WORK_TYPE[row.TypeOfWork] || WORK_CLASS.UNKNOWN,
     status: st.status,
     confidence: st.confidence,
+    lifecycleStage: st.stage,
     description: describe(row, facility, st.label),
     valuation: num(row.EstimatedCost),
     squareFeet: num(d['square footage']),

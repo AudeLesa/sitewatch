@@ -22,6 +22,14 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      # Backend (Supabase + Resend) — optional. The load/alert/digest steps
+      # below self-skip while these secrets are unset, so the map refresh works
+      # standalone; add the secrets and the alert pipeline turns on.
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      ALERT_FROM: ${{ secrets.ALERT_FROM }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +61,18 @@ jobs:
           # successive daily runs. (Run it uncapped locally for the first full seed.)
           GEOCODER_FALLBACK_MAX: '800'
         run: npm run refresh
+
+      - name: Load projects into Supabase
+        if: env.SUPABASE_URL != ''
+        run: npm run load
+
+      - name: Send Pro saved-search alerts
+        if: env.SUPABASE_URL != ''
+        run: npm run alerts
+
+      - name: Send the free weekly digest (Mondays)
+        if: env.SUPABASE_URL != ''
+        run: if [ "$(date -u +%u)" = "1" ]; then node backend/alert-worker.mjs digest; fi
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

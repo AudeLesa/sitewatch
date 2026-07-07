@@ -61,6 +61,8 @@ function toFeature(rec) {
       workClass: rec.workClass,
       status: rec.status,
       confidence: rec.confidence,
+      lifecycleStage: rec.lifecycleStage,
+      geocodePrecision: rec.geocode?.precision ?? null,
       description: rec.description,
       facilityName: rec.facilityName,
       valuation: rec.valuation,

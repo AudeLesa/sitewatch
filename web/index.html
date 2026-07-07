@@ -92,6 +92,17 @@
     .list-head { display: flex; justify-content: space-between; align-items: center; padding: 0 20px 6px; }
     .list-head .cnt { font-size: 11px; color: var(--faint); }
     .list-head select { width: auto; font-size: 11px; padding: 4px 8px; }
+    .list-tools { display: flex; align-items: center; gap: 6px; }
+    #csv { background: var(--card); border: none; color: var(--primary); font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 999px; cursor: pointer; box-shadow: 0 2px 8px rgba(49,63,159,.08); font-family: inherit; }
+    #csv:hover { filter: brightness(.97); }
+    #digestbox { margin-top: 14px; }
+    .digestrow { display: flex; gap: 7px; }
+    .digestrow input { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 999px; border: 1px solid var(--border);
+      background: var(--card); color: var(--ink); font-size: 12.5px; font-family: inherit; }
+    .digestrow button { background: var(--primary); border: none; color: #fff; border-radius: 999px; padding: 9px 15px;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; flex: none; }
+    .digestrow button:hover { filter: brightness(1.08); }
     #list { flex: 1; overflow-y: auto; min-height: 0; padding: 0 14px 14px; }
     #list::-webkit-scrollbar { width: 8px; } #list::-webkit-scrollbar-thumb { background: #e8d3c9; border-radius: 8px; }
     .item { padding: 10px 12px; margin: 0 0 7px; border-radius: 14px; background: var(--tint); cursor: pointer; transition: background .12s; }
@@ -243,6 +254,13 @@
         <label class="toggle"><input type="checkbox" id="startedonly" /> 🚧 Just started construction <span id="startedcnt" style="color:var(--good);font-weight:600"></span></label>
         <button id="reset">Reset filters</button>
         <button id="alertme" hidden>🔔 Alert me about this search</button>
+        <div id="digestbox" hidden>
+          <label class="lbl" for="digest-email">Free weekly digest — new projects &amp; groundbreakings</label>
+          <div class="digestrow">
+            <input id="digest-email" type="email" placeholder="you@company.com" autocomplete="email" />
+            <button id="digest-go">Sign up</button>
+          </div>
+        </div>
       </div>
 
       <div id="stats">
@@ -252,11 +270,14 @@
 
       <div class="list-head">
         <span class="cnt" id="list-cnt"></span>
-        <select id="sort">
-          <option value="new">Newest first</option>
-          <option value="value">Highest value</option>
-          <option value="sqft">Largest sq ft</option>
-        </select>
+        <span class="list-tools">
+          <button id="csv" title="Download the filtered list as a spreadsheet (CSV)">⬇ CSV</button>
+          <select id="sort">
+            <option value="new">Newest first</option>
+            <option value="value">Highest value</option>
+            <option value="sqft">Largest sq ft</option>
+          </select>
+        </span>
       </div>
       <div id="list"></div>
     </aside>
@@ -341,9 +362,11 @@
       return true;
     }
 
+    let LAST_VISIBLE = [];
     function apply() {
       const visible = [];
       for (const m of MARKERS) if (passes(m._p)) visible.push(m);
+      LAST_VISIBLE = visible;
       cluster.clearLayers();
       cluster.addLayers(visible.map(v => v.marker));
       let total = 0; for (const v of visible) total += v._p.valuation || 0;
@@ -351,6 +374,32 @@
       document.getElementById('stat-value').textContent = fmtShort(total);
       renderList(visible);
     }
+
+    // Export the CURRENT filtered set (all of it, not just the listed 250) as a
+    // CSV — sales teams live in spreadsheets and CRMs, not maps.
+    document.getElementById('csv').onclick = () => {
+      if (!LAST_VISIBLE.length) return toast('Nothing to export — adjust the filters first.');
+      const cols = [
+        ['Permit', p => p.permitNumber], ['Name', p => p.facilityName], ['Address', p => p.address],
+        ['Category', p => p.category], ['Work', p => WORK_LABELS[p.workClass] || p.workClass], ['Status', p => statusText(p)],
+        ['% active', p => p.confidence != null ? Math.round(p.confidence * 100) : ''], ['Value', p => p.valuation],
+        ['Sq ft', p => p.squareFeet], ['Registered', p => p.issuedDate], ['Est. start', p => p.estStartDate],
+        ['Est. end', p => p.estEndDate], ['Started', p => p.startedAt], ['Owner', p => p.owner], ['Owner phone', p => p.ownerPhone],
+        ['Architect', p => p.designFirm], ['Architect phone', p => p.designFirmPhone], ['Contact', p => p.contactName],
+        ['Lat', p => byId.get(p.permitNumber)?.marker.getLatLng().lat], ['Lng', p => byId.get(p.permitNumber)?.marker.getLatLng().lng],
+        ['TDLR page', p => /^TABS/.test(p.permitNumber || '') ? `https://www.tdlr.texas.gov/TABS/Search/Project/${p.permitNumber}` : ''],
+      ];
+      const cell = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+      const lines = [cols.map(c => c[0]).join(',')];
+      for (const v of LAST_VISIBLE) lines.push(cols.map(c => cell(c[1](v._p))).join(','));
+      const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `sitewatch-${new Date().toISOString().slice(0,10)}-${LAST_VISIBLE.length}-sites.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      toast(`Exported ${LAST_VISIBLE.length.toLocaleString()} sites ✓`);
+    };
 
     function renderList(visible) {
       const el = document.getElementById('list');
@@ -380,8 +429,10 @@
       const p = f.properties, [lng, lat] = f.geometry.coordinates;
       const c = COLORS[p.category] || COLORS.unknown;
       const ring = p.justStarted ? RING_STARTED : isNew(p) ? RING_NEW : null; // green=started, amber=new
+      // Opacity encodes confidence: a pin we believe is actively building reads
+      // solid; a decayed/past-due one visibly fades instead of lying.
       const m = L.circleMarker([lat, lng], { radius: radius(p.valuation),
-        color: ring || c, weight: ring ? 2.5 : 1.1, fillColor: c, fillOpacity: .68 });
+        color: ring || c, weight: ring ? 2.5 : 1.1, fillColor: c, fillOpacity: .25 + .45 * (p.confidence ?? .5) });
       const tip = p.facilityName || p.address || 'Project';
       m.bindTooltip(p.valuation ? `${tip} · ${fmtShort(p.valuation)}` : tip, { direction: 'top', offset: [0, -2], className: 'sw-tip' });
       m.on('click', () => openDetail(p, false));
@@ -416,8 +467,9 @@
       if (p.scopeOfWork) add('Scope', esc(p.scopeOfWork));
       add('Timeline', (p.estStartDate||p.estEndDate) ? `${p.estStartDate||'?'} → ${p.estEndDate||'?'}` : null);
       add('Registered', p.issuedDate);
-      if (p.startedAt) add('Construction started', `🚧 ${esc(p.startedAt)}`);
-      else if (p.statusChangedAt && p.firstSeenAt && p.statusChangedAt !== p.firstSeenAt) add('Status updated', esc(p.statusChangedAt) + (p.prevStatus ? ` (from ${esc(p.prevStatus)})` : ''));
+      if (p.startedAt) add(p.justStarted ? 'Broke ground' : 'Construction start', `${p.justStarted ? '🚧 ' : ''}${esc(p.startedAt)}`);
+      if (p.statusChangedAt && p.firstSeenAt && p.statusChangedAt !== p.firstSeenAt) add('Status updated', esc(p.statusChangedAt) + (p.prevStatus ? ` (from ${esc(p.prevStatus)})` : ''));
+      if (p.geocodePrecision && p.geocodePrecision !== 'address') add('Pin accuracy', p.geocodePrecision === 'area' ? 'approximate — area-level match' : 'approximate — street-level match');
       add('Owner', party(p.owner, p.ownerPhone));
       add('Architect', party(p.designFirm, p.designFirmPhone));
       add('Contact', esc(p.contactName));
@@ -554,6 +606,7 @@
         const btn = document.getElementById('alertme');
         btn.hidden = false;
         btn.onclick = () => (!user ? openSignIn() : isPro ? openSave() : openUpgrade());
+        initDigestBox();
         renderAccount();
         // returning from a successful Stripe Checkout
         if (/[?&]upgraded=1/.test(location.search)) {
@@ -570,14 +623,40 @@
       try { const { data } = await sb.from('profiles').select('is_pro').maybeSingle(); isPro = !!data?.is_pro; } catch (e) {}
     }
 
+    // Free weekly digest — the ungated top of the funnel. Insert-only table;
+    // duplicates come back as a unique-violation, which we read as "already in".
+    function initDigestBox() {
+      const box = document.getElementById('digestbox');
+      box.hidden = false;
+      document.getElementById('digest-go').onclick = async () => {
+        const input = document.getElementById('digest-email');
+        const email = input.value.trim().toLowerCase();
+        if (!/.+@.+\..+/.test(email)) return toast('Enter a valid email address');
+        const { error } = await sb.from('digest_subscribers').insert({ email });
+        if (error && !/duplicate|unique/i.test(error.message)) return toast(error.message);
+        input.value = '';
+        toast(error ? "You're already on the list ✓" : "You're in — first digest lands Monday ✓");
+      };
+    }
+
     function renderAccount() {
       const el = document.getElementById('account');
       if (user) {
-        const tag = isPro ? `<span class="protag">PRO</span>` : `<button class="link-btn" id="upgrade">Upgrade to Pro</button>`;
+        const tag = isPro ? `<span class="protag">PRO</span> · <button class="link-btn" id="managesub" title="Manage or cancel your subscription">Billing</button>` : `<button class="link-btn" id="upgrade">Upgrade to Pro</button>`;
         el.innerHTML = `<span class="who"><b>${esc(user.email)}</b></span> · ${tag} · <button class="link-btn" id="myalerts">My alerts</button> · <button class="link-btn" id="signout">Sign out</button>`;
         document.getElementById('myalerts').onclick = openManage;
         document.getElementById('signout').onclick = async () => { await sb.auth.signOut(); toast('Signed out'); };
         const up = document.getElementById('upgrade'); if (up) up.onclick = openUpgrade;
+        const mg = document.getElementById('managesub');
+        if (mg) mg.onclick = async () => {
+          mg.disabled = true;
+          try {
+            const token = (await sb.auth.getSession()).data.session?.access_token;
+            const r = await fetch('/api/create-portal', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+            const out = await r.json();
+            if (out.url) location.href = out.url; else { toast(out.error || 'Billing portal unavailable'); mg.disabled = false; }
+          } catch (e) { toast('Billing portal unavailable'); mg.disabled = false; }
+        };
       } else {
         el.innerHTML = `<button class="btn" id="signin">Sign in for alerts</button>`;
         document.getElementById('signin').onclick = openSignIn;

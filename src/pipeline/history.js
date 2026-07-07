@@ -9,19 +9,24 @@ import { writeFileAtomic, loadStateFile } from '../util/fsafe.js';
 // Each refresh is a snapshot; this stage persists the last-known state of every
 // project (data/history.json) and diffs the current run against it to detect:
 //   • firstSeenAt    — when we first tracked this project
-//   • statusChangedAt — when its status/confidence last moved
-//   • startedAt       — when it crossed into *construction* (confidence ≥ 0.8,
-//                       i.e. inspections began). Only set when we actually OBSERVE
-//                       the transition — we never claim a start we didn't witness.
+//   • statusChangedAt — when its lifecycle status last moved (label/status diff;
+//                       NOT confidence, which now drifts daily by design as the
+//                       lifecycle model decays past-due projects)
+//   • startedAt       — when construction (most likely) began: the declared
+//                       estStartDate once it arrives, while the project is still
+//                       pre-inspection. TABS registration legally precedes
+//                       construction and inspections follow completion, so the
+//                       declared start is the best shovels-in-the-ground signal
+//                       the registry offers. (The pre-2026-07 rule — confidence
+//                       crossing 0.8 — mapped to the inspection stages and would
+//                       have flagged buildings as "started" as they FINISHED.)
 //   • justStarted     — startedAt within the last `justStartedDays`
 //
-// "confidence ≥ 0.8" maps to the inspection stages of the TABS lifecycle (see
-// tdlrTabs STATUS_MAP), so this works for any source that sets a lifecycle
-// confidence. The store survives across runs (and CI, via the workflow cache).
+// The store survives across runs (and CI, via the workflow cache).
 // ---------------------------------------------------------------------------
 
 const HISTORY_PATH = join(projectRoot, config.output.dir, 'history.json');
-const START_CONFIDENCE = 0.8;
+const DONE_STAGES = new Set(['finishing', 'finished', 'closed']);
 
 export function applyHistory(records, now = new Date()) {
   const hist = load();
@@ -32,24 +37,28 @@ export function applyHistory(records, now = new Date()) {
   for (const r of records) {
     const key = r.permitNumber || r.id;
     if (!key) continue;
-    const conf = r.confidence ?? 0;
     const prev = hist[key];
+    const label = statusLabelOf(r);
 
-    let firstSeenAt, statusChangedAt, startedAt, prevStatus = null;
+    let firstSeenAt, statusChangedAt, prevStatus = null;
     if (!prev) {
       firstSeenAt = today;
       statusChangedAt = today;
-      startedAt = null; // newly tracked — we didn't witness when it started
       added++;
     } else {
       firstSeenAt = prev.firstSeenAt || today;
-      const moved = (prev.confidence ?? 0) !== conf || prev.status !== r.status;
+      const moved = prev.status !== r.status || (prev.statusLabel || null) !== label;
       statusChangedAt = moved ? today : prev.statusChangedAt || firstSeenAt;
       if (moved) { changed++; prevStatus = prev.statusLabel || null; }
-      const wasBuilding = (prev.confidence ?? 0) >= START_CONFIDENCE;
-      const isBuilding = conf >= START_CONFIDENCE;
-      if (!wasBuilding && isBuilding) { startedAt = today; started++; } // a genuine new start
-      else startedAt = prev.startedAt || null;
+    }
+
+    // Construction start: the declared start date has arrived and the project
+    // hasn't already moved into the finishing/finished stages (whose start is
+    // long past — flagging those would advertise completions as starts).
+    let startedAt = prev?.startedAt || null;
+    if (!startedAt && r.estStartDate && r.estStartDate <= today && !DONE_STAGES.has(r.lifecycleStage)) {
+      startedAt = r.estStartDate;
+      if (daysBetween(startedAt, today) <= justDays) started++; // only count fresh ones
     }
     const justStarted = !!startedAt && daysBetween(startedAt, today) <= justDays;
 
@@ -59,7 +68,7 @@ export function applyHistory(records, now = new Date()) {
     r.justStarted = justStarted;
     r.prevStatus = prevStatus;
 
-    hist[key] = { firstSeenAt, lastSeenAt: today, status: r.status, confidence: conf, statusLabel: statusLabelOf(r), statusChangedAt, startedAt };
+    hist[key] = { firstSeenAt, lastSeenAt: today, status: r.status, confidence: r.confidence ?? 0, statusLabel: label, statusChangedAt, startedAt };
   }
 
   save(hist);

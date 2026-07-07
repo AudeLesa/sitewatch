@@ -64,6 +64,38 @@ create index if not exists projects_category_idx    on projects (category);
 create index if not exists projects_value_idx       on projects (valuation desc);
 
 -- ---------------------------------------------------------------------------
+-- profiles: per-user billing state (is_pro is flipped by the Stripe webhook).
+-- Lives here (not billing.sql) because pending_alerts depends on it: alerts
+-- stop the moment a subscription lapses, even if a webhook was missed.
+-- RLS/policies for it are in billing.sql.
+-- ---------------------------------------------------------------------------
+create table if not exists profiles (
+  user_id            uuid primary key references auth.users (id) on delete cascade,
+  is_pro             boolean not null default false,
+  stripe_customer_id text,
+  status             text,            -- active | trialing | past_due | canceled | ...
+  current_period_end timestamptz,
+  updated_at         timestamptz not null default now()
+);
+create index if not exists profiles_customer_idx on profiles (stripe_customer_id);
+
+-- ---------------------------------------------------------------------------
+-- digest_subscribers: the free weekly-digest list — the ungated top of the
+-- funnel. Anyone may subscribe (insert); nobody may read the list back through
+-- the anon API. The worker (service key) reads it and sends the digest.
+-- ---------------------------------------------------------------------------
+create table if not exists digest_subscribers (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null unique,
+  active     boolean not null default true,
+  created_at timestamptz not null default now()
+);
+alter table digest_subscribers enable row level security;
+drop policy if exists digest_public_insert on digest_subscribers;
+create policy digest_public_insert on digest_subscribers
+  for insert to anon, authenticated with check (true);
+
+-- ---------------------------------------------------------------------------
 -- saved_searches: a user's filter + how/whether to alert on it.
 -- `filters` mirrors the front-end controls; `last_alert_at` marks how far we've
 -- already notified so the worker only considers newer projects.
@@ -112,9 +144,12 @@ language sql stable as $$
     and (s.filters->'workClasses'  is null or p.work_class = any (select jsonb_array_elements_text(s.filters->'workClasses')))
     and (s.filters->>'minValue'      is null or p.valuation  >= (s.filters->>'minValue')::bigint)
     and (s.filters->>'minConfidence' is null or coalesce(p.confidence,0) >= (s.filters->>'minConfidence')::real)
+    -- q searches the same fields the map's search box does (address, description,
+    -- owner, architect, facility) so a saved alert matches what the user saw.
     and (s.filters->>'q' is null or
          (p.address ilike '%'||(s.filters->>'q')||'%' or p.facility_name ilike '%'||(s.filters->>'q')||'%'
-          or p.owner ilike '%'||(s.filters->>'q')||'%' or p.architect ilike '%'||(s.filters->>'q')||'%'))
+          or p.owner ilike '%'||(s.filters->>'q')||'%' or p.architect ilike '%'||(s.filters->>'q')||'%'
+          or p.description ilike '%'||(s.filters->>'q')||'%'))
     and (s.filters->'center' is null or p.geom is null or
          st_dwithin(
            p.geom,
@@ -140,7 +175,15 @@ language sql stable as $$
          p.id, p.permit_number, p.facility_name, p.address, p.category, p.valuation, p.confidence,
          p.owner, p.owner_phone
   from saved_searches s
-  cross join lateral projects_matching(s, now() - make_interval(days => lookback_days)) p
+  -- Alerts are the Pro product: gate on is_pro HERE, not just at insert time,
+  -- so a canceled subscriber's surviving searches stop emailing immediately —
+  -- even if a Stripe webhook was missed.
+  join profiles pr on pr.user_id = s.user_id and pr.is_pro
+  -- Per-search floor at last_alert_at: a brand-new search starts from its
+  -- creation moment instead of dumping the whole lookback window as "new".
+  cross join lateral projects_matching(
+    s, greatest(coalesce(s.last_alert_at, now()), now() - make_interval(days => lookback_days))
+  ) p
   where s.active and s.alert_email and s.email is not null
     and not exists (
       select 1 from alerts_sent a where a.saved_search_id = s.id and a.project_id = p.id
@@ -156,12 +199,24 @@ alter table projects       enable row level security;
 alter table saved_searches enable row level security;
 alter table alerts_sent    enable row level security;
 
+drop policy if exists projects_public_read on projects;
 create policy projects_public_read on projects
   for select using (true);
 
-create policy saved_searches_owner on saved_searches
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+-- Owners can read and delete their searches. WRITE policies (insert/update)
+-- live canonically in billing.sql, where they also require an active Pro
+-- subscription — defining them here too caused a footgun: re-running this file
+-- after billing.sql would silently re-open un-gated writes (Postgres ORs
+-- policies together). Without billing.sql applied, saves are denied — safe.
+drop policy if exists saved_searches_owner on saved_searches;
+drop policy if exists saved_searches_select on saved_searches;
+drop policy if exists saved_searches_delete on saved_searches;
+create policy saved_searches_select on saved_searches
+  for select using (auth.uid() = user_id);
+create policy saved_searches_delete on saved_searches
+  for delete using (auth.uid() = user_id);
 
+drop policy if exists alerts_sent_owner on alerts_sent;
 create policy alerts_sent_owner on alerts_sent
   for select using (
     exists (select 1 from saved_searches s where s.id = alerts_sent.saved_search_id and s.user_id = auth.uid())

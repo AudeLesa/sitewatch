@@ -73,9 +73,13 @@ export function makeRecord(partial) {
     startedAt: partial.startedAt ?? null,
     justStarted: partial.justStarted ?? false,
     prevStatus: partial.prevStatus ?? null,
-    // How confident we are the site is *actively being built* (0–1). Derived from
-    // wherever the source sits in the permit lifecycle (filed → inspections → closed).
+    // How confident we are the site is *actively being built* (0–1). The source
+    // sets a stage prior; src/pipeline/lifecycle.js adjusts it with the declared
+    // start/end dates and expires finished projects.
     confidence: partial.confidence ?? null,
+    // Where the project sits in its lifecycle:
+    // pre | review | building | finishing | finished | closed (null if unknown).
+    lifecycleStage: partial.lifecycleStage ?? null,
     contractor: partial.contractor ?? null,
     designFirm: partial.designFirm ?? null,
     designFirmPhone: partial.designFirmPhone ?? null,

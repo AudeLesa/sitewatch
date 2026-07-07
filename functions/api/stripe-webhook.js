@@ -16,6 +16,13 @@ export async function onRequestPost({ request, env }) {
 
   try {
     if (event.type === 'checkout.session.completed') {
+      // Only a settled checkout grants Pro — an async payment method can
+      // complete the session while the charge later fails (that path arrives
+      // as checkout.session.async_payment_failed, which we treat as no-op and
+      // the subscription.deleted event cleans up).
+      if (obj.payment_status !== 'paid' && obj.payment_status !== 'no_payment_required') {
+        return new Response('ok (unpaid session ignored)');
+      }
       await upsertProfile(env, {
         user_id: obj.client_reference_id,
         stripe_customer_id: obj.customer,
@@ -40,19 +47,32 @@ export async function onRequestPost({ request, env }) {
 }
 
 // --- Stripe signature (t=…,v1=…) via HMAC-SHA256, with a 5-minute tolerance -----
+// The header may carry SEVERAL v1 signatures (Stripe sends one per active
+// signing secret during rotation) — accept if ANY of them verifies.
 async function verify(payload, header, secret) {
   if (!secret || !header) return false;
-  const parts = Object.fromEntries(header.split(',').map((kv) => kv.split('=')));
-  if (!parts.t || !parts.v1) return false;
-  if (Math.abs(Date.now() / 1000 - Number(parts.t)) > 300) return false; // replay guard
+  let t = null;
+  const v1s = [];
+  for (const kv of header.split(',')) {
+    const i = kv.indexOf('=');
+    if (i < 0) continue;
+    const k = kv.slice(0, i).trim(), v = kv.slice(i + 1).trim();
+    if (k === 't') t = v;
+    else if (k === 'v1') v1s.push(v);
+  }
+  if (!t || !v1s.length) return false;
+  if (Math.abs(Date.now() / 1000 - Number(t)) > 300) return false; // replay guard
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const mac = await crypto.subtle.sign('HMAC', key, enc.encode(`${parts.t}.${payload}`));
+  const mac = await crypto.subtle.sign('HMAC', key, enc.encode(`${t}.${payload}`));
   const hex = [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, '0')).join('');
-  // constant-time compare
-  if (hex.length !== parts.v1.length) return false;
+  return v1s.some((v1) => constantTimeEqual(hex, v1));
+}
+
+function constantTimeEqual(a, b) {
+  if (a.length !== b.length) return false;
   let diff = 0;
-  for (let i = 0; i < hex.length; i++) diff |= hex.charCodeAt(i) ^ parts.v1.charCodeAt(i);
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
 }
 
@@ -69,7 +89,15 @@ async function upsertProfile(env, row) {
 async function patchByCustomer(env, customer, patch) {
   if (!customer) return;
   const r = await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?stripe_customer_id=eq.${encodeURIComponent(customer)}`, {
-    method: 'PATCH', headers: sbHeaders(env, { Prefer: 'return=minimal' }), body: JSON.stringify(patch),
+    method: 'PATCH', headers: sbHeaders(env, { Prefer: 'return=representation' }), body: JSON.stringify(patch),
   });
   if (!r.ok) throw new Error(`profiles patch ${r.status}: ${await r.text()}`);
+  // A 204/empty result means no profile carries this customer id (e.g. the
+  // checkout event never landed). Fail loudly so Stripe retries and the miss
+  // is visible in its dashboard instead of a subscription change silently
+  // never reaching the database.
+  const rows = await r.json().catch(() => []);
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error(`profiles patch matched 0 rows for customer ${customer}`);
+  }
 }

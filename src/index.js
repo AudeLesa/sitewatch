@@ -5,6 +5,7 @@ import * as shovels from './sources/shovels.js';
 import * as houston from './sources/houstonSoldPermits.js';
 import * as demo from './sources/demo.js';
 import { dedupe } from './pipeline/dedupe.js';
+import { applyLifecycle } from './pipeline/lifecycle.js';
 import { applyFilter } from './pipeline/filter.js';
 import { geocodeMissing, geocodeOne } from './pipeline/geocode.js';
 import { applyHistory } from './pipeline/history.js';
@@ -61,20 +62,25 @@ async function pull(sources, { cityId, outputId } = {}) {
   records = dedupe(records);
   log(`After cross-source dedupe: ${records.length}.`);
 
-  // 3. Keep only "currently under commercial construction".
+  // 3. Timeline-aware confidence + expire finished projects (lifecycle model).
+  const lc = applyLifecycle(records);
+  records = lc.records;
+  if (lc.finished) log(`Lifecycle: ${lc.finished} inspection-completed & past-due projects expired.`);
+
+  // 4. Keep only "currently under commercial construction".
   const { kept, reasons } = applyFilter(records);
   log(`After filter: ${kept.length} under-construction.  Dropped: ${fmt(reasons)}`);
 
-  // 4. Geocode the records that didn't arrive with coordinates.
+  // 5. Geocode the records that didn't arrive with coordinates.
   const geo = await geocodeMissing(kept, { log });
   const fb = geo.fallback ? `, ${geo.fallback.provider} +${geo.fallback.hits}/${geo.fallback.used}` : '';
   log(`Geocoded: ${geo.matched}/${geo.attempted} (missed ${geo.missed}; ${geo.fromCache} cached${fb}).`);
 
-  // 5. Diff status across runs → first-seen, status changes, and "new starts".
+  // 6. Diff status across runs → first-seen, status changes, and "new starts".
   const hist = applyHistory(kept);
   log(`History: tracking ${hist.tracked}; +${hist.added} new, ${hist.started} just started construction, ${hist.changed} status changes.`);
 
-  // 6. Write map-ready outputs.
+  // 7. Write map-ready outputs.
   const res = await writeOutputs(outId, kept);
   log(`\n✔ Wrote ${res.geocoded} points -> ${res.dir}\\${res.geojson}`);
   log(`  (${res.ungeocoded} ungeocoded, see ${outId}.ungeocoded.json)\n`);
