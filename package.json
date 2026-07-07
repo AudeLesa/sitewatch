@@ -16,7 +16,7 @@
     "demo": "node src/index.js demo",
     "build": "node scripts/build.mjs",
     "refresh": "npm run pull:texas && npm run build",
-    "deploy": "npx wrangler pages deploy dist --project-name sitewatch-eyt",
+    "deploy": "npx wrangler pages deploy dist --project-name sitewatch --branch main",
     "publish": "npm run refresh && npm run deploy",
     "preview": "npm run build && node src/serve.js dist",
     "load": "node backend/load.mjs",
