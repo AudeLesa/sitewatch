@@ -3,6 +3,7 @@ import { config, activeCity } from '../config.js';
 import { projectRoot } from '../util/env.js';
 import { fetchJson, mapLimit, sleep } from '../util/http.js';
 import { writeFileAtomic, loadStateFile } from '../util/fsafe.js';
+import { resolveHard, isHardCandidate } from './geocodeHard.js';
 import { oneLine } from '../util/address.js';
 
 // ---------------------------------------------------------------------------
@@ -91,6 +92,34 @@ export async function geocodeMissing(records, { log = () => {} } = {}) {
     }
   }
 
+  // Pass 3 — hard cases via TxGIO statewide address points: brand-new addresses
+  // the classic geocoders don't know yet, nearest-number street snaps, and
+  // "A & B" intersections. Same cache/TTL bookkeeping under provider 'txpts'.
+  let hardUsed = 0;
+  let hardHits = 0;
+  if (config.geocoder.hard !== 'none') {
+    const todo = pending.filter(
+      (p) => !p.rec.location && !p.tried.has('txpts') && isHardCandidate(p.rec.address.line1)
+    );
+    const limit = Math.min(todo.length, config.geocoder.hardMax);
+    if (limit) log(`[geocode] txpts hard cases: trying ${limit} of ${todo.length} (address points: exact / nearest-number / intersections)...`);
+    await mapLimit(todo.slice(0, limit), 4, async (p) => {
+      const hit = await resolveHard({
+        line1: p.rec.address.line1,
+        city: p.rec.address.city,
+        county: p.rec.address.county,
+      }).catch(() => null);
+      record(cache, p, hit, 'txpts', bbox);
+      hardUsed++;
+      if (hit && inBbox(hit, bbox)) hardHits++;
+      if (hardUsed % 100 === 0) {
+        log(`[geocode] txpts ${hardUsed}/${limit} (+${hardHits} recovered)`);
+        saveCache(cache); // checkpoint
+      }
+    });
+    if (limit) log(`[geocode] txpts done: +${hardHits}/${hardUsed} placed.`);
+  }
+
   saveCache(cache);
   const matched = needs.filter((r) => r.location).length;
   return {
@@ -99,6 +128,7 @@ export async function geocodeMissing(records, { log = () => {} } = {}) {
     attempted: needs.length,
     fromCache,
     fallback: provider ? { provider: provider.name, used: fallbackUsed, hits: fallbackHits } : null,
+    hard: hardUsed ? { used: hardUsed, hits: hardHits } : null,
   };
 }
 

@@ -153,6 +153,10 @@ export const config = {
     // Max fallback lookups per run (politeness + bounded runtime). The disk cache
     // makes runs additive — re-run to keep filling in misses. Raise/lower freely.
     fallbackMax: Number(env.GEOCODER_FALLBACK_MAX || 2500),
+    // Hard-case tier (TxGIO statewide address points: exact new-address hits,
+    // nearest-number street snaps, intersections). GEOCODER_HARD=none disables.
+    hard: env.GEOCODER_HARD || 'txpts',
+    hardMax: Number(env.GEOCODER_HARD_MAX || 800),
     locationiqKey: env.LOCATIONIQ_KEY || '',
     // Nominatim requires a real, identifying User-Agent.
     userAgent: env.GEOCODER_USER_AGENT || 'SiteWatch construction map (contact: audelesauvage@gmail.com)',

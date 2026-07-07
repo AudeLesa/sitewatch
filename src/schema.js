@@ -46,6 +46,7 @@ export function makeRecord(partial) {
   const address = {
     line1: partial.address?.line1 ?? null,
     city: partial.address?.city ?? null,
+    county: partial.address?.county ?? null,
     state: partial.address?.state ?? null,
     zip: partial.address?.zip ?? null,
     full: partial.address?.full ?? buildFull(partial.address),

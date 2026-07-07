@@ -74,7 +74,8 @@ async function pull(sources, { cityId, outputId } = {}) {
   // 5. Geocode the records that didn't arrive with coordinates.
   const geo = await geocodeMissing(kept, { log });
   const fb = geo.fallback ? `, ${geo.fallback.provider} +${geo.fallback.hits}/${geo.fallback.used}` : '';
-  log(`Geocoded: ${geo.matched}/${geo.attempted} (missed ${geo.missed}; ${geo.fromCache} cached${fb}).`);
+  const hard = geo.hard ? `, txpts +${geo.hard.hits}/${geo.hard.used}` : '';
+  log(`Geocoded: ${geo.matched}/${geo.attempted} (missed ${geo.missed}; ${geo.fromCache} cached${fb}${hard}).`);
 
   // 6. Diff status across runs → first-seen, status changes, and "new starts".
   const hist = applyHistory(kept);

@@ -354,6 +354,7 @@ function mapProject(row, lookup) {
     address: {
       line1,
       city: cityName,
+      county: lookup.COUNTIES?.[String(row.County)] || null,
       state: 'TX',
       zip: null,
       // Detail page only gives a street; pair it with the city decoded from the row.
