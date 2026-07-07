@@ -18,9 +18,13 @@ request can't create an alert without an active subscription. The frontend mirro
 ## One-time setup
 
 1. **Supabase:** after `schema.sql`, run [backend/billing.sql](backend/billing.sql)
-   (creates `profiles`, gates alert creation to Pro).
-2. **Stripe → Product + Price:** create a Product with a recurring **Price** (e.g.
-   $29/mo). Copy the **Price ID** (`price_…`).
+   (owns the saved_searches write policies; gates alert creation AND edits to Pro).
+   Re-apply it after any schema.sql re-run.
+2. **Stripe → Product + Price:** create a Product with a recurring **Price**. The
+   $29/mo placeholder is deliberately low — comparable construction-lead products
+   (Dodge, ConstructConnect, Shovels at $599/mo) anchor 10–20× higher; consider a
+   founding-member price nearer $79–149/mo and validate against real customers.
+   Copy the **Price ID** (`price_…`).
 3. **Cloudflare Pages → Settings → Environment variables** (Production), add:
    ```
    STRIPE_SECRET_KEY      sk_live_…   (or sk_test_… while testing)
@@ -28,14 +32,19 @@ request can't create an alert without an active subscription. The frontend mirro
    STRIPE_WEBHOOK_SECRET  whsec_…     (from step 4)
    SUPABASE_URL           https://xxxx.supabase.co
    SUPABASE_ANON_KEY      eyJ…        (public)
-   SUPABASE_SERVICE_KEY   eyJ…        (secret — the webhook writes profiles)
+   SUPABASE_SERVICE_KEY   eyJ…        (secret — webhook/portal/unsubscribe use it)
    ```
 4. **Stripe → Developers → Webhooks → Add endpoint:**
    `https://<your-site>/api/stripe-webhook`, listening for
    `checkout.session.completed`, `customer.subscription.updated`,
    `customer.subscription.deleted`. Copy its **Signing secret** → `STRIPE_WEBHOOK_SECRET`.
-5. **Deploy:** `npm run build` bundles `functions/` into `dist/`; deploy as usual
-   (`npm run deploy`). The functions go live with the site.
+5. **Stripe → Settings → Billing → Customer portal:** enable it (the site's
+   "Billing" link opens it via `/api/create-portal` so subscribers can cancel
+   self-serve).
+6. **Deploy:** `npm run deploy` — wrangler bundles `functions/` from the repo root
+   (they are deliberately NOT copied into `dist/`, which would expose their source
+   as static files). After deploying, verify `POST /api/create-checkout` returns
+   401/405 — anything but 404 means the functions are routing.
 
 ## Test it (Stripe test mode)
 

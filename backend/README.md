@@ -33,19 +33,24 @@ pull:texas ─► data/texas.json ─► load.mjs ─► projects table
 
 1. **Create a Supabase project** (free) → supabase.com. Note the project URL, the
    **anon** key (public, for the frontend) and the **service-role** key (secret).
-2. **Apply the schema:** Supabase dashboard → SQL editor → paste `schema.sql` → run.
-   (Enables PostGIS, creates everything.)
+2. **Apply the schema:** Supabase dashboard → SQL editor → paste `schema.sql` → run,
+   then `billing.sql` → run — **in that order, and re-apply billing.sql after any
+   schema.sql re-run** (billing.sql owns the saved_searches write policies; without
+   it applied, alert saves are denied by design). Enables PostGIS, creates everything.
 3. **Create a Resend account** (free) → resend.com → verify a sending domain → get an
    API key.
-4. **Load data + send alerts** (locally or in the refresh workflow), with secrets in
-   the environment (never in git):
+4. **Load data + send alerts** (locally to test), with secrets in the environment
+   (never in git):
    ```bash
    export SUPABASE_URL=…  SUPABASE_SERVICE_KEY=…  RESEND_API_KEY=…  ALERT_FROM="SiteWatch <alerts@yourdomain>"
-   npm run load     # push the latest projects into Postgres
-   npm run alerts   # email new matches
+   npm run load                          # push the latest projects into Postgres
+   npm run alerts                        # email new Pro saved-search matches
+   node backend/alert-worker.mjs digest  # the free weekly digest (CI runs it Mondays)
    ```
-   In CI, add these as repo secrets and append `load` + `alerts` to
-   `.github/workflows/refresh.yml` after the build step.
+   In CI this is already wired: add `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`,
+   `RESEND_API_KEY`, `ALERT_FROM` as GitHub repo secrets and the load/alert/digest
+   steps in `.github/workflows/refresh.yml` activate on the next run (they
+   self-skip while the secrets are missing).
 5. **Frontend:** open `web/index.html`, find the `window.SITEWATCH` block near the
    bottom, and paste your Supabase URL + **anon** (public) key:
    ```js
