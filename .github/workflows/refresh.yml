@@ -1,0 +1,57 @@
+name: Refresh SiteWatch
+
+# Rebuilds the statewide dataset and redeploys the live site on a schedule, so the
+# map updates itself with no manual steps.
+#
+# One-time setup (see DEPLOY.md):
+#   1. Push this repo to GitHub.
+#   2. Add two repository secrets (Settings → Secrets and variables → Actions):
+#        CLOUDFLARE_API_TOKEN   — Cloudflare → My Profile → API Tokens → "Edit Cloudflare Pages"
+#        CLOUDFLARE_ACCOUNT_ID  — Cloudflare dashboard → Workers & Pages → Account ID
+
+on:
+  schedule:
+    - cron: '0 9 * * *'    # daily at 09:00 UTC (~4am Central)
+  workflow_dispatch: {}     # + a manual "Run workflow" button
+
+concurrency:
+  group: sitewatch-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Persist the geocode + detail caches between runs so re-pulls stay cheap
+      # (skip TDLR for known projects, skip geocoding for known addresses).
+      - name: Restore caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/geocode-cache.json
+            data/tabs-detail-cache.json
+            data/history.json
+          key: sitewatch-caches-${{ github.run_id }}
+          restore-keys: |
+            sitewatch-caches-
+
+      - name: Pull fresh data + build dist/
+        env:
+          # Bound the slow OSM fallback in CI; the cache fills the long tail over
+          # successive daily runs. (Run it uncapped locally for the first full seed.)
+          GEOCODER_FALLBACK_MAX: '800'
+        run: npm run refresh
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name sitewatch-eyt

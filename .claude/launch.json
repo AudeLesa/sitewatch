@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sitewatch-map",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\Owin\\Desktop\\sitewatch\\src\\serve.js"],
+      "port": 5173
+    }
+  ]
+}

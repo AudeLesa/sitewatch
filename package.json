@@ -1,0 +1,29 @@
+{
+  "name": "sitewatch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Live data pipeline for U.S. commercial construction sites. MVP: Houston, TX.",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "sitewatch": "src/index.js"
+  },
+  "scripts": {
+    "pull": "node src/index.js pull",
+    "pull:texas": "node src/index.js pull texas",
+    "demo": "node src/index.js demo",
+    "build": "node scripts/build.mjs",
+    "refresh": "npm run pull:texas && npm run build",
+    "deploy": "npx wrangler pages deploy dist --project-name sitewatch-eyt",
+    "publish": "npm run refresh && npm run deploy",
+    "preview": "npm run build && node src/serve.js dist",
+    "load": "node backend/load.mjs",
+    "alerts": "node backend/alert-worker.mjs",
+    "serve": "node src/serve.js",
+    "sources": "node src/index.js sources",
+    "geocode:test": "node src/index.js geocode-test",
+    "probe:houston": "node scripts/probe-houston.mjs"
+  }
+}
