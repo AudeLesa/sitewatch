@@ -6,6 +6,8 @@
   <title>SiteWatch — Texas Commercial Construction, Live</title>
   <meta name="description" content="A live map of every commercial construction site in Texas — filter by category, value, and stage; see the owner and architect for every project. Free, updated daily from TDLR TABS." />
   <meta name="theme-color" content="#f2dcd8" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
@@ -204,14 +206,29 @@
     #loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1500; pointer-events: none; }
     #loading span { background: var(--panel); color: var(--muted); font-size: 13.5px; padding: 14px 22px; border-radius: 999px; box-shadow: var(--shadow); }
 
+    #sheet-handle { display: none; }
     @media (max-width: 760px) {
-      #legend, #sb-toggle { display: none; }
-      #map { bottom: 46vh; }
-      #sidebar { left: 0; right: 0; top: auto; bottom: 0; width: auto; height: 46vh; border-radius: 26px 26px 0 0; transform: none !important; }
+      #sb-toggle { display: none; }
+      #app { --sheet-h: 46vh; }
+      #app.peek { --sheet-h: 15vh; }
+      #map { bottom: var(--sheet-h); }
+      #sidebar { left: 0; right: 0; top: auto; bottom: 0; width: auto; height: var(--sheet-h); border-radius: 26px 26px 0 0;
+        transform: none !important; transition: height .25s ease; }
+      /* grab-handle: tap to swap between full panel and a slim peek (more map) */
+      #sheet-handle { display: grid; place-items: center; height: 30px; flex: none; background: none; border: none; cursor: pointer; }
+      #sheet-handle span { width: 44px; height: 5px; border-radius: 999px; background: var(--border); }
+      #app.peek .controls, #app.peek .list-head, #app.peek #list { display: none; }
+      /* legend lives above the sheet, toggled by the ⓘ chip */
+      #legend { display: none; left: 12px; bottom: calc(var(--sheet-h) + 12px); transition: bottom .25s ease; }
+      #app.show-legend #legend { display: block; }
+      #legend-btn { display: inline-flex; }
       #detail { top: 8vh; left: 10px; right: 10px; bottom: 0; width: auto; border-radius: 26px 26px 0 0; }
+      #detail .dh .close { width: 38px; height: 38px; font-size: 22px; }
       #search, select, .sheet input { font-size: 16px; } /* prevent iOS focus zoom */
       .chip { padding: 8px 14px; }
     }
+    #legend-btn { display: none; align-items: center; font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 999px; border: none; background: var(--tint); color: var(--muted); cursor: pointer; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -219,11 +236,13 @@
   <div id="app">
     <main id="map"></main>
     <aside id="sidebar">
+      <button id="sheet-handle" aria-label="Expand or collapse the panel"><span></span></button>
       <div id="brand">
         <h1><span class="dot">●</span> SiteWatch — <span id="region">Texas</span></h1>
         <div class="meta-row">
           <span id="badge">loading…</span>
           <span id="through"></span>
+          <button id="legend-btn" aria-pressed="false">ⓘ legend</button>
         </div>
         <div id="account"></div>
         <div class="seolinks"><a href="/insights">📊 Texas construction report</a> · <a href="/companies">Companies</a></div>
@@ -232,6 +251,9 @@
       <div class="controls">
         <label class="lbl" for="search">Search address · owner · architect · project</label>
         <input id="search" type="text" placeholder="e.g. warehouse, ISD, Hines, Westheimer…" autocomplete="off" />
+
+        <label class="lbl">Jump to metro</label>
+        <div class="chips" id="metros"></div>
 
         <label class="lbl">Category</label>
         <div class="chips" id="cats"></div>
@@ -817,8 +839,35 @@
       sheet.querySelectorAll('.x').forEach((btn) => (btn.onclick = async () => { await sb.from('saved_searches').delete().eq('id', btn.dataset.id); btn.closest('.alertrow').remove(); toast('Alert deleted'); }));
     }
 
+    const appEl = document.getElementById('app');
+
+    // metro quick-jumps
+    const METROS = [
+      ['Houston', 29.76, -95.37, 10], ['DFW', 32.85, -97.03, 9], ['Austin', 30.27, -97.74, 10],
+      ['San Antonio', 29.42, -98.49, 10], ['El Paso', 31.77, -106.44, 10],
+    ];
+    const metroEl = document.getElementById('metros');
+    for (const [name, lat, lng, z] of METROS) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = name;
+      b.onclick = () => { map.flyTo([lat, lng], z, { duration: 1.1 }); if (window.innerWidth <= 760) appEl.classList.add('peek'); };
+      metroEl.appendChild(b);
+    }
+
+    // mobile bottom sheet: tap the handle to swap panel <-> map real estate
+    const sheetHandle = document.getElementById('sheet-handle');
+    sheetHandle.onclick = () => {
+      appEl.classList.toggle('peek');
+      setTimeout(() => map.invalidateSize(), 280); // map height changed
+    };
+    // mobile legend toggle
+    const legendBtn = document.getElementById('legend-btn');
+    legendBtn.onclick = () => {
+      const on = appEl.classList.toggle('show-legend');
+      legendBtn.setAttribute('aria-pressed', String(on));
+    };
+
     // collapsible floating panel — more map when you want it
-    const appEl = document.getElementById('app'), sbToggle = document.getElementById('sb-toggle');
+    const sbToggle = document.getElementById('sb-toggle');
     function setCollapsed(c) {
       appEl.classList.toggle('collapsed', c);
       sbToggle.textContent = c ? '›' : '‹';

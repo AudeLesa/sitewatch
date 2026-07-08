@@ -12,8 +12,22 @@ const dist = join(root, 'dist');
 rmSync(dist, { recursive: true, force: true }); // clean build — no stale/orphaned pages
 mkdirSync(join(dist, 'data'), { recursive: true });
 
-// 1. The app shell.
+// 1. The app shell + icon + PWA manifest (installable, and a real favicon —
+//    browsers were 404ing /favicon.ico on every visit).
 copyFileSync(join(root, 'web', 'index.html'), join(dist, 'index.html'));
+copyFileSync(join(root, 'web', 'icon.svg'), join(dist, 'icon.svg'));
+writeFileSync(
+  join(dist, 'manifest.webmanifest'),
+  JSON.stringify({
+    name: 'SiteWatch — Texas Construction, Live',
+    short_name: 'SiteWatch',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#f2dcd8',
+    theme_color: '#313f9f',
+    icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+  })
+);
 
 // 2. Only the map-ready GeoJSON (not *.json / *.ungeocoded.json / *-cache.json).
 const dataDir = join(root, 'data');

@@ -21,6 +21,23 @@ const esc = (s) => (s == null ? '' : String(s).replace(/[&<>"]/g, (c) => ({ '&':
 const usd = (n) => (n ? '$' + Number(n).toLocaleString() : null);
 const short = (n) => (!n ? '$0' : n >= 1e9 ? '$' + (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? '$' + (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + Math.round(n / 1e3) + 'K' : '$' + n);
 const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'tx';
+
+// Entity resolution for company names: "Tesla, Inc." / "TESLA INC" / "Tesla"
+// are one company and must share one page and one ranking tally. Conservative
+// on purpose — only punctuation, case, "the", &/and, and trailing LEGAL
+// suffixes are normalized; word differences ("Tesla Energy") stay distinct.
+const LEGAL_SUFFIX = /\s+(L\s*L\s*C|L\s*L\s*P|L\s*P|INC(ORPORATED)?|CORP(ORATION)?|CO(MPANY)?|LTD|LIMITED|PLLC|P\s*C|PLC|GP|PARTNERS(HIP)?( LTD| LP)?)\.?$/;
+function companyKey(name) {
+  let s = String(name || '').toUpperCase()
+    .replace(/&/g, ' AND ')
+    .replace(/[^A-Z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^THE\s+/, '');
+  let prev;
+  do { prev = s; s = s.replace(LEGAL_SUFFIX, '').trim(); } while (s !== prev && s.includes(' '));
+  return s || String(name || '').toUpperCase().trim();
+}
 const cityOf = (addr) => { const p = String(addr || '').split(','); return p.length >= 2 ? p[p.length - 2].trim() : ''; };
 const fileOf = (permit) => String(permit || '').replace(/[^A-Za-z0-9_-]/g, '');
 const JUNK = /^(n\/?a|tbd|to be determined|unknown|none|owner|self|same|various|n\.a\.)$/i;
@@ -42,9 +59,12 @@ export function generateSeo(dist, features, { siteUrl }) {
   const valid = [];
   const addCo = (name, p, role) => {
     if (!isCompany(name)) return;
-    const s = slug(name);
-    if (!companies.has(s)) companies.set(s, { name: String(name).trim(), owned: [], designed: [] });
-    companies.get(s)[role].push(p);
+    const s = slug(companyKey(name));
+    if (!companies.has(s)) companies.set(s, { name: '', variants: new Map(), owned: [], designed: [] });
+    const c = companies.get(s);
+    const raw = String(name).trim();
+    c.variants.set(raw, (c.variants.get(raw) || 0) + 1);
+    c[role].push(p);
   };
   for (const f of features) {
     const p = f.properties || {};
@@ -55,8 +75,10 @@ export function generateSeo(dist, features, { siteUrl }) {
     addCo(p.owner, p, 'owned');
     addCo(p.designFirm, p, 'designed');
   }
+  // A merged company displays as its most frequent spelling.
+  for (const c of companies.values()) c.name = [...c.variants.entries()].sort((a, b) => b[1] - a[1])[0][0];
   const paged = new Set([...companies].filter(([, c]) => c.owned.length + c.designed.length >= MIN_COMPANY_PROJECTS).map(([s]) => s));
-  const coLink = (name) => { const s = slug(name); return isCompany(name) && paged.has(s) ? `/company/${s}` : null; };
+  const coLink = (name) => { const s = slug(companyKey(name)); return isCompany(name) && paged.has(s) ? `/company/${s}` : null; };
 
   // URLs are EXTENSIONLESS everywhere (canonicals, sitemap, internal links):
   // Cloudflare Pages 308-redirects `/x.html` to `/x`, so linking the .html form
@@ -112,6 +134,7 @@ function head(title, desc, canonical, jsonld) {
 <link rel="canonical" href="${esc(canonical)}">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">
 <meta property="og:type" content="website"><meta property="og:url" content="${esc(canonical)}">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/p.css">
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ''}
 </head><body>`;
