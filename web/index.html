@@ -10,8 +10,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <style>
     :root {
       --bg: #f2dcd8;            /* blush ground */
@@ -182,13 +180,6 @@
     .pin:hover { transform: scale(1.18); }
     .pin.ring-new { box-shadow: 0 0 0 2.5px var(--new), inset 0 0 0 1.5px rgba(255,255,255,.4), 0 3px 9px rgba(35,42,82,.3); }
     .pin.ring-started { box-shadow: 0 0 0 2.5px var(--good), inset 0 0 0 1.5px rgba(255,255,255,.4), 0 3px 9px rgba(35,42,82,.3); }
-    /* clusters: a quiet white chip with the count — no heavy traffic-light circles */
-    .cl { display: grid; place-items: center; width: 100%; height: 100%; background: var(--card); color: var(--primary);
-      font-family: Poppins, "Segoe UI", sans-serif; font-weight: 600; border-radius: 50%;
-      box-shadow: 0 0 0 5px rgba(49,63,159,.14), 0 5px 16px rgba(35,42,82,.22); }
-    .cl span { font-size: 12px; letter-spacing: -.02em; }
-    .cl.m span { font-size: 13px; }
-    .cl.l span { font-size: 14px; }
     /* legend chips reuse the pin look at a small size */
     .legend-pin { width: 15px; height: 15px; border-radius: 32%; display: inline-grid; place-items: center; flex: none; }
     .legend-pin svg { width: 10px; height: 10px; fill: #fff; display: block; }
@@ -329,7 +320,6 @@
     window.SITEWATCH = { supabaseUrl: '', supabaseAnonKey: '' };
   </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script>
     const COLORS = { commercial:'#4356c0', industrial:'#e2984a', institutional:'#e58a9e', multifamily:'#5cae8d', residential:'#9ba3c4', unknown:'#a6adbf' };
     const CAT_LABELS = { commercial:'Commercial', industrial:'Industrial', institutional:'Institutional', multifamily:'Multifamily', residential:'Residential', unknown:'Unknown' };
@@ -365,16 +355,15 @@
     baseLayers['Soft'].addTo(map);
     L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
 
-    const cluster = L.markerClusterGroup({
-      chunkedLoading: true, maxClusterRadius: 55, spiderfyOnMaxZoom: true, showCoverageOnHover: false,
-      iconCreateFunction(c) {
-        const n = c.getChildCount();
-        const tier = n >= 500 ? ['l', 48] : n >= 50 ? ['m', 40] : ['s', 33];
-        const label = n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n);
-        return L.divIcon({ html: `<div class="cl ${tier[0]}"><span>${label}</span></div>`, className: '', iconSize: [tier[1], tier[1]] });
-      },
-    });
-    map.addLayer(cluster);
+    // No clustering, no count bubbles — FlightRadar-style. EVERY site is always
+    // on the map as a small category-colored dot (one shared canvas, cheap at
+    // any zoom); once you're close enough to read them (PIN_ZOOM), the glyph
+    // chips render on top for whatever is in the viewport.
+    const PIN_ZOOM = 11;
+    const PIN_CAP = 1500; // safety: never mount more chip DOM nodes than this
+    const dotRenderer = L.canvas({ padding: 0.4 });
+    const dotsGroup = L.layerGroup().addTo(map);
+    const pinsGroup = L.layerGroup().addTo(map);
 
     let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now(), DATA_AGE_DAYS = null;
     const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, sort:'new' };
@@ -402,8 +391,7 @@
       const visible = [];
       for (const m of MARKERS) if (passes(m._p)) visible.push(m);
       LAST_VISIBLE = visible;
-      cluster.clearLayers();
-      cluster.addLayers(visible.map(v => v.marker));
+      redrawMap();
       let total = 0; for (const v of visible) total += v._p.valuation || 0;
       document.getElementById('stat-count').textContent = visible.length.toLocaleString();
       document.getElementById('stat-value').textContent = fmtShort(total);
@@ -421,7 +409,7 @@
         ['Sq ft', p => p.squareFeet], ['Registered', p => p.issuedDate], ['Est. start', p => p.estStartDate],
         ['Est. end', p => p.estEndDate], ['Started', p => p.startedAt], ['Owner', p => p.owner], ['Owner phone', p => p.ownerPhone],
         ['Architect', p => p.designFirm], ['Architect phone', p => p.designFirmPhone], ['Contact', p => p.contactName],
-        ['Lat', p => byId.get(p.permitNumber)?.marker.getLatLng().lat], ['Lng', p => byId.get(p.permitNumber)?.marker.getLatLng().lng],
+        ['Lat', p => byId.get(p.permitNumber)?.ll.lat], ['Lng', p => byId.get(p.permitNumber)?.ll.lng],
         ['TDLR page', p => /^TABS/.test(p.permitNumber || '') ? `https://www.tdlr.texas.gov/TABS/Search/Project/${p.permitNumber}` : ''],
       ];
       const cell = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
@@ -460,30 +448,73 @@
       for (const node of el.children) node.onclick = () => focusProject(node.dataset.id, true);
     }
 
-    function makeMarker(f) {
+    function makeEntry(f, dupIndex) {
       const p = f.properties, [lng, lat] = f.geometry.coordinates;
+      // Stacked projects on one coordinate get a tiny deterministic ring offset
+      // so chips don't perfectly eclipse each other once you zoom in (~18 m).
+      let ll;
+      if (dupIndex) {
+        const a = dupIndex * 2.4, r = 0.00016 * (1 + Math.floor(dupIndex / 8));
+        ll = L.latLng(lat + r * Math.sin(a), lng + r * Math.cos(a));
+      } else ll = L.latLng(lat, lng);
       const c = COLORS[p.category] || COLORS.unknown;
-      const ring = p.justStarted ? 'ring-started' : isNew(p) ? 'ring-new' : ''; // green=started, amber=new
-      const size = pinSize(p.valuation);
-      // Opacity encodes confidence: a pin we believe is actively building reads
+      // Opacity encodes confidence: a site we believe is actively building reads
       // solid; a decayed/past-due one visibly fades instead of lying.
+      const op = .45 + .55 * (p.confidence ?? .5);
+      const ringCol = p.justStarted ? RING_STARTED : isNew(p) ? RING_NEW : null; // green=started, amber=new
+      const dot = L.circleMarker(ll, {
+        renderer: dotRenderer,
+        radius: p.valuation >= 25e6 ? 4.6 : p.valuation >= 2e6 ? 3.4 : 2.6,
+        fillColor: c, fillOpacity: Math.max(.5, op),
+        color: ringCol || '#fff', weight: ringCol ? 1.6 : .8, opacity: ringCol ? .95 : .5,
+      });
+      const tip = p.facilityName || p.address || 'Project';
+      const tipText = p.valuation ? `${tip} · ${fmtShort(p.valuation)}` : tip;
+      dot.bindTooltip(tipText, { direction: 'top', offset: [0, -4], className: 'sw-tip' });
+      dot.on('click', () => openDetail(p, false));
+      return { _p: p, ll, dot, pin: null, tipText };
+    }
+
+    // Glyph chips are built lazily — only for what actually enters the viewport.
+    function pinFor(e) {
+      if (e.pin) return e.pin;
+      const p = e._p;
+      const c = COLORS[p.category] || COLORS.unknown;
+      const ring = p.justStarted ? 'ring-started' : isNew(p) ? 'ring-new' : '';
+      const size = pinSize(p.valuation);
       const op = (.45 + .55 * (p.confidence ?? .5)).toFixed(2);
-      const m = L.marker([lat, lng], {
+      const m = L.marker(e.ll, {
         icon: L.divIcon({
           html: `<div class="pin ${ring}" style="--c:${c};opacity:${op}">${pinSvg(p.category)}</div>`,
           className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2],
         }),
       });
-      const tip = p.facilityName || p.address || 'Project';
-      m.bindTooltip(p.valuation ? `${tip} · ${fmtShort(p.valuation)}` : tip, { direction: 'top', offset: [0, -size / 2], className: 'sw-tip' });
+      m.bindTooltip(e.tipText, { direction: 'top', offset: [0, -size / 2], className: 'sw-tip' });
       m.on('click', () => openDetail(p, false));
-      return { marker: m, _p: p };
+      e.pin = m;
+      return m;
     }
+
+    function redrawMap() {
+      dotsGroup.clearLayers();
+      for (const e of LAST_VISIBLE) dotsGroup.addLayer(e.dot);
+      refreshPins();
+    }
+    function refreshPins() {
+      pinsGroup.clearLayers();
+      if (map.getZoom() < PIN_ZOOM) return;
+      const b = map.getBounds().pad(0.2);
+      let inView = LAST_VISIBLE.filter((e) => b.contains(e.ll));
+      if (inView.length > PIN_CAP) {
+        inView = inView.sort((x, y) => (y._p.valuation || 0) - (x._p.valuation || 0)).slice(0, PIN_CAP);
+      }
+      for (const e of inView) pinsGroup.addLayer(pinFor(e));
+    }
+    map.on('moveend zoomend', refreshPins);
 
     function focusProject(id, fromList) {
       const entry = byId.get(id); if (!entry) return;
-      const ll = entry.marker.getLatLng();
-      map.setView(ll, Math.max(map.getZoom(), 13), { animate: true });
+      map.setView(entry.ll, Math.max(map.getZoom(), 13), { animate: true });
       openDetail(entry._p, false);
       document.querySelectorAll('.item.active').forEach(n => n.classList.remove('active'));
       const node = document.querySelector(`.item[data-id="${CSS.escape(id)}"]`); if (node) node.classList.add('active');
@@ -527,7 +558,7 @@
       document.getElementById('detail').classList.add('open');
       document.getElementById('detail').setAttribute('aria-hidden','false');
       history.replaceState(null,'', '#p=' + encodeURIComponent(p.permitNumber||''));
-      if (recenter) { const e = byId.get(p.permitNumber); if (e) map.setView(e.marker.getLatLng(), Math.max(map.getZoom(),13)); }
+      if (recenter) { const e = byId.get(p.permitNumber); if (e) map.setView(e.ll, Math.max(map.getZoom(),13)); }
     }
     function closeDetail() { document.getElementById('detail').classList.remove('open'); document.getElementById('detail').setAttribute('aria-hidden','true'); history.replaceState(null,'',' '); }
     document.getElementById('detail-close').onclick = closeDetail;
@@ -559,10 +590,14 @@
       document.getElementById('region').textContent = loaded.url.includes('texas') ? 'Texas' : 'Houston';
       const isDemo = loaded.url.includes('-demo');
 
-      // build markers + indexes
+      // build markers + indexes (dup counter drives the stacked-coordinate offsets)
       let maxVal = 0, through = 0, newCount = 0, startedCount = 0;
+      const coordSeen = new Map();
       for (const f of FEATURES) {
-        const e = makeMarker(f); MARKERS.push(e); byId.set(f.properties.permitNumber, e);
+        const key = f.geometry.coordinates.join(',');
+        const dup = coordSeen.get(key) || 0;
+        coordSeen.set(key, dup + 1);
+        const e = makeEntry(f, dup); MARKERS.push(e); byId.set(f.properties.permitNumber, e);
         maxVal = Math.max(maxVal, f.properties.valuation||0);
         if (f.properties.issuedDate) through = Math.max(through, Date.parse(f.properties.issuedDate));
         if (isNew(f.properties)) newCount++;
