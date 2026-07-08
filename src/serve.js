@@ -42,9 +42,19 @@ const server = createServer(async (req, res) => {
     try {
       body = await readFile(filePath);
     } catch (err) {
-      if (DIST && err.code === 'ENOENT') {
-        body = await readFile(join(ROOT, 'index.html')); // SPA-style fallback (matches _redirects)
-        ext = '.html';
+      if (DIST && err.code === 'ENOENT' && !ext) {
+        // Pretty URLs, like Cloudflare Pages: /insights -> insights.html,
+        // /where/ -> where/index.html.
+        try {
+          const pretty = urlPath.endsWith('/') ? join(filePath, 'index.html') : `${filePath}.html`;
+          body = await readFile(pretty);
+          ext = '.html';
+        } catch {
+          body = await readFile(join(ROOT, '404.html')).catch(() => 'not found');
+          res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(body);
+          return;
+        }
       } else throw err;
     }
     res.writeHead(200, { 'Content-Type': TYPES[ext] || 'application/octet-stream', 'Cache-Control': 'no-store' });

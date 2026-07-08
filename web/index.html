@@ -226,7 +226,7 @@
           <span id="through"></span>
         </div>
         <div id="account"></div>
-        <div class="seolinks"><a href="/insights.html">📊 Texas construction report</a> · <a href="/companies.html">Companies</a></div>
+        <div class="seolinks"><a href="/insights">📊 Texas construction report</a> · <a href="/companies">Companies</a></div>
       </div>
 
       <div class="controls">
@@ -409,6 +409,7 @@
         ['Sq ft', p => p.squareFeet], ['Registered', p => p.issuedDate], ['Est. start', p => p.estStartDate],
         ['Est. end', p => p.estEndDate], ['Started', p => p.startedAt], ['Owner', p => p.owner], ['Owner phone', p => p.ownerPhone],
         ['Architect', p => p.designFirm], ['Architect phone', p => p.designFirmPhone], ['Contact', p => p.contactName],
+        ['Tenant', p => p.tenantName], ['Tenant phone', p => p.tenantPhone], ['RAS', p => p.rasName], ['RAS phone', p => p.rasPhone], ['ZIP', p => p.zip],
         ['Lat', p => byId.get(p.permitNumber)?.ll.lat], ['Lng', p => byId.get(p.permitNumber)?.ll.lng],
         ['TDLR page', p => /^TABS/.test(p.permitNumber || '') ? `https://www.tdlr.texas.gov/TABS/Search/Project/${p.permitNumber}` : ''],
       ];
@@ -544,6 +545,8 @@
       if (p.geocodePrecision && p.geocodePrecision !== 'address') add('Pin accuracy', p.geocodePrecision === 'area' ? 'approximate — area-level match' : 'approximate — street-level match');
       add('Owner', party(p.owner, p.ownerPhone));
       add('Architect', party(p.designFirm, p.designFirmPhone));
+      add('Tenant', party(p.tenantName, p.tenantPhone));
+      add('RAS', party(p.rasName, p.rasPhone));
       add('Contact', esc(p.contactName));
       add('Contractor', esc(p.contractor));
       add('Funding', p.publicFunds == null ? null : (p.publicFunds ? 'Public' : 'Private'));
@@ -554,7 +557,7 @@
       const tdlr = document.getElementById('d-tdlr');
       if (/^TABS/.test(p.permitNumber||'')) { tdlr.style.display=''; tdlr.href = `https://www.tdlr.texas.gov/TABS/Search/Project/${p.permitNumber}`; }
       else tdlr.style.display = 'none';
-      document.getElementById('d-page').href = '/project/' + (p.permitNumber||'').replace(/[^A-Za-z0-9_-]/g,'') + '.html';
+      document.getElementById('d-page').href = '/project/' + (p.permitNumber||'').replace(/[^A-Za-z0-9_-]/g,'');
       document.getElementById('detail').classList.add('open');
       document.getElementById('detail').setAttribute('aria-hidden','false');
       history.replaceState(null,'', '#p=' + encodeURIComponent(p.permitNumber||''));

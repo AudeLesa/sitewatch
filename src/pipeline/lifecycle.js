@@ -44,6 +44,10 @@ export function applyLifecycle(records, now = new Date()) {
     }
 
     r.confidence = timelineAdjusted(r.confidence, r.estStartDate, past, now);
+    // Registrants fat-finger valuations; flag the implausible ones so rankings
+    // ("largest projects", top-owner tallies) can skip them. TABS's legal floor
+    // is $50k, and nothing in Texas legitimately exceeds a few $B.
+    r.valuationSuspect = r.valuation != null && (r.valuation < 50000 || r.valuation > 5e9);
     kept.push(r);
   }
   return { records: kept, finished };

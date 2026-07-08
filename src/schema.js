@@ -89,6 +89,12 @@ export function makeRecord(partial) {
     ownerPhone: partial.ownerPhone ?? null,
     ownerAddress: partial.ownerAddress ?? null,
     contactName: partial.contactName ?? null,
+    // Tenant (who's moving in) and RAS (the accessibility specialist on the
+    // project) — TABS detail-page contacts beyond owner/architect.
+    tenantName: partial.tenantName ?? null,
+    tenantPhone: partial.tenantPhone ?? null,
+    rasName: partial.rasName ?? null,
+    rasPhone: partial.rasPhone ?? null,
     scopeOfWork: partial.scopeOfWork ?? null,
     publicFunds: partial.publicFunds ?? null,
     facilityName: partial.facilityName ?? null,

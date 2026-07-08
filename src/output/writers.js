@@ -86,6 +86,12 @@ function toFeature(rec) {
       designFirmPhone: rec.designFirmPhone,
       designFirmAddress: rec.designFirmAddress,
       contactName: rec.contactName,
+      tenantName: rec.tenantName,
+      tenantPhone: rec.tenantPhone,
+      rasName: rec.rasName,
+      rasPhone: rec.rasPhone,
+      zip: rec.address.zip,
+      valuationSuspect: rec.valuationSuspect || undefined,
       sources: rec.contributingSources,
     },
   };

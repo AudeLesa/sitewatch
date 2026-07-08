@@ -323,7 +323,9 @@ function mapProject(row, lookup) {
   const cityName = lookup.CITIES?.[String(row.City)] || null;
   const line1 = cleanLine(d['location address']) || null;
   const st = STATUS_MAP[row.ProjectStatus] || { status: STATUS.UNKNOWN, confidence: null, stage: null, label: null };
-  const facility = row.FacilityName || d['facility name'] || null;
+  // Registrants type junk into name fields; "N/A" as a literal title made it
+  // onto 334 project pages (title/H1/og:title all "n/a").
+  const facility = nullIfJunk(row.FacilityName) || nullIfJunk(d['facility name']);
 
   return makeRecord({
     source: id,
@@ -341,13 +343,20 @@ function mapProject(row, lookup) {
     estStartDate: isoDay(row.EstimatedStartDate),
     estEndDate: isoDay(row.EstimatedEndDate),
     finalizedDate: row.ProjectStatus === 3007 ? isoDay(row.EstimatedEndDate) : null,
-    owner: d['owner name'] || null,
+    owner: nullIfJunk(d['owner name']),
     ownerPhone: d['owner phone'] || null,
     ownerAddress: d['owner address'] || null,
-    designFirm: d['design firm name'] || null,
+    designFirm: nullIfJunk(d['design firm name']),
     designFirmPhone: d['design firm phone'] || null,
     designFirmAddress: d['design firm address'] || null,
-    contactName: d['contact name'] || null,
+    contactName: nullIfJunk(d['contact name']),
+    // The tenant (who's moving in — prime lead intel on build-outs) and the
+    // RAS (the accessibility specialist hired for the project). Both were
+    // already parsed and cached; they were just never mapped.
+    tenantName: nullIfJunk(d['tenant name']),
+    tenantPhone: d['tenant phone'] || null,
+    rasName: nullIfJunk(d['ras name']),
+    rasPhone: d['ras phone'] || null,
     scopeOfWork: d['scope of work'] || null,
     publicFunds: fundsToBool(d['type of funds']),
     facilityName: facility,
@@ -364,9 +373,16 @@ function mapProject(row, lookup) {
   });
 }
 
+// "N/A", "TBD", "unknown" and friends are junk, not names.
+function nullIfJunk(v) {
+  const s = String(v || '').trim();
+  if (!s || /^(n\s*\/?\s*a|n\.a\.?|tbd|to be determined|unknown|none|null|x+|-+)$/i.test(s)) return null;
+  return s;
+}
+
 function describe(row, facility, statusLabel) {
   const work = WORK_LABEL[row.TypeOfWork] || 'Construction';
-  const name = row.ProjectName || facility || '';
+  const name = nullIfJunk(row.ProjectName) || facility || '';
   const bits = [work];
   if (name) bits.push(`— ${name}`);
   if (statusLabel) bits.push(`(${statusLabel})`);

@@ -39,6 +39,7 @@ create table if not exists projects (
   address         text,
   city            text,
   county          text,
+  zip             text,
   lat             double precision,
   lng             double precision,
   -- Auto-derived from lat/lng so the loader never touches PostGIS directly.
@@ -49,6 +50,10 @@ create table if not exists projects (
   owner_address   text,
   architect       text,
   architect_phone text,
+  tenant          text,           -- who's moving in (retail/office build-outs)
+  tenant_phone    text,
+  ras_name        text,           -- registered accessibility specialist on the project
+  ras_phone       text,
   contact_name    text,
   scope_of_work   text,
   public_funds    boolean,

@@ -157,6 +157,16 @@ function applyHit(rec, entry) {
     matched: entry.matched ?? null,
     precision: entry.precision ?? inferPrecision(entry),
   };
+  // TABS never supplies a ZIP, but the geocoder's matched string usually does —
+  // backfill it (TX ZIPs are 75xxx–79xxx). Output enrichment only: the cache
+  // key was computed from the original address, so lookups stay stable.
+  if (rec.address && !rec.address.zip) {
+    const zip = /\b(7[5-9]\d{3})(?:-\d{4})?\b/.exec(String(entry.matched || ''))?.[1];
+    if (zip) {
+      rec.address.zip = zip;
+      if (rec.address.full && !rec.address.full.includes(zip)) rec.address.full += ` ${zip}`;
+    }
+  }
 }
 
 /** Is this provider's cached negative still trustworthy? Entries from before
