@@ -382,7 +382,11 @@
     // ── Accounts + alerts (optional) ────────────────────────────────────────
     // Paste your Supabase project URL + anon (public) key to enable sign-in and
     // saved-search email alerts. Leave blank to run the public map with no accounts.
-    window.SITEWATCH = { supabaseUrl: '', supabaseAnonKey: '' };
+    window.SITEWATCH = {
+      supabaseUrl: 'https://hlibpwjnqojtuskwklcq.supabase.co',
+      // anon key — public by design; RLS policies are the security boundary
+      supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsaWJwd2pucW9qdHVza3drbGNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MDIxMTIsImV4cCI6MjA5OTE3ODExMn0.eImjmSv0Z46XskE9woiTGVrLigNDLJYaDKB9BGC3qfU',
+    };
   </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
