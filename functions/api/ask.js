@@ -19,6 +19,7 @@ Rules:
 - workClasses: new_construction | addition | remodel. Leave null unless clearly implied ("build-outs"/"renovations" → remodel).
 - keywords: lowercase search terms matched (ALL of them, substring) against scope-of-work text, project/facility names, and addresses. Use them for materials, trades, and building types: "tilt wall" → ["tilt"] (catches tilt-up/tiltwall), "metal building" → ["metal"], "car wash" → ["car wash"]. Prefer 1-2 short distinctive terms; never generic words like "construction" or "project". Null when none.
 - companies: owner/architect/tenant names mentioned ("what is Tesla building" → ["tesla"]). Lowercase. Null when none.
+- City/metro names go in keywords — addresses contain the city ("in San Antonio" → add "san antonio" to keywords). Never set nearMe for a named city.
 - minValue: dollars ("over $5M" → 5000000). Null when unstated.
 - minConfidence: 0-1. Set ~0.6 only when the user stresses ACTIVE/currently-under-construction sites; otherwise null.
 - sinceDays: when the user asks for recent/new registrations ("this month" → 30). Null otherwise.
