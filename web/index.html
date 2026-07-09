@@ -39,48 +39,99 @@
     #map { position: absolute; inset: 0; background: #ead9d4; z-index: 0; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-    /* floating sidebar card */
-    #sidebar { position: fixed; left: 16px; top: 16px; bottom: 16px; width: var(--sidebar-w); z-index: 1050;
+    /* MarineTraffic-style shell: brand pill + icon rail + one drawer pane at a
+       time + top search bar + chip tray, all floating over the full-bleed map. */
+    #brand-pill { position: fixed; top: 16px; left: 12px; z-index: 1055; display: flex; align-items: center; gap: 9px;
+      background: var(--panel); border: none; border-radius: 999px; padding: 8px 15px; font-family: inherit;
+      box-shadow: var(--shadow); cursor: pointer; text-align: left; }
+    #brand-pill .bt { font-size: 14px; font-weight: 700; letter-spacing: .1px; color: var(--ink); white-space: nowrap; }
+    #brand-pill .bt .dot { color: var(--pink); }
+    #bstate { font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--tint); color: var(--muted); white-space: nowrap; }
+    #brand-pill[data-state="live"] #bstate { color: #1e7d59; background: #ddefe6; }
+    #brand-pill[data-state="demo"] #bstate { color: #9a6a12; background: #f7e8cd; }
+    #brand-pill[data-state="stale"] #bstate { color: #a35d17; background: #f7e3cd; }
+
+    #rail { position: fixed; left: 12px; top: 64px; bottom: 16px; width: 48px; z-index: 1060;
+      background: var(--panel); border-radius: 999px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 12px 0;
+      overflow-y: auto; scrollbar-width: none; }
+    #rail::-webkit-scrollbar { display: none; }
+    /* short desktop-layout viewports (landscape phones, small windows): shrink
+       the icons so all seven stay inside the pill */
+    @media (min-width: 761px) and (max-height: 460px) {
+      #rail { gap: 2px; padding: 6px 0; }
+      #rail button { width: 30px; height: 30px; }
+      #rail button svg { width: 16px; height: 16px; }
+    }
+    #rail .spacer { flex: 1; }
+    #rail button { position: relative; width: 36px; height: 36px; border-radius: 50%; border: none; background: none;
+      color: var(--muted); cursor: pointer; display: grid; place-items: center; font-family: inherit; flex: none; }
+    #rail button svg { width: 18px; height: 18px; display: block; }
+    #rail button:hover { background: var(--tint); color: var(--primary); }
+    #rail button.active { background: var(--primary); color: #fff; }
+    .bdg { position: absolute; top: -1px; right: -3px; min-width: 15px; height: 15px; padding: 0 4px;
+      border-radius: 999px; background: var(--new); color: #fff; font-size: 9px; font-weight: 700; line-height: 15px; display: none; }
+    .bdg.show { display: block; }
+    #acct-bdg.show { min-width: 0; width: 10px; height: 10px; padding: 0; }
+
+    /* drawer: one pane visible at a time, chosen by the rail */
+    #sidebar { position: fixed; left: 68px; top: 64px; bottom: 16px; width: var(--sidebar-w); z-index: 1050;
       background: var(--panel); border-radius: 26px; box-shadow: var(--shadow);
       display: flex; flex-direction: column; min-height: 0; overflow: hidden;
       transition: transform .28s ease; }
-    #app.collapsed #sidebar { transform: translateX(calc(-100% - 28px)); }
-    #sb-toggle { position: fixed; top: 24px; left: calc(16px + var(--sidebar-w) + 12px); z-index: 1100;
-      width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--card); color: var(--primary);
-      cursor: pointer; font-size: 18px; line-height: 1; display: grid; place-items: center;
-      box-shadow: 0 8px 24px rgba(49,63,159,.18); transition: left .28s ease; }
-    #app.collapsed #sb-toggle { left: 28px; }
-    #sb-toggle:hover { background: var(--primary); color: #fff; }
-
-    #brand { padding: 18px 20px 14px; }
-    #brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: .1px; }
-    #brand h1 .dot { color: var(--pink); }
+    #sidebar[data-open=""] { transform: translateX(calc(-100% - 96px)); }
+    .pane { display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; padding: 16px 20px; }
+    .pane::-webkit-scrollbar { width: 8px; } .pane::-webkit-scrollbar-thumb { background: #e8d3c9; border-radius: 8px; }
+    #sidebar[data-open="sites"] .pane[data-pane="sites"], #sidebar[data-open="filters"] .pane[data-pane="filters"],
+    #sidebar[data-open="places"] .pane[data-pane="places"], #sidebar[data-open="views"] .pane[data-pane="views"],
+    #sidebar[data-open="companies"] .pane[data-pane="companies"], #sidebar[data-open="account"] .pane[data-pane="account"],
+    #sidebar[data-open="info"] .pane[data-pane="info"] { display: flex; }
+    .pane[data-pane="sites"] { padding: 14px 0 0; overflow: hidden; }
+    .pane-h { font-size: 13.5px; font-weight: 700; margin: 0 0 2px; }
+    .pane-p { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 4px 0 8px; }
     .meta-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     #badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--tint); color: var(--muted); }
     #badge.live { color: #1e7d59; background: #ddefe6; }
     #badge.demo { color: #9a6a12; background: #f7e8cd; }
     #badge.stale { color: #a35d17; background: #f7e3cd; }
-    #through { font-size: 11px; color: var(--faint); }
-
-    /* Filters / Sites tabs: the panel had grown too many controls to share one
-       column with the results — each pane now gets the full height instead. */
-    #tabs { display: flex; gap: 6px; padding: 0 16px 10px; }
-    #tabs button { flex: 1; border: none; background: var(--tint); color: var(--muted); font-family: inherit;
-      font-size: 12.5px; font-weight: 600; padding: 9px 10px; border-radius: 999px; cursor: pointer; transition: background .12s; }
-    #tabs button.active { background: var(--primary); color: #fff; }
-    #tabs button:not(.active):hover { background: var(--primary-soft); color: var(--primary); }
-    #tab-count { font-weight: 700; opacity: .85; }
-    #sites-pane { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-    #sidebar.tab-filters #sites-pane { display: none; }
-    #sidebar.tab-sites .controls { display: none; }
-
-    .controls { padding: 4px 20px 14px; overflow-y: auto; flex: 1; min-height: 0; }
-    .controls::-webkit-scrollbar { width: 8px; } .controls::-webkit-scrollbar-thumb { background: #e8d3c9; border-radius: 8px; }
+    #through { font-size: 11px; color: var(--faint); margin-top: 6px; }
+    .corow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 12px;
+      margin: 0 0 6px; background: var(--tint); border-radius: 12px; font-size: 12.5px; }
+    .corow .x { background: none; border: none; color: #d05a5a; cursor: pointer; font-size: 11.5px; font-weight: 600; padding: 0; font-family: inherit; }
     label.lbl { display: block; font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; margin: 15px 0 7px; }
-    #search { width: 100%; padding: 11px 14px; border-radius: 14px; border: 1px solid transparent; background: var(--card);
-      color: var(--ink); font-size: 13px; font-family: inherit; box-shadow: 0 3px 12px rgba(49,63,159,.07); }
+
+    /* top search + ask pill, centered over the map; chip tray hangs below it */
+    #topwrap { position: fixed; top: 16px; left: calc(68px + var(--sidebar-w) + 24px); right: 24px; z-index: 1150;
+      display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;
+      transition: left .28s ease, right .24s ease; }
+    #sidebar[data-open=""] ~ #topwrap { left: 96px; }
+    /* the search pill yields to the detail card and the brand pill */
+    @media (min-width: 761px) {
+      body.detail-open #topwrap { right: calc(var(--detail-w) + 40px); }
+    }
+    @media (min-width: 761px) and (max-width: 950px) {
+      #sidebar[data-open=""] ~ #topwrap { left: 292px; }
+    }
+    #topbar { pointer-events: auto; display: flex; align-items: center; gap: 8px; width: min(480px, 100%);
+      background: var(--panel); border-radius: 999px; box-shadow: var(--shadow); padding: 6px 6px 6px 16px; }
+    #topbar .ico { color: var(--faint); flex: none; display: grid; place-items: center; }
+    #topbar .ico svg { width: 15px; height: 15px; display: block; }
+    #search { flex: 1; border: none; background: none; color: var(--ink); font-size: 13px; font-family: inherit; padding: 8px 0; min-width: 0; }
     #search::placeholder { color: var(--faint); }
-    #search:focus { outline: none; border-color: var(--primary); }
+    #search:focus { outline: none; }
+    #ask-go { flex: none; background: var(--primary); color: #fff; border: none; border-radius: 999px; padding: 8px 16px;
+      font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    #ask-go:hover { filter: brightness(1.08); }
+    #ask-go:disabled { opacity: .6; cursor: default; }
+    /* gaps between chips fall through to the map; only the chips catch clicks */
+    #tray { pointer-events: none; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 640px; }
+    #tray .chip { pointer-events: auto; }
+    #tray:empty { display: none; }
+    #tray .chip .x { margin-left: 2px; color: var(--faint); font-weight: 700; }
+    #tray .chip .x:hover { color: #d05a5a; }
+    #tray .chip.alertchip { background: var(--primary); color: #fff; }
+    #tray .chip.ai { background: var(--primary-soft); color: var(--primary); max-width: 340px; }
+    #tray .chip.ai .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
     .chips { display: flex; flex-wrap: wrap; gap: 7px; }
     .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 6px 12px;
       border-radius: 999px; border: none; background: var(--card); color: var(--ink); cursor: pointer; user-select: none;
@@ -95,10 +146,20 @@
     .toggle input { accent-color: var(--primary); }
     #reset { background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; margin-top: 13px; }
 
-    #stats { display: flex; gap: 10px; padding: 4px 20px 12px; }
-    .stat { flex: 1; background: var(--card); border-radius: 16px; padding: 10px 14px; box-shadow: 0 3px 12px rgba(49,63,159,.06); }
-    .stat .n { font-size: 19px; font-weight: 700; color: var(--primary); }
-    .stat .l { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    /* ambient status: always-visible count chip + legend toggle on the map edge */
+    #ambient { position: fixed; bottom: 16px; left: calc(68px + var(--sidebar-w) + 16px); z-index: 1000;
+      display: flex; gap: 8px; align-items: center; transition: left .28s ease; }
+    #sidebar[data-open=""] ~ #ambient { left: 76px; }
+    #statchip { background: var(--card); border: none; border-radius: 999px; padding: 8px 15px; font-size: 12px;
+      color: var(--muted); box-shadow: 0 8px 24px rgba(49,63,159,.12); cursor: pointer; font-family: inherit; white-space: nowrap; }
+    #statchip b { color: var(--primary); font-weight: 700; }
+    #statchip:hover { color: var(--primary); }
+    /* demo/stale warning chip — the mobile stand-in for the hidden brand pill */
+    #badge-chip { border: none; border-radius: 999px; padding: 8px 13px; font-size: 11.5px; font-weight: 600;
+      cursor: pointer; font-family: inherit; white-space: nowrap; box-shadow: 0 8px 24px rgba(49,63,159,.12);
+      color: #a35d17; background: #f7e3cd; }
+    #badge-chip[data-state="demo"] { color: #9a6a12; background: #f7e8cd; }
+    @media (min-width: 761px) { #badge-chip { display: none; } }
 
     /* list */
     .list-head { display: flex; justify-content: space-between; align-items: center; padding: 0 20px 6px; }
@@ -109,8 +170,6 @@
       border-radius: 999px; cursor: pointer; box-shadow: 0 2px 8px rgba(49,63,159,.08); font-family: inherit; }
     #csv:hover { filter: brightness(.97); }
     #digestbox { margin-top: 14px; }
-    #ask-note { margin: 0 16px 10px; font-size: 12px; color: var(--muted); background: var(--primary-soft); border-radius: 12px; padding: 8px 12px; line-height: 1.45; }
-    #ask-note button { background: none; border: none; color: var(--primary); font-weight: 600; font-size: 12px; cursor: pointer; padding: 0; }
     .chip.on { background: var(--primary); color: #fff; }
     .chip.on .sw { background: #fff !important; }
     .digestrow { display: flex; gap: 7px; }
@@ -216,84 +275,94 @@
     .leaflet-tooltip.sw-tip { background: var(--card); border: none; color: var(--ink); font-size: 12px; font-family: Poppins, "Segoe UI", sans-serif;
       font-weight: 600; padding: 5px 10px; border-radius: 10px; box-shadow: 0 6px 18px rgba(49,63,159,.18); }
     .leaflet-tooltip.sw-tip::before { display: none; }
-    #legend { position: fixed; bottom: 16px; left: calc(16px + var(--sidebar-w) + 12px); z-index: 1000; background: var(--card);
+    #legend { position: fixed; bottom: 58px; left: calc(68px + var(--sidebar-w) + 16px); z-index: 1000; background: var(--card);
       border-radius: 16px; padding: 10px 14px; font-size: 11.5px; color: var(--muted);
-      box-shadow: 0 8px 24px rgba(49,63,159,.12); transition: left .28s ease; }
-    #app.collapsed #legend { left: 28px; }
+      box-shadow: 0 8px 24px rgba(49,63,159,.12); transition: left .28s ease; display: none; }
+    #app.show-legend #legend { display: block; }
+    #sidebar[data-open=""] ~ #legend { left: 76px; }
     #legend .lr { display: flex; align-items: center; gap: 7px; margin: 2px 0; }
     #legend .sw { width: 9px; height: 9px; border-radius: 50%; flex: none; }
     #legend .hr { height: 1px; background: var(--border); margin: 6px 0; }
     #loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1500; pointer-events: none; }
     #loading span { background: var(--panel); color: var(--muted); font-size: 13.5px; padding: 14px 22px; border-radius: 999px; box-shadow: var(--shadow); }
 
+    #legend-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--card); color: var(--muted);
+      cursor: pointer; box-shadow: 0 8px 24px rgba(49,63,159,.12); font-size: 15px; display: grid; place-items: center; font-family: inherit; flex: none; }
+    #legend-btn:hover, #legend-btn[aria-pressed="true"] { color: var(--primary); }
+
     #sheet-handle { display: none; }
     @media (max-width: 760px) {
-      #sb-toggle { display: none; }
       #app { --sheet-h: 46vh; }
       #app.peek { --sheet-h: 15vh; }
-      #map { bottom: var(--sheet-h); }
+      #map { bottom: calc(var(--sheet-h) + 46px); }
+      #brand-pill { display: none; }
+      /* the rail becomes a horizontal icon row riding the top edge of the sheet */
+      #rail { left: 8px; right: 8px; top: auto; bottom: var(--sheet-h); width: auto; height: 44px;
+        flex-direction: row; justify-content: space-evenly; align-items: center; padding: 0 10px; gap: 0;
+        border-radius: 22px; transition: bottom .25s ease; }
+      #rail .spacer { display: none; }
       #sidebar { left: 0; right: 0; top: auto; bottom: 0; width: auto; height: var(--sheet-h); border-radius: 26px 26px 0 0;
         transform: none !important; transition: height .25s ease; }
       /* grab-handle: tap to swap between full panel and a slim peek (more map) */
       #sheet-handle { display: grid; place-items: center; height: 30px; flex: none; background: none; border: none; cursor: pointer; }
       #sheet-handle span { width: 44px; height: 5px; border-radius: 999px; background: var(--border); }
-      #app.peek .controls, #app.peek #sites-pane, #app.peek #tabs { display: none; }
-      /* legend lives above the sheet, toggled by the ⓘ chip */
-      #legend { display: none; left: 12px; bottom: calc(var(--sheet-h) + 12px); transition: bottom .25s ease; }
-      #app.show-legend #legend { display: block; }
-      #legend-btn { display: inline-flex; }
+      #app.peek #sidebar .pane { display: none; }
+      #topwrap { left: 8px !important; right: 8px; top: 8px; }
+      #tray { pointer-events: auto; flex-wrap: nowrap; overflow-x: auto; max-width: 100%; justify-content: flex-start; scrollbar-width: none;
+        -webkit-mask-image: linear-gradient(90deg, #000 86%, transparent); mask-image: linear-gradient(90deg, #000 86%, transparent); }
+      #tray::-webkit-scrollbar { display: none; }
+      #tray .chip { flex: none; } /* chips must not squish — the row scrolls instead */
+      #ambient { left: 8px !important; bottom: calc(var(--sheet-h) + 54px); transition: bottom .25s ease; }
+      #legend { left: 8px !important; bottom: calc(var(--sheet-h) + 96px); transition: bottom .25s ease;
+        max-height: calc(100vh - var(--sheet-h) - 210px); overflow-y: auto; }
       #detail { top: 8vh; left: 10px; right: 10px; bottom: 0; width: auto; border-radius: 26px 26px 0 0; }
       #detail .dh .close { width: 38px; height: 38px; font-size: 22px; }
       #search, select, .sheet input { font-size: 16px; } /* prevent iOS focus zoom */
       .chip { padding: 8px 14px; }
     }
-    #legend-btn { display: none; align-items: center; font-size: 11px; font-weight: 600; padding: 4px 10px;
-      border-radius: 999px; border: none; background: var(--tint); color: var(--muted); cursor: pointer; font-family: inherit; }
   </style>
 </head>
 <body>
-  <h2 class="sr-only">SiteWatch: a live map of commercial construction sites across Texas, filterable by category, value, and likelihood of active construction.</h2>
+  <h1 class="sr-only">SiteWatch: a live map of commercial construction sites across Texas, filterable by category, value, and likelihood of active construction.</h1>
   <div id="app">
     <main id="map"></main>
-    <aside id="sidebar">
+
+    <button id="brand-pill" data-state="" title="About this map">
+      <strong class="bt"><span class="dot">●</span> SiteWatch — <span id="region">Texas</span></strong>
+      <span id="bstate">loading…</span>
+    </button>
+
+    <nav id="rail" aria-label="Map panels">
+      <button data-panel="sites" title="Sites" aria-label="Sites list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 6h11.5M8.5 12h11.5M8.5 18h11.5M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+      <button data-panel="filters" title="Filters" aria-label="Filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6.5 7.2V19l-3-1.6v-5.2z"/></svg><span class="bdg" id="facet-bdg"></span></button>
+      <button data-panel="places" title="Places" aria-label="Places"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+      <button data-panel="views" title="Saved views" aria-label="Saved views"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.7 5.4 5.9.9-4.3 4.2 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.4 9.8l5.9-.9z"/></svg></button>
+      <button data-panel="companies" title="Companies" aria-label="Followed companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8h6v13M13 21V4h6v17M8 12h.01M8 16h.01M16 8h.01M16 12h.01M16 16h.01"/></svg><span class="bdg" id="fol-bdg"></span></button>
+      <div class="spacer"></div>
+      <button data-panel="account" title="Alerts &amp; account" aria-label="Alerts and account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5M10.4 20a1.9 1.9 0 0 0 3.2 0"/></svg><span class="bdg" id="acct-bdg"></span></button>
+      <button data-panel="info" title="About this map" aria-label="About this map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11.5V16"/></svg></button>
+    </nav>
+
+    <aside id="sidebar" data-open="">
       <button id="sheet-handle" aria-label="Expand or collapse the panel"><span></span></button>
-      <div id="brand">
-        <h1><span class="dot">●</span> SiteWatch — <span id="region">Texas</span></h1>
-        <div class="meta-row">
-          <span id="badge">loading…</span>
-          <span id="through"></span>
-          <button id="legend-btn" aria-pressed="false">ⓘ legend</button>
+
+      <section class="pane" data-pane="sites">
+        <div class="list-head">
+          <span class="cnt" id="list-cnt"></span>
+          <span class="list-tools">
+            <button id="csv" title="Download the filtered list as a spreadsheet (CSV)">⬇ CSV</button>
+            <select id="sort">
+              <option value="new">Newest first</option>
+              <option value="value">Highest value</option>
+              <option value="sqft">Largest sq ft</option>
+            </select>
+          </span>
         </div>
-        <div id="account"></div>
-        <div class="seolinks"><a href="/insights">📊 Texas construction report</a> · <a href="/companies">Companies</a></div>
-      </div>
+        <div id="list"></div>
+      </section>
 
-      <div id="tabs" role="tablist">
-        <button id="tab-filters" role="tab" data-tab="filters">Filters</button>
-        <button id="tab-sites" role="tab" data-tab="sites">Sites <span id="tab-count"></span></button>
-      </div>
-      <div id="ask-note" hidden></div>
-
-      <div class="controls">
-        <label class="lbl" for="ask">✨ Ask the map</label>
-        <div class="digestrow">
-          <input id="ask" type="text" placeholder="e.g. tilt-wall warehouses near me over $5M" autocomplete="off" />
-          <button id="ask-go">Ask</button>
-        </div>
-
-        <label class="lbl" for="search">Search address · owner · architect · scope</label>
-        <input id="search" type="text" placeholder="e.g. tilt wall, ISD, Hines, Westheimer…" autocomplete="off" />
-
-        <label class="lbl">Jump to metro</label>
-        <div class="chips" id="metros"></div>
-        <div id="nearrow" hidden>
-          <label class="lbl" for="radius">Within <span id="radiusout" class="rangeval">30 mi</span> of your location</label>
-          <input id="radius" type="range" min="5" max="150" step="5" value="30" />
-        </div>
-
-        <label class="lbl">Saved views</label>
-        <div class="chips" id="views"></div>
-
+      <section class="pane" data-pane="filters">
+        <div class="pane-h">Filters</div>
         <label class="lbl">Category</label>
         <div class="chips" id="cats"></div>
 
@@ -318,8 +387,36 @@
 
         <label class="toggle"><input type="checkbox" id="newonly" /> Only show new this week <span id="newcnt" style="color:var(--new);font-weight:600"></span></label>
         <label class="toggle"><input type="checkbox" id="startedonly" /> 🚧 Just started construction <span id="startedcnt" style="color:var(--good);font-weight:600"></span></label>
-        <label class="toggle"><input type="checkbox" id="followedonly" /> ★ Followed companies only <span id="folcnt" style="color:var(--primary);font-weight:600"></span></label>
         <button id="reset">Reset filters</button>
+      </section>
+
+      <section class="pane" data-pane="places">
+        <div class="pane-h">Places</div>
+        <label class="lbl">Jump to metro</label>
+        <div class="chips" id="metros"></div>
+        <div id="nearrow" hidden>
+          <label class="lbl" for="radius">Within <span id="radiusout" class="rangeval">30 mi</span> of your location</label>
+          <input id="radius" type="range" min="5" max="150" step="5" value="30" />
+        </div>
+      </section>
+
+      <section class="pane" data-pane="views">
+        <div class="pane-h">Saved views</div>
+        <p class="pane-p">A view is a snapshot of your filters and map position, saved on this device.</p>
+        <div class="chips" id="views"></div>
+      </section>
+
+      <section class="pane" data-pane="companies">
+        <div class="pane-h">Companies</div>
+        <p class="pane-p">Follow owners, architects, and tenants from any site's detail card — tap the ☆ next to their name.</p>
+        <div id="colist"></div>
+        <label class="toggle"><input type="checkbox" id="followedonly" /> ★ Followed companies only <span id="folcnt" style="color:var(--primary);font-weight:600"></span></label>
+        <label class="toggle"><input type="checkbox" id="dimothers" /> Dim other sites on the map</label>
+      </section>
+
+      <section class="pane" data-pane="account">
+        <div class="pane-h">Alerts &amp; account</div>
+        <div id="account"></div>
         <button id="alertme" hidden>🔔 Alert me about this search</button>
         <div id="digestbox" hidden>
           <label class="lbl" for="digest-email">Free weekly digest — new projects &amp; groundbreakings</label>
@@ -328,30 +425,34 @@
             <button id="digest-go">Sign up</button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div id="sites-pane">
-        <div id="stats">
-          <div class="stat"><div class="n" id="stat-count">—</div><div class="l">Sites shown</div></div>
-          <div class="stat"><div class="n" id="stat-value">—</div><div class="l">Declared value</div></div>
+      <section class="pane" data-pane="info">
+        <div class="pane-h">About this map</div>
+        <div class="meta-row">
+          <span id="badge">loading…</span>
         </div>
-
-        <div class="list-head">
-          <span class="cnt" id="list-cnt"></span>
-          <span class="list-tools">
-            <button id="csv" title="Download the filtered list as a spreadsheet (CSV)">⬇ CSV</button>
-            <select id="sort">
-              <option value="new">Newest first</option>
-              <option value="value">Highest value</option>
-              <option value="sqft">Largest sq ft</option>
-            </select>
-          </span>
-        </div>
-        <div id="list"></div>
-      </div>
+        <div id="through"></div>
+        <p class="pane-p" style="margin-top:12px">Every dot is a commercial construction project registered with the State of Texas (TDLR TABS). Color = category · size = declared value · faded = likely finished. Green ring = just broke ground, amber ring = new this week.</p>
+        <div class="seolinks"><a href="/insights">📊 Texas construction report</a> · <a href="/companies">Companies</a></div>
+        <p class="pane-p" style="margin-top:12px">Map © OpenStreetMap · CARTO · Esri. Project data: TDLR TABS, refreshed daily.</p>
+      </section>
     </aside>
 
-    <button id="sb-toggle" aria-label="Toggle panel" title="Hide panel">‹</button>
+    <div id="topwrap">
+      <div id="topbar">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></span>
+        <input id="search" type="text" placeholder="Search — or ask: tilt-wall warehouses near me over $5M" autocomplete="off" aria-label="Search or ask the map" />
+        <button id="ask-go" title="Ask AI to build this filter (Ctrl+Enter)">✨ Ask</button>
+      </div>
+      <div id="tray" aria-live="polite"></div>
+    </div>
+
+    <div id="ambient">
+      <button id="statchip" title="Open the sites list"><b id="stat-count">—</b> sites · <span id="stat-value">—</span> shown</button>
+      <button id="badge-chip" hidden title="About this data"></button>
+      <button id="legend-btn" aria-pressed="false" title="Legend" aria-label="Toggle the map legend">ⓘ</button>
+    </div>
     <div id="legend"></div>
   </div>
 
@@ -422,7 +523,8 @@
       'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery &copy; Esri · data: TDLR TABS', maxZoom: 19 }),
     };
     baseLayers['Soft'].addTo(map);
-    L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
+    // bottomright (above zoom): topright would sit under the search pill
+    L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(map);
 
     // No clustering, no count bubbles — FlightRadar-style. EVERY site is always
     // on the map as a small category-colored dot (one shared canvas, cheap at
@@ -434,8 +536,8 @@
     const dotsGroup = L.layerGroup().addTo(map);
     const pinsGroup = L.layerGroup().addTo(map);
 
-    let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now(), DATA_AGE_DAYS = null;
-    const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, followedOnly:false, sort:'new', center:null, radiusMi:30 };
+    let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now(), DATA_AGE_DAYS = null, LOADED = false;
+    const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, followedOnly:false, dimOthers:false, sort:'new', center:null, radiusMi:30 };
 
     // ── Followed companies ("my fleet") — stored locally, no account needed ──
     const normCo = (s) => String(s || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9 ]+/g, ' ')
@@ -443,9 +545,34 @@
       .replace(/( (llc|llp|lp|inc|incorporated|corp|corporation|co|company|ltd|limited))+$/, '');
     let FOLLOWED = new Set();
     try { FOLLOWED = new Set(JSON.parse(localStorage.getItem('sw-follow') || '[]')); } catch (e) {}
+    // display names for the Companies pane — sw-follow itself stores normalized keys
+    let FOLLOW_NAMES = {};
+    try { FOLLOW_NAMES = JSON.parse(localStorage.getItem('sw-follow-names') || '{}'); } catch (e) {}
     function saveFollowed() {
-      try { localStorage.setItem('sw-follow', JSON.stringify([...FOLLOWED])); } catch (e) {}
+      try {
+        localStorage.setItem('sw-follow', JSON.stringify([...FOLLOWED]));
+        localStorage.setItem('sw-follow-names', JSON.stringify(FOLLOW_NAMES));
+      } catch (e) {}
       document.getElementById('folcnt').textContent = FOLLOWED.size ? `(${FOLLOWED.size})` : '';
+      const bdg = document.getElementById('fol-bdg');
+      bdg.textContent = FOLLOWED.size || '';
+      bdg.classList.toggle('show', FOLLOWED.size > 0);
+      renderCompanies();
+    }
+    function renderCompanies() {
+      const el = document.getElementById('colist');
+      if (!FOLLOWED.size) {
+        el.innerHTML = '<div class="empty">No companies followed yet.<br>Open any site and tap the ☆ next to its owner or architect.</div>';
+        return;
+      }
+      el.innerHTML = [...FOLLOWED].sort().map((k) =>
+        `<div class="corow"><span>★ ${esc(FOLLOW_NAMES[k] || k)}</span><button class="x" data-k="${esc(k)}">Unfollow</button></div>`).join('');
+      for (const b of el.querySelectorAll('.x')) b.onclick = () => {
+        FOLLOWED.delete(b.dataset.k); delete FOLLOW_NAMES[b.dataset.k];
+        if (state.followedOnly && !FOLLOWED.size) { state.followedOnly = false; document.getElementById('followedonly').checked = false; }
+        saveFollowed();
+        apply();
+      };
     }
     function isFollowedCo(p) {
       return [p.owner, p.designFirm, p.tenantName].some((n) => n && FOLLOWED.has(normCo(n)));
@@ -491,6 +618,7 @@
 
     let LAST_VISIBLE = [];
     function apply() {
+      if (!LOADED) return; // pre-load repaints would render a dead empty state
       const visible = [];
       for (const m of MARKERS) if (passes(m._p, m)) visible.push(m);
       LAST_VISIBLE = visible;
@@ -498,24 +626,55 @@
       let total = 0; for (const v of visible) total += v._p.valuation || 0;
       document.getElementById('stat-count').textContent = visible.length.toLocaleString();
       document.getElementById('stat-value').textContent = fmtShort(total);
-      document.getElementById('tab-count').textContent = visible.length.toLocaleString();
       renderList(visible);
+      renderTray();
     }
 
-    // Filters / Sites tab switching (remembered across visits)
+    // Rail → drawer: one pane at a time; clicking the active icon closes it.
     const sidebarEl = document.getElementById('sidebar');
-    function setTab(name) {
-      sidebarEl.classList.toggle('tab-filters', name === 'filters');
-      sidebarEl.classList.toggle('tab-sites', name === 'sites');
-      for (const b of document.querySelectorAll('#tabs button')) {
-        const on = b.dataset.tab === name;
+    const appEl = document.getElementById('app');
+    const PANELS = ['sites', 'filters', 'places', 'views', 'companies', 'account', 'info'];
+    let activePanel = null;
+    const isMobile = () => window.innerWidth <= 760;
+    function setPanel(name) {
+      if (!PANELS.includes(name)) name = null;
+      // mobile has no closed-drawer state: closing collapses to a peeked sheet
+      // instead of leaving a blank 46vh panel (statchip, Escape, stale '' pref)
+      const collapse = !name && isMobile();
+      if (collapse) name = activePanel || 'sites';
+      activePanel = name;
+      sidebarEl.dataset.open = name || '';
+      for (const b of document.querySelectorAll('#rail button[data-panel]')) {
+        const on = b.dataset.panel === name;
         b.classList.toggle('active', on);
-        b.setAttribute('aria-selected', String(on));
+        b.setAttribute('aria-pressed', String(on));
       }
-      try { localStorage.setItem('sw-tab', name); } catch (e) {}
+      if (name === 'companies') renderCompanies();
+      if (isMobile() && (collapse || appEl.classList.contains('peek'))) {
+        appEl.classList.toggle('peek', collapse);
+        setTimeout(() => map.invalidateSize(), 280);
+      }
+      try { localStorage.setItem('sw-panel', name || ''); } catch (e) {}
     }
-    for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => setTab(b.dataset.tab);
-    setTab((() => { try { return localStorage.getItem('sw-tab') || 'sites'; } catch (e) { return 'sites'; } })());
+    for (const b of document.querySelectorAll('#rail button[data-panel]')) {
+      b.onclick = () => {
+        if (activePanel === b.dataset.panel) {
+          // mobile: tapping the active icon collapses to peek instead of blanking the sheet
+          if (isMobile()) { appEl.classList.toggle('peek'); setTimeout(() => map.invalidateSize(), 280); }
+          else setPanel(null);
+        } else setPanel(b.dataset.panel);
+      };
+    }
+    document.getElementById('brand-pill').onclick = () => setPanel(activePanel === 'info' ? null : 'info');
+    document.getElementById('statchip').onclick = () => setPanel(activePanel === 'sites' ? null : 'sites');
+    document.getElementById('badge-chip').onclick = () => setPanel('info');
+    // first paint: restore sw-panel, migrating the old sw-tab / sw-collapsed prefs
+    setPanel((() => { try {
+      const saved = localStorage.getItem('sw-panel');
+      if (saved != null) return saved; // '' → drawer closed
+      if (localStorage.getItem('sw-collapsed') === '1') return '';
+      return localStorage.getItem('sw-tab') || 'sites';
+    } catch (e) { return 'sites'; } })());
 
     // Export the CURRENT filtered set (all of it, not just the listed 250) as a
     // CSV — sales teams live in spreadsheets and CRMs, not maps.
@@ -592,7 +751,8 @@
       const tipText = p.valuation ? `${tip} · ${fmtShort(p.valuation)}` : tip;
       dot.bindTooltip(tipText, { direction: 'top', offset: [0, -4], className: 'sw-tip' });
       dot.on('click', () => openDetail(p, false));
-      return { _p: p, ll, dot, pin: null, tipText };
+      // base opacities remembered so "dim other sites" can restore them
+      return { _p: p, ll, dot, pin: null, tipText, fop: Math.max(.5, op), sop: ringCol ? .95 : .5 };
     }
 
     // Glyph chips are built lazily — only for what actually enters the viewport.
@@ -615,9 +775,17 @@
       return m;
     }
 
+    // "Dim other sites" fades non-followed sites instead of hiding them —
+    // the FlightRadar principle: everything stays on the map.
+    const dimActive = () => state.dimOthers && FOLLOWED.size > 0;
     function redrawMap() {
       dotsGroup.clearLayers();
-      for (const e of LAST_VISIBLE) dotsGroup.addLayer(e.dot);
+      const dim = dimActive();
+      for (const e of LAST_VISIBLE) {
+        const d = dim && !isFollowedCo(e._p);
+        e.dot.setStyle({ fillOpacity: d ? .1 : e.fop, opacity: d ? .12 : e.sop });
+        dotsGroup.addLayer(e.dot);
+      }
       refreshPins();
     }
     function refreshPins() {
@@ -628,7 +796,12 @@
       if (inView.length > PIN_CAP) {
         inView = inView.sort((x, y) => (y._p.valuation || 0) - (x._p.valuation || 0)).slice(0, PIN_CAP);
       }
-      for (const e of inView) pinsGroup.addLayer(pinFor(e));
+      const dim = dimActive();
+      for (const e of inView) {
+        const m = pinFor(e);
+        m.setOpacity(dim && !isFollowedCo(e._p) ? .15 : 1);
+        pinsGroup.addLayer(m);
+      }
     }
     map.on('moveend zoomend', refreshPins);
 
@@ -687,10 +860,11 @@
       else sv.style.display = 'none';
       document.getElementById('detail').classList.add('open');
       document.getElementById('detail').setAttribute('aria-hidden','false');
+      document.body.classList.add('detail-open'); // topwrap yields to the card
       history.replaceState(null,'', '#p=' + encodeURIComponent(p.permitNumber||''));
       if (recenter) { const e = byId.get(p.permitNumber); if (e) map.setView(e.ll, Math.max(map.getZoom(),13)); }
     }
-    function closeDetail() { document.getElementById('detail').classList.remove('open'); document.getElementById('detail').setAttribute('aria-hidden','true'); history.replaceState(null,'',' '); }
+    function closeDetail() { document.getElementById('detail').classList.remove('open'); document.getElementById('detail').setAttribute('aria-hidden','true'); document.body.classList.remove('detail-open'); history.replaceState(null,'',' '); }
     document.getElementById('detail-close').onclick = closeDetail;
     document.getElementById('d-copy').onclick = () => navigator.clipboard?.writeText(location.href).then(() => { const b=document.getElementById('d-copy'); b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy link',1200); });
 
@@ -703,8 +877,72 @@
         chip.innerHTML = (colored ? `<span class="sw" style="background:${COLORS[v]||COLORS.unknown}"></span>` : '') + (labels[v]||v);
         chip.onclick = () => { const on = stateSet.has(v);
           if (on) { stateSet.delete(v); chip.classList.add('off'); } else { stateSet.add(v); chip.classList.remove('off'); }
-          chip.setAttribute('aria-pressed', String(!on)); apply(); };
+          chip.setAttribute('aria-pressed', String(!on)); ASK_EXPL = null; apply(); };
         el.appendChild(chip); }
+    }
+
+    // ── Filter-chip tray: filters are state you set, not a panel you live in.
+    // Every applied facet shows as a removable chip under the search bar, so
+    // the current query is glanceable in any pane state (MarineTraffic-style).
+    let ALL_CATS = [], ALL_WORKS = [];
+    let ASK_EXPL = null; // last Ask-the-map explanation, shown as the ✨ chip
+    function clearFacet(name) {
+      ASK_EXPL = null; // any manual facet change makes the AI explanation stale
+      switch (name) {
+        case 'cats': state.cats = new Set(ALL_CATS); buildChips('cats', ALL_CATS, CAT_LABELS, state.cats, true); break;
+        case 'works': state.works = new Set(ALL_WORKS); buildChips('works', ALL_WORKS, WORK_LABELS, state.works, false); break;
+        case 'val': state.minVal = 0; document.getElementById('val').value = '0'; document.getElementById('valout').textContent = '$0+'; break;
+        case 'conf': state.minConf = 0; document.getElementById('conf').value = '0'; document.getElementById('confout').textContent = '0%'; break;
+        case 'since': state.since = 0; document.getElementById('since').value = '0'; break;
+        case 'new': state.newOnly = false; document.getElementById('newonly').checked = false; break;
+        case 'started': state.startedOnly = false; document.getElementById('startedonly').checked = false; break;
+        case 'followed': state.followedOnly = false; document.getElementById('followedonly').checked = false; break;
+        case 'q': state.q = ''; document.getElementById('search').value = ''; break;
+        case 'near': setNear(null); return; // setNear re-applies itself
+      }
+      apply();
+    }
+    function renderTray() {
+      const tray = document.getElementById('tray');
+      tray.innerHTML = '';
+      let facets = 0;
+      const chip = (cls, html, title, onBody, onX) => {
+        const c = document.createElement('button'); c.type = 'button'; c.className = 'chip' + (cls ? ' ' + cls : '');
+        c.innerHTML = html + (onX ? ' <span class="x" title="Remove">×</span>' : '');
+        if (title) c.title = title;
+        c.onclick = (e) => { if (e.target.classList.contains('x')) { if (onX) onX(); } else if (onBody) onBody(); };
+        tray.appendChild(c);
+      };
+      if (ASK_EXPL) chip('ai', `✨ <span class="txt">${esc(ASK_EXPL)}</span>`, ASK_EXPL, () => toast(ASK_EXPL),
+        () => { ASK_EXPL = null; document.getElementById('reset').click(); });
+      if (state.q && !ASK_EXPL) { facets++;
+        chip('', `“${esc(state.q.length > 26 ? state.q.slice(0, 26) + '…' : state.q)}”`, 'Search: ' + state.q, null, () => clearFacet('q')); }
+      if (ALL_CATS.length && state.cats.size < ALL_CATS.length) { facets++;
+        const sel = [...state.cats];
+        const label = sel.length === 0 ? 'no categories' : sel.length === 1 ? (CAT_LABELS[sel[0]] || sel[0]) : sel.length + ' categories';
+        const sw = sel.length === 1 ? `<span class="sw" style="background:${COLORS[sel[0]] || COLORS.unknown}"></span>` : '';
+        chip('', sw + esc(label), sel.length ? sel.map((c) => CAT_LABELS[c] || c).join(', ') : 'Every category is toggled off', () => setPanel('filters'), () => clearFacet('cats')); }
+      if (ALL_WORKS.length && state.works.size && state.works.size < ALL_WORKS.length) { facets++;
+        const sel = [...state.works];
+        const label = sel.length === 1 ? (WORK_LABELS[sel[0]] || sel[0]) : sel.length + ' work types';
+        chip('', esc(label), sel.map((w) => WORK_LABELS[w] || w).join(', '), () => setPanel('filters'), () => clearFacet('works')); }
+      if (state.minConf) { facets++; chip('', `≥${state.minConf}% likely`, 'Min. likelihood of active construction', () => setPanel('filters'), () => clearFacet('conf')); }
+      if (state.minVal) { facets++; chip('', '≥' + fmtShort(state.minVal), 'Min. declared value', () => setPanel('filters'), () => clearFacet('val')); }
+      if (state.since) { facets++;
+        const lbl = state.since >= 365 ? 'last year' : state.since >= 180 ? 'last 6 months' : `last ${state.since} days`;
+        chip('', lbl, 'Registered within', () => setPanel('filters'), () => clearFacet('since')); }
+      if (state.newOnly) { facets++; chip('', 'new this week', '', () => setPanel('filters'), () => clearFacet('new')); }
+      if (state.startedOnly) { facets++; chip('', '🚧 just started', '', () => setPanel('filters'), () => clearFacet('started')); }
+      if (state.followedOnly) { facets++; chip('', '★ my companies', 'Only followed companies', () => setPanel('companies'), () => clearFacet('followed')); }
+      if (state.center) { facets++; chip('', `within ${state.radiusMi} mi`, 'Adjust the radius in Places', () => setPanel('places'), () => clearFacet('near')); }
+      const bdg = document.getElementById('facet-bdg');
+      bdg.textContent = facets || '';
+      bdg.classList.toggle('show', facets > 0);
+      if (facets || ASK_EXPL) {
+        chip('', 'Clear all', 'Reset every filter', () => document.getElementById('reset').click());
+        const alertBtn = document.getElementById('alertme');
+        if (!alertBtn.hidden) chip('alertchip', '🔔 Alert me', 'Email me when new projects match these filters', () => alertBtn.click());
+      }
     }
 
     let t; const debounce = (fn) => { clearTimeout(t); t = setTimeout(fn, 140); };
@@ -715,7 +953,17 @@
         try { const r = await fetch(url); if (r.ok) { loaded = { url, fc: await r.json() }; break; } } catch (e) {}
       }
       const badge = document.getElementById('badge');
-      if (!loaded) { document.querySelector('#loading span').textContent = 'No data. Run `npm run pull:texas` (or `npm run demo`).'; badge.textContent='no data'; return; }
+      const syncBrand = () => { // brand pill mirrors the badge as a compact colored state
+        document.getElementById('brand-pill').dataset.state = badge.className || '';
+        document.getElementById('bstate').textContent = badge.textContent;
+        // the brand pill is hidden on mobile — demo/stale data still needs an
+        // ambient surface there, so those states get a colored chip
+        const bc = document.getElementById('badge-chip');
+        const warn = badge.className === 'demo' || badge.className === 'stale';
+        bc.hidden = !warn;
+        if (warn) { bc.textContent = badge.textContent; bc.dataset.state = badge.className; }
+      };
+      if (!loaded) { document.querySelector('#loading span').textContent = 'No data. Run `npm run pull:texas` (or `npm run demo`).'; badge.textContent='no data'; syncBrand(); return; }
       FEATURES = (loaded.fc.features||[]).filter(f => f.geometry && f.geometry.coordinates);
       document.getElementById('region').textContent = loaded.url.includes('texas') ? 'Texas' : 'Houston';
       const isDemo = loaded.url.includes('-demo');
@@ -739,12 +987,14 @@
       if (isDemo) { badge.textContent = 'demo data'; badge.className = 'demo'; }
       else if (DATA_AGE_DAYS != null && DATA_AGE_DAYS > 3) { badge.textContent = `updated ${DATA_AGE_DAYS} days ago`; badge.className = 'stale'; }
       else { badge.textContent = 'live · TDLR'; badge.className = 'live'; }
+      syncBrand();
       document.getElementById('through').textContent = through ? `data through ${new Date(through).toISOString().slice(0,10)} · ${FEATURES.length.toLocaleString()} sites` : `${FEATURES.length.toLocaleString()} sites`;
       if (newCount) document.getElementById('newcnt').textContent = `(${newCount})`;
       if (startedCount) document.getElementById('startedcnt').textContent = `(${startedCount})`;
 
       const cats = [...new Set(FEATURES.map(f=>f.properties.category))].sort();
       const works = [...new Set(FEATURES.map(f=>f.properties.workClass))].sort();
+      ALL_CATS = cats; ALL_WORKS = works; // the tray's clearFacet restores these
       buildChips('cats', cats, CAT_LABELS, state.cats, true);
       buildChips('works', works, WORK_LABELS, state.works, false);
       document.getElementById('legend').innerHTML =
@@ -760,9 +1010,10 @@
       document.getElementById('newonly').onchange = (e) => { state.newOnly = e.target.checked; apply(); };
       document.getElementById('startedonly').onchange = (e) => { state.startedOnly = e.target.checked; apply(); };
       document.getElementById('sort').onchange = (e) => { state.sort = e.target.value; apply(); };
-      document.getElementById('search').oninput = (e) => { state.q = e.target.value.trim(); debounce(apply); };
+      document.getElementById('search').oninput = (e) => { state.q = e.target.value.trim(); ASK_EXPL = null; debounce(apply); };
       document.getElementById('reset').onclick = () => {
         state.minVal=0; state.minConf=0; state.since=0; state.newOnly=false; state.startedOnly=false; state.followedOnly=false; state.q='';
+        ASK_EXPL = null;
         val.value=0; conf.value=0; document.getElementById('valout').textContent='$0+'; document.getElementById('confout').textContent='0%';
         document.getElementById('since').value='0'; document.getElementById('newonly').checked=false; document.getElementById('startedonly').checked=false; document.getElementById('followedonly').checked=false; document.getElementById('search').value='';
         state.cats=new Set(cats); state.works=new Set(works);
@@ -772,6 +1023,7 @@
       };
 
       document.getElementById('loading').style.display = 'none';
+      LOADED = true;
       apply();
 
       // Deep link FIRST — it must not depend on anything below succeeding.
@@ -798,6 +1050,7 @@
       if (e.key !== 'Escape') return;
       if (modal.classList.contains('open')) closeModal();
       else if (document.getElementById('detail').classList.contains('open')) closeDetail();
+      else if (activePanel) setPanel(null);
     });
     function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2800); }
     function openSheet(html) { sheet.innerHTML = `<button class="close" id="x-close">×</button>` + html; modal.classList.add('open'); document.getElementById('x-close').onclick = closeModal; }
@@ -848,6 +1101,8 @@
 
     function renderAccount() {
       const el = document.getElementById('account');
+      // signed-out nudge: a small dot on the bell icon in the rail
+      document.getElementById('acct-bdg').classList.toggle('show', !user);
       if (user) {
         const tag = isPro ? `<span class="protag">PRO</span> · <button class="link-btn" id="managesub" title="Manage or cancel your subscription">Billing</button>` : `<button class="link-btn" id="upgrade">Upgrade to Pro</button>`;
         el.innerHTML = `<span class="who"><b>${esc(user.email)}</b></span> · ${tag} · <button class="link-btn" id="myalerts">My alerts</button> · <button class="link-btn" id="signout">Sign out</button>`;
@@ -947,8 +1202,6 @@
       sheet.querySelectorAll('.x').forEach((btn) => (btn.onclick = async () => { await sb.from('saved_searches').delete().eq('id', btn.dataset.id); btn.closest('.alertrow').remove(); toast('Alert deleted'); }));
     }
 
-    const appEl = document.getElementById('app');
-
     // metro quick-jumps
     const METROS = [
       ['Houston', 29.76, -95.37, 10], ['DFW', 32.85, -97.03, 9], ['Austin', 30.27, -97.74, 10],
@@ -1002,10 +1255,11 @@
     };
 
     // ✨ Ask the map: Claude turns a plain-English question into map filters
-    // (/api/ask). If the endpoint isn't configured, fall back to keyword search.
-    const askEl = document.getElementById('ask'), askBtn = document.getElementById('ask-go'), askNote = document.getElementById('ask-note');
+    // (/api/ask). Shares the top-bar input with keyword search — typing filters
+    // as you type; only the ✨ button (or Ctrl/Cmd+Enter) spends an AI call.
+    const searchEl = document.getElementById('search'), askBtn = document.getElementById('ask-go');
     async function runAsk() {
-      const q = askEl.value.trim();
+      const q = searchEl.value.trim();
       if (!q) return;
       askBtn.disabled = true; askBtn.textContent = '…';
       try {
@@ -1021,17 +1275,14 @@
         const STOP = /^(projects?|construction|sites?|buildings?|show|me|all|the|a|an|in|of|for|near|nearby|around|with|that|are|is|being|built|new|currently)$/i;
         const kept = q.split(/\s+/).filter((t) => !STOP.test(t)).join(' ') || q;
         document.getElementById('reset').click();
-        state.q = kept; document.getElementById('search').value = kept; apply();
-        setTab('sites');
-        askNote.hidden = false;
-        askNote.innerHTML = `AI search unavailable (${esc(String(e.message || e))}) — ran a keyword search instead. <button id="ask-clear">Clear</button>`;
-        document.getElementById('ask-clear').onclick = clearAsk;
+        state.q = kept; searchEl.value = kept; apply();
+        setPanel('sites');
+        toast('AI search unavailable — ran a keyword search instead');
       }
-      askBtn.disabled = false; askBtn.textContent = 'Ask';
+      askBtn.disabled = false; askBtn.textContent = '✨ Ask';
     }
     askBtn.onclick = runAsk;
-    askEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') runAsk(); });
-    function clearAsk() { askNote.hidden = true; askEl.value = ''; document.getElementById('reset').click(); }
+    searchEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runAsk(); });
 
     async function applyAiFilters(f) {
       document.getElementById('reset').click(); // clean slate (also clears near-me)
@@ -1056,11 +1307,9 @@
         if (loc) setNear(loc, f.radiusMi || 30);
         else toast('Location unavailable — showing statewide results');
       }
+      ASK_EXPL = f.explanation || 'AI filters applied'; // renderTray shows the ✨ chip
       apply();
-      setTab('sites'); // show the results, not the knobs
-      askNote.hidden = false;
-      askNote.innerHTML = `${esc(f.explanation || 'Filters applied.')} · <b>${document.getElementById('stat-count').textContent}</b> sites match. <button id="ask-clear">Clear</button>`;
-      document.getElementById('ask-clear').onclick = clearAsk;
+      setPanel('sites'); // show the results, not the knobs
     }
 
     // mobile bottom sheet: tap the handle to swap panel <-> map real estate
@@ -1069,12 +1318,17 @@
       appEl.classList.toggle('peek');
       setTimeout(() => map.invalidateSize(), 280); // map height changed
     };
-    // mobile legend toggle
+    // legend toggle (desktop + mobile) — on by default on desktop, persisted
     const legendBtn = document.getElementById('legend-btn');
     legendBtn.onclick = () => {
       const on = appEl.classList.toggle('show-legend');
       legendBtn.setAttribute('aria-pressed', String(on));
+      try { localStorage.setItem('sw-legend', on ? '1' : '0'); } catch (e) {}
     };
+    if ((() => { try { const v = localStorage.getItem('sw-legend'); return v === '1' || (v == null && !isMobile()); } catch (e) { return !isMobile(); } })()) {
+      appEl.classList.add('show-legend');
+      legendBtn.setAttribute('aria-pressed', 'true');
+    }
 
     // follow-star clicks in the detail panel (delegated — rows are re-rendered)
     document.getElementById('d-kv').addEventListener('click', (e) => {
@@ -1083,14 +1337,18 @@
       const key = normCo(b.dataset.co);
       if (!key) return;
       const on = !FOLLOWED.has(key);
-      if (on) FOLLOWED.add(key); else FOLLOWED.delete(key);
+      if (on) { FOLLOWED.add(key); FOLLOW_NAMES[key] = b.dataset.co; } else { FOLLOWED.delete(key); delete FOLLOW_NAMES[key]; }
       saveFollowed();
       for (const el of document.querySelectorAll(`.fol[data-co="${CSS.escape(b.dataset.co)}"]`)) {
         el.classList.toggle('on', on); el.textContent = on ? '★' : '☆';
         el.title = (on ? 'Unfollow' : 'Follow') + ' this company';
       }
       toast(on ? `Following ${b.dataset.co} ★` : `Unfollowed ${b.dataset.co}`);
-      if (state.followedOnly) apply();
+      // unfollowing the last company can't leave a filter that matches nothing
+      const clearedFol = !on && state.followedOnly && !FOLLOWED.size;
+      if (clearedFol) { state.followedOnly = false; document.getElementById('followedonly').checked = false; }
+      if (state.followedOnly || clearedFol) apply();
+      else if (state.dimOthers) redrawMap();
     });
     document.getElementById('followedonly').onchange = (e) => {
       if (e.target.checked && !FOLLOWED.size) {
@@ -1099,7 +1357,14 @@
       }
       state.followedOnly = e.target.checked; apply();
     };
-    saveFollowed(); // paints the (n) counter on load
+    document.getElementById('dimothers').onchange = (e) => {
+      if (e.target.checked && !FOLLOWED.size) {
+        e.target.checked = false;
+        return toast('Follow a company first — open any site and tap the ☆ next to its owner or architect');
+      }
+      state.dimOthers = e.target.checked; redrawMap();
+    };
+    saveFollowed(); // paints the counters + Companies pane on load
 
     // ── Saved views ("my areas") — filters + camera, stored locally ──────────
     let VIEWS = [];
@@ -1158,22 +1423,10 @@
       if (v.center) setNear(v.center, v.radiusMi);
       if (v.cam) map.setView([v.cam.lat, v.cam.lng], v.cam.z, { animate: true });
       apply();
-      setTab('sites');
+      setPanel('sites');
       toast(`Restored “${v.name}”`);
     }
     renderViews();
-
-    // collapsible floating panel — more map when you want it
-    const sbToggle = document.getElementById('sb-toggle');
-    function setCollapsed(c) {
-      appEl.classList.toggle('collapsed', c);
-      sbToggle.textContent = c ? '›' : '‹';
-      sbToggle.title = c ? 'Show panel' : 'Hide panel';
-      try { localStorage.setItem('sw-collapsed', c ? '1' : '0'); } catch (e) {}
-      // map is full-bleed behind the floating panel — no resize needed
-    }
-    sbToggle.onclick = () => setCollapsed(!appEl.classList.contains('collapsed'));
-    setCollapsed((() => { try { return localStorage.getItem('sw-collapsed') === '1'; } catch (e) { return false; } })());
 
     load();
     initAuth();
