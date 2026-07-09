@@ -10,7 +10,7 @@
 // Env vars: ANTHROPIC_API_KEY (Pages → Settings → Environment variables).
 // Without it the endpoint answers 503 and the client falls back to keyword search.
 
-const MODEL = 'claude-opus-4-8';
+const MODEL = 'claude-sonnet-5';
 
 const SYSTEM = `You translate questions about a Texas commercial-construction map into its filter model. The map shows ~14k projects from TDLR TABS permit registrations, each with: category, work class, declared value (USD), a 0-1 confidence that construction is active now, registration date, scope-of-work free text, owner (the developer/company building it), architect/design firm, tenant, and address.
 
@@ -56,15 +56,19 @@ export async function onRequestPost({ request, env }) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key': env.ANTHROPIC_API_KEY,
+      // trim: a secret set via a piped shell can pick up a trailing newline
+      'x-api-key': String(env.ANTHROPIC_API_KEY).trim(),
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
     },
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 700,
+      // Sonnet 5 runs adaptive thinking when `thinking` is omitted — explicitly
+      // off here: filter translation needs speed, not deliberation.
+      thinking: { type: 'disabled' },
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
       system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-      output_config: { format: { type: 'json_schema', schema: SCHEMA } },
       messages: [{ role: 'user', content: question }],
     }),
   });

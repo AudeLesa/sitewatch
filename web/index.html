@@ -154,8 +154,12 @@
     .kv .v { color: var(--ink); overflow-wrap: anywhere; }
     .kv .v.big { color: var(--good); font-weight: 700; }
     .kv a { color: var(--primary); }
-    .dactions { display: flex; gap: 8px; margin-top: 18px; }
-    .dactions a, .dactions button { flex: 1; text-align: center; font-size: 12px; font-weight: 600; padding: 10px 8px;
+    .fol { background: none; border: none; color: var(--faint); font-size: 14px; cursor: pointer; padding: 0 2px; vertical-align: baseline; }
+    .fol.on, .fol:hover { color: var(--new); }
+    #views .chip .x { margin-left: 4px; color: var(--faint); font-weight: 700; }
+    #views .chip .x:hover { color: #d05a5a; }
+    .dactions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .dactions a, .dactions button { flex: 1 1 45%; text-align: center; font-size: 12px; font-weight: 600; padding: 10px 8px;
       border-radius: 999px; border: none; background: var(--card); color: var(--primary); cursor: pointer; text-decoration: none;
       box-shadow: 0 2px 8px rgba(49,63,159,.08); font-family: inherit; }
     .dactions a:first-child { background: var(--primary); color: #fff; }
@@ -287,6 +291,9 @@
           <input id="radius" type="range" min="5" max="150" step="5" value="30" />
         </div>
 
+        <label class="lbl">Saved views</label>
+        <div class="chips" id="views"></div>
+
         <label class="lbl">Category</label>
         <div class="chips" id="cats"></div>
 
@@ -311,6 +318,7 @@
 
         <label class="toggle"><input type="checkbox" id="newonly" /> Only show new this week <span id="newcnt" style="color:var(--new);font-weight:600"></span></label>
         <label class="toggle"><input type="checkbox" id="startedonly" /> 🚧 Just started construction <span id="startedcnt" style="color:var(--good);font-weight:600"></span></label>
+        <label class="toggle"><input type="checkbox" id="followedonly" /> ★ Followed companies only <span id="folcnt" style="color:var(--primary);font-weight:600"></span></label>
         <button id="reset">Reset filters</button>
         <button id="alertme" hidden>🔔 Alert me about this search</button>
         <div id="digestbox" hidden>
@@ -360,6 +368,7 @@
       <div class="kv" id="d-kv"></div>
       <div class="dactions">
         <a id="d-page" target="_blank" rel="noopener">Details ↗</a>
+        <a id="d-street" target="_blank" rel="noopener">📷 Street View</a>
         <a id="d-tdlr" target="_blank" rel="noopener">TDLR ↗</a>
         <button id="d-copy">Copy link</button>
       </div>
@@ -422,7 +431,21 @@
     const pinsGroup = L.layerGroup().addTo(map);
 
     let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now(), DATA_AGE_DAYS = null;
-    const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, sort:'new', center:null, radiusMi:30 };
+    const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, followedOnly:false, sort:'new', center:null, radiusMi:30 };
+
+    // ── Followed companies ("my fleet") — stored locally, no account needed ──
+    const normCo = (s) => String(s || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9 ]+/g, ' ')
+      .replace(/\s+/g, ' ').trim().replace(/^the /, '')
+      .replace(/( (llc|llp|lp|inc|incorporated|corp|corporation|co|company|ltd|limited))+$/, '');
+    let FOLLOWED = new Set();
+    try { FOLLOWED = new Set(JSON.parse(localStorage.getItem('sw-follow') || '[]')); } catch (e) {}
+    function saveFollowed() {
+      try { localStorage.setItem('sw-follow', JSON.stringify([...FOLLOWED])); } catch (e) {}
+      document.getElementById('folcnt').textContent = FOLLOWED.size ? `(${FOLLOWED.size})` : '';
+    }
+    function isFollowedCo(p) {
+      return [p.owner, p.designFirm, p.tenantName].some((n) => n && FOLLOWED.has(normCo(n)));
+    }
     // Three size tiers by declared value — enough to read hierarchy at a glance
     // without the mushy continuum the old radius formula produced.
     const pinSize = (v) => (v >= 25e6 ? 30 : v >= 2e6 ? 24 : 19);
@@ -436,6 +459,7 @@
       if (state.since && (!p.issuedDate || (now - Date.parse(p.issuedDate)) > state.since*DAY)) return false;
       if (state.newOnly && !isNew(p)) return false;
       if (state.startedOnly && !p.justStarted) return false;
+      if (state.followedOnly && !isFollowedCo(p)) return false;
       if (state.center && m) {
         if (milesBetween(state.center, m.ll) > state.radiusMi) return false;
       }
@@ -624,7 +648,12 @@
       const rows = [];
       const add = (k, v) => { if (v != null && v !== '' && v !== '—') rows.push(`<div class="k">${k}</div><div class="v${k==='Value'?' big':''}">${v}</div>`); };
       const tel = (n) => { const d = String(n||'').replace(/[^0-9+]/g,''); return d ? `<a href="tel:${d}">${esc(n)}</a>` : ''; };
-      const party = (name, phone) => { let s = esc(name||''); if (phone) s += (s?' · ':'') + tel(phone); return s || null; };
+      const party = (name, phone) => {
+        let s = esc(name||''); if (phone) s += (s?' · ':'') + tel(phone);
+        if (name) { const on = FOLLOWED.has(normCo(name));
+          s += ` <button type="button" class="fol${on ? ' on' : ''}" data-co="${esc(name)}" title="${on ? 'Unfollow' : 'Follow'} this company">${on ? '★' : '☆'}</button>`; }
+        return s || null;
+      };
       add('Value', p.valuation ? fmtUSD(p.valuation) : null);
       add('Size', fmtSqft(p.squareFeet));
       add('Type', WORK_LABELS[p.workClass] || null);
@@ -649,6 +678,9 @@
       if (/^TABS/.test(p.permitNumber||'')) { tdlr.style.display=''; tdlr.href = `https://www.tdlr.texas.gov/TABS/Search/Project/${p.permitNumber}`; }
       else tdlr.style.display = 'none';
       document.getElementById('d-page').href = '/project/' + (p.permitNumber||'').replace(/[^A-Za-z0-9_-]/g,'');
+      const entry = byId.get(p.permitNumber), sv = document.getElementById('d-street');
+      if (entry) { sv.style.display = ''; sv.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${entry.ll.lat},${entry.ll.lng}`; }
+      else sv.style.display = 'none';
       document.getElementById('detail').classList.add('open');
       document.getElementById('detail').setAttribute('aria-hidden','false');
       history.replaceState(null,'', '#p=' + encodeURIComponent(p.permitNumber||''));
@@ -726,9 +758,9 @@
       document.getElementById('sort').onchange = (e) => { state.sort = e.target.value; apply(); };
       document.getElementById('search').oninput = (e) => { state.q = e.target.value.trim(); debounce(apply); };
       document.getElementById('reset').onclick = () => {
-        state.minVal=0; state.minConf=0; state.since=0; state.newOnly=false; state.startedOnly=false; state.q='';
+        state.minVal=0; state.minConf=0; state.since=0; state.newOnly=false; state.startedOnly=false; state.followedOnly=false; state.q='';
         val.value=0; conf.value=0; document.getElementById('valout').textContent='$0+'; document.getElementById('confout').textContent='0%';
-        document.getElementById('since').value='0'; document.getElementById('newonly').checked=false; document.getElementById('startedonly').checked=false; document.getElementById('search').value='';
+        document.getElementById('since').value='0'; document.getElementById('newonly').checked=false; document.getElementById('startedonly').checked=false; document.getElementById('followedonly').checked=false; document.getElementById('search').value='';
         state.cats=new Set(cats); state.works=new Set(works);
         buildChips('cats', cats, CAT_LABELS, state.cats, true); buildChips('works', works, WORK_LABELS, state.works, false);
         if (state.center) setNear(null); // also clears the near-me radius filter
@@ -1039,6 +1071,93 @@
       const on = appEl.classList.toggle('show-legend');
       legendBtn.setAttribute('aria-pressed', String(on));
     };
+
+    // follow-star clicks in the detail panel (delegated — rows are re-rendered)
+    document.getElementById('d-kv').addEventListener('click', (e) => {
+      const b = e.target.closest('.fol');
+      if (!b) return;
+      const key = normCo(b.dataset.co);
+      if (!key) return;
+      const on = !FOLLOWED.has(key);
+      if (on) FOLLOWED.add(key); else FOLLOWED.delete(key);
+      saveFollowed();
+      for (const el of document.querySelectorAll(`.fol[data-co="${CSS.escape(b.dataset.co)}"]`)) {
+        el.classList.toggle('on', on); el.textContent = on ? '★' : '☆';
+        el.title = (on ? 'Unfollow' : 'Follow') + ' this company';
+      }
+      toast(on ? `Following ${b.dataset.co} ★` : `Unfollowed ${b.dataset.co}`);
+      if (state.followedOnly) apply();
+    });
+    document.getElementById('followedonly').onchange = (e) => {
+      if (e.target.checked && !FOLLOWED.size) {
+        e.target.checked = false;
+        return toast('Follow a company first — open any site and tap the ☆ next to its owner or architect');
+      }
+      state.followedOnly = e.target.checked; apply();
+    };
+    saveFollowed(); // paints the (n) counter on load
+
+    // ── Saved views ("my areas") — filters + camera, stored locally ──────────
+    let VIEWS = [];
+    try { VIEWS = JSON.parse(localStorage.getItem('sw-views') || '[]'); } catch (e) {}
+    function persistViews() { try { localStorage.setItem('sw-views', JSON.stringify(VIEWS)); } catch (e) {} }
+    function renderViews() {
+      const el = document.getElementById('views');
+      el.innerHTML = '';
+      for (const [i, v] of VIEWS.entries()) {
+        const chip = document.createElement('button'); chip.type = 'button'; chip.className = 'chip';
+        chip.innerHTML = `⭐ ${esc(v.name)}<span class="x" title="Delete this view">×</span>`;
+        chip.onclick = (e) => {
+          if (e.target.classList.contains('x')) { VIEWS.splice(i, 1); persistViews(); renderViews(); return; }
+          restoreView(v);
+        };
+        el.appendChild(chip);
+      }
+      const add = document.createElement('button'); add.type = 'button'; add.className = 'chip'; add.textContent = '＋ Save current view';
+      add.onclick = saveCurrentView;
+      el.appendChild(add);
+    }
+    function saveCurrentView() {
+      const c = map.getCenter();
+      const snap = {
+        name: '', q: state.q, cats: [...state.cats], works: [...state.works],
+        minConf: state.minConf, minVal: state.minVal, since: state.since,
+        newOnly: state.newOnly, startedOnly: state.startedOnly, followedOnly: state.followedOnly,
+        center: state.center, radiusMi: state.radiusMi,
+        cam: { lat: +c.lat.toFixed(4), lng: +c.lng.toFixed(4), z: map.getZoom() },
+      };
+      openSheet(`<h3>⭐ Save this view</h3><p>Filters and map position, saved on this device.</p>
+        <input type="text" id="view-name" placeholder="e.g. DFW warehouses over $2M" maxlength="40" />
+        <button class="btn primary" id="view-save" style="width:100%">Save</button>`);
+      const nameEl = document.getElementById('view-name');
+      nameEl.value = filtersSummary(currentFilters()).slice(0, 40);
+      nameEl.select();
+      document.getElementById('view-save').onclick = () => {
+        snap.name = nameEl.value.trim() || `View ${VIEWS.length + 1}`;
+        VIEWS.push(snap); persistViews(); renderViews(); closeModal();
+        toast(`Saved “${snap.name}” ⭐`);
+      };
+    }
+    function restoreView(v) {
+      document.getElementById('reset').click();
+      // chips: turn OFF anything the view had off
+      if (v.cats?.length) for (const chip of document.querySelectorAll('#cats .chip')) if (!v.cats.includes(chip.dataset.v)) chip.click();
+      if (v.works?.length) for (const chip of document.querySelectorAll('#works .chip')) if (!v.works.includes(chip.dataset.v)) chip.click();
+      state.q = v.q || ''; document.getElementById('search').value = state.q;
+      state.minConf = v.minConf || 0; document.getElementById('conf').value = String(state.minConf); document.getElementById('confout').textContent = state.minConf + '%';
+      state.minVal = v.minVal || 0; document.getElementById('valout').textContent = fmtShort(state.minVal) + '+';
+      const valEl = document.getElementById('val'); if (+valEl.max >= state.minVal) valEl.value = String(state.minVal);
+      state.since = v.since || 0; document.getElementById('since').value = String(state.since);
+      state.newOnly = !!v.newOnly; document.getElementById('newonly').checked = state.newOnly;
+      state.startedOnly = !!v.startedOnly; document.getElementById('startedonly').checked = state.startedOnly;
+      state.followedOnly = !!v.followedOnly && FOLLOWED.size > 0; document.getElementById('followedonly').checked = state.followedOnly;
+      if (v.center) setNear(v.center, v.radiusMi);
+      if (v.cam) map.setView([v.cam.lat, v.cam.lng], v.cam.z, { animate: true });
+      apply();
+      setTab('sites');
+      toast(`Restored “${v.name}”`);
+    }
+    renderViews();
 
     // collapsible floating panel — more map when you want it
     const sbToggle = document.getElementById('sb-toggle');
