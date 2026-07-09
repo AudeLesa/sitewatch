@@ -30,9 +30,6 @@ const sb = (path, opts = {}) =>
     headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
   });
 
-if (process.argv[2] === 'digest') await runDigest();
-else await runAlerts();
-
 // ── Pro saved-search alerts ─────────────────────────────────────────────────
 
 async function runAlerts() {
@@ -187,3 +184,8 @@ function digestHtml(top, newCount, startedCount, subscriberId) {
     <p style="color:#aab0c8;font-size:12px;margin-top:18px">You signed up for the free SiteWatch weekly digest ·
       <a href="${SITE}/api/unsubscribe?id=${encodeURIComponent(subscriberId)}" style="color:#7a7f9e">unsubscribe</a></p>`);
 }
+
+// Dispatch LAST: the helpers above are const bindings, which are in the
+// temporal dead zone until this point in module evaluation.
+if (process.argv[2] === 'digest') await runDigest();
+else await runAlerts();
