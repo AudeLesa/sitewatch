@@ -62,7 +62,19 @@
     #badge.stale { color: #a35d17; background: #f7e3cd; }
     #through { font-size: 11px; color: var(--faint); }
 
-    .controls { padding: 4px 20px 14px; overflow-y: auto; }
+    /* Filters / Sites tabs: the panel had grown too many controls to share one
+       column with the results — each pane now gets the full height instead. */
+    #tabs { display: flex; gap: 6px; padding: 0 16px 10px; }
+    #tabs button { flex: 1; border: none; background: var(--tint); color: var(--muted); font-family: inherit;
+      font-size: 12.5px; font-weight: 600; padding: 9px 10px; border-radius: 999px; cursor: pointer; transition: background .12s; }
+    #tabs button.active { background: var(--primary); color: #fff; }
+    #tabs button:not(.active):hover { background: var(--primary-soft); color: var(--primary); }
+    #tab-count { font-weight: 700; opacity: .85; }
+    #sites-pane { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    #sidebar.tab-filters #sites-pane { display: none; }
+    #sidebar.tab-sites .controls { display: none; }
+
+    .controls { padding: 4px 20px 14px; overflow-y: auto; flex: 1; min-height: 0; }
     .controls::-webkit-scrollbar { width: 8px; } .controls::-webkit-scrollbar-thumb { background: #e8d3c9; border-radius: 8px; }
     label.lbl { display: block; font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; margin: 15px 0 7px; }
     #search { width: 100%; padding: 11px 14px; border-radius: 14px; border: 1px solid transparent; background: var(--card);
@@ -97,7 +109,7 @@
       border-radius: 999px; cursor: pointer; box-shadow: 0 2px 8px rgba(49,63,159,.08); font-family: inherit; }
     #csv:hover { filter: brightness(.97); }
     #digestbox { margin-top: 14px; }
-    #ask-note { margin-top: 8px; font-size: 12px; color: var(--muted); background: var(--primary-soft); border-radius: 12px; padding: 8px 12px; line-height: 1.45; }
+    #ask-note { margin: 0 16px 10px; font-size: 12px; color: var(--muted); background: var(--primary-soft); border-radius: 12px; padding: 8px 12px; line-height: 1.45; }
     #ask-note button { background: none; border: none; color: var(--primary); font-weight: 600; font-size: 12px; cursor: pointer; padding: 0; }
     .chip.on { background: var(--primary); color: #fff; }
     .chip.on .sw { background: #fff !important; }
@@ -221,7 +233,7 @@
       /* grab-handle: tap to swap between full panel and a slim peek (more map) */
       #sheet-handle { display: grid; place-items: center; height: 30px; flex: none; background: none; border: none; cursor: pointer; }
       #sheet-handle span { width: 44px; height: 5px; border-radius: 999px; background: var(--border); }
-      #app.peek .controls, #app.peek .list-head, #app.peek #list { display: none; }
+      #app.peek .controls, #app.peek #sites-pane, #app.peek #tabs { display: none; }
       /* legend lives above the sheet, toggled by the ⓘ chip */
       #legend { display: none; left: 12px; bottom: calc(var(--sheet-h) + 12px); transition: bottom .25s ease; }
       #app.show-legend #legend { display: block; }
@@ -252,13 +264,18 @@
         <div class="seolinks"><a href="/insights">📊 Texas construction report</a> · <a href="/companies">Companies</a></div>
       </div>
 
+      <div id="tabs" role="tablist">
+        <button id="tab-filters" role="tab" data-tab="filters">Filters</button>
+        <button id="tab-sites" role="tab" data-tab="sites">Sites <span id="tab-count"></span></button>
+      </div>
+      <div id="ask-note" hidden></div>
+
       <div class="controls">
         <label class="lbl" for="ask">✨ Ask the map</label>
         <div class="digestrow">
           <input id="ask" type="text" placeholder="e.g. tilt-wall warehouses near me over $5M" autocomplete="off" />
           <button id="ask-go">Ask</button>
         </div>
-        <div id="ask-note" hidden></div>
 
         <label class="lbl" for="search">Search address · owner · architect · scope</label>
         <input id="search" type="text" placeholder="e.g. tilt wall, ISD, Hines, Westheimer…" autocomplete="off" />
@@ -305,23 +322,25 @@
         </div>
       </div>
 
-      <div id="stats">
-        <div class="stat"><div class="n" id="stat-count">—</div><div class="l">Sites shown</div></div>
-        <div class="stat"><div class="n" id="stat-value">—</div><div class="l">Declared value</div></div>
-      </div>
+      <div id="sites-pane">
+        <div id="stats">
+          <div class="stat"><div class="n" id="stat-count">—</div><div class="l">Sites shown</div></div>
+          <div class="stat"><div class="n" id="stat-value">—</div><div class="l">Declared value</div></div>
+        </div>
 
-      <div class="list-head">
-        <span class="cnt" id="list-cnt"></span>
-        <span class="list-tools">
-          <button id="csv" title="Download the filtered list as a spreadsheet (CSV)">⬇ CSV</button>
-          <select id="sort">
-            <option value="new">Newest first</option>
-            <option value="value">Highest value</option>
-            <option value="sqft">Largest sq ft</option>
-          </select>
-        </span>
+        <div class="list-head">
+          <span class="cnt" id="list-cnt"></span>
+          <span class="list-tools">
+            <button id="csv" title="Download the filtered list as a spreadsheet (CSV)">⬇ CSV</button>
+            <select id="sort">
+              <option value="new">Newest first</option>
+              <option value="value">Highest value</option>
+              <option value="sqft">Largest sq ft</option>
+            </select>
+          </span>
+        </div>
+        <div id="list"></div>
       </div>
-      <div id="list"></div>
     </aside>
 
     <button id="sb-toggle" aria-label="Toggle panel" title="Hide panel">‹</button>
@@ -426,8 +445,11 @@
         // "sitework") actually lives in TABS records.
         const hay = [p.address, p.description, p.owner, p.designFirm, p.facilityName, p.scopeOfWork, p.tenantName]
           .filter(Boolean).join(' ').toLowerCase();
-        for (const t of state.q.toLowerCase().split(/\s+/)) {
-          if (t && !hay.includes(t)) return false;
+        for (let t of state.q.toLowerCase().split(/\s+/)) {
+          if (!t) continue;
+          // plural-tolerant: "warehouses" should match records saying "warehouse"
+          if (t.length > 4 && t.endsWith('s')) t = t.slice(0, -1);
+          if (!hay.includes(t)) return false;
         }
       }
       return true;
@@ -448,8 +470,24 @@
       let total = 0; for (const v of visible) total += v._p.valuation || 0;
       document.getElementById('stat-count').textContent = visible.length.toLocaleString();
       document.getElementById('stat-value').textContent = fmtShort(total);
+      document.getElementById('tab-count').textContent = visible.length.toLocaleString();
       renderList(visible);
     }
+
+    // Filters / Sites tab switching (remembered across visits)
+    const sidebarEl = document.getElementById('sidebar');
+    function setTab(name) {
+      sidebarEl.classList.toggle('tab-filters', name === 'filters');
+      sidebarEl.classList.toggle('tab-sites', name === 'sites');
+      for (const b of document.querySelectorAll('#tabs button')) {
+        const on = b.dataset.tab === name;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', String(on));
+      }
+      try { localStorage.setItem('sw-tab', name); } catch (e) {}
+    }
+    for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => setTab(b.dataset.tab);
+    setTab((() => { try { return localStorage.getItem('sw-tab') || 'sites'; } catch (e) { return 'sites'; } })());
 
     // Export the CURRENT filtered set (all of it, not just the listed 250) as a
     // CSV — sales teams live in spreadsheets and CRMs, not maps.
@@ -948,6 +986,7 @@
         const kept = q.split(/\s+/).filter((t) => !STOP.test(t)).join(' ') || q;
         document.getElementById('reset').click();
         state.q = kept; document.getElementById('search').value = kept; apply();
+        setTab('sites');
         askNote.hidden = false;
         askNote.innerHTML = `AI search unavailable (${esc(String(e.message || e))}) — ran a keyword search instead. <button id="ask-clear">Clear</button>`;
         document.getElementById('ask-clear').onclick = clearAsk;
@@ -982,6 +1021,7 @@
         else toast('Location unavailable — showing statewide results');
       }
       apply();
+      setTab('sites'); // show the results, not the knobs
       askNote.hidden = false;
       askNote.innerHTML = `${esc(f.explanation || 'Filters applied.')} · <b>${document.getElementById('stat-count').textContent}</b> sites match. <button id="ask-clear">Clear</button>`;
       document.getElementById('ask-clear').onclick = clearAsk;
