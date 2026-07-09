@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { config, activeCity } from '../config.js';
+import { config, activeRegion } from '../config.js';
 import { projectRoot } from '../util/env.js';
 import { writeFileAtomic, loadStateFile } from '../util/fsafe.js';
 import { fetchWithRetry, fetchText, mapLimit } from '../util/http.js';
@@ -71,7 +71,7 @@ export async function fetchPermits({ log = console.error } = {}) {
     return [];
   }
 
-  const cityTabs = activeCity().tabs || {};
+  const cityTabs = activeRegion().tabs || {};
   const statewide = cityTabs.statewide === true;
   const counties = statewide ? [null] : cfg.countyCodes || cityTabs.countyCodes || [];
   if (!counties.length) {

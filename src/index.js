@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { config, activeCity } from './config.js';
+import { config, activeRegion, SOURCE_PERMIT_PREFIXES } from './config.js';
 import * as tdlrTabs from './sources/tdlrTabs.js';
 import * as shovels from './sources/shovels.js';
 import * as houston from './sources/houstonSoldPermits.js';
@@ -22,8 +22,8 @@ async function main() {
     case 'pull':
       return pull(SOURCES, { cityId: process.argv[3] });
     case 'demo':
-      // Writes to <city>-demo.* so it never clobbers a real pull's output.
-      return pull([demo], { outputId: `${activeCity().id}-demo` });
+      // Writes to <region>-demo.* so it never clobbers a real pull's output.
+      return pull([demo], { outputId: `${activeRegion().id}-demo` });
     case 'sources':
       return listSources();
     case 'geocode-test':
@@ -34,16 +34,24 @@ async function main() {
 }
 
 async function pull(sources, { cityId, outputId } = {}) {
-  if (cityId) config.city = cityId; // so activeCity() everywhere reflects the override
-  const city = activeCity();
-  const outId = outputId || city.id;
-  log(`\n▶ SiteWatch pull — ${city.label} (lookback ${config.lookbackMonths}mo)\n`);
+  if (cityId) config.city = cityId; // so activeRegion() everywhere reflects the override
+  const region = activeRegion();
+  const outId = outputId || region.id;
+  log(`\n▶ SiteWatch pull — ${region.label} (lookback ${config.lookbackMonths}mo)\n`);
 
   // 1. Fetch from every source.
   let records = [];
   for (const src of sources) {
     try {
       const got = await src.fetchPermits({ log });
+      // Permit-prefix contract: a prefixed source guarantees globally-unique
+      // permit numbers (history keys + the DB unique constraint depend on it).
+      // A record that breaks it means source drift — fail the run loudly.
+      const prefix = SOURCE_PERMIT_PREFIXES[src.id];
+      if (prefix) {
+        const bad = got.find((r) => r.permitNumber && !r.permitNumber.startsWith(prefix));
+        if (bad) throw new Error(`permit "${bad.permitNumber}" breaks the ${src.id} "${prefix}" prefix contract`);
+      }
       records.push(...got);
     } catch (err) {
       log(`[${src.id}] ERROR: ${err.message}`);
@@ -52,6 +60,10 @@ async function pull(sources, { cityId, outputId } = {}) {
       process.exitCode = 1;
     }
   }
+  // Every record belongs to the region being pulled — the loader and any
+  // future multi-region UI key off this. Operational subset presets (houston)
+  // stamp their covering PUBLIC region so DB rows never leave it.
+  for (const r of records) r.region = region.publicRegion || region.id;
   log(`\nFetched ${records.length} raw records.`);
   if (records.length === 0) {
     log('Nothing to process. Add a Shovels key or finalize Houston, or try: npm run demo\n');
@@ -74,11 +86,11 @@ async function pull(sources, { cityId, outputId } = {}) {
   // 5. Geocode the records that didn't arrive with coordinates.
   const geo = await geocodeMissing(kept, { log });
   const fb = geo.fallback ? `, ${geo.fallback.provider} +${geo.fallback.hits}/${geo.fallback.used}` : '';
-  const hard = geo.hard ? `, txpts +${geo.hard.hits}/${geo.hard.used}` : '';
+  const hard = geo.hard ? `, ${geo.hard.provider} +${geo.hard.hits}/${geo.hard.used}` : '';
   log(`Geocoded: ${geo.matched}/${geo.attempted} (missed ${geo.missed}; ${geo.fromCache} cached${fb}${hard}).`);
 
   // 6. Diff status across runs → first-seen, status changes, and "new starts".
-  const hist = applyHistory(kept);
+  const hist = applyHistory(kept, { regionId: outId });
   log(`History: tracking ${hist.tracked}; +${hist.added} new, ${hist.started} just started construction, ${hist.changed} status changes.`);
 
   // 7. Write map-ready outputs.
@@ -110,6 +122,7 @@ function help() {
 Usage:
   npm run pull            Fetch the Houston metro -> data/houston.geojson
   npm run pull:texas      Fetch the WHOLE STATE -> data/texas.geojson (long run)
+  npm run pull -- <id>    Fetch any region preset (see REGIONS in src/config.js)
   npm run demo            Run the full pipeline on bundled sample Houston data
   npm run sources         Show which sources are configured
   npm run geocode:test    Hit the Census geocoder on two sample addresses

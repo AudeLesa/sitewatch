@@ -4,6 +4,16 @@ The app is a **static site** — one HTML file plus the map-ready GeoJSON. There
 server to run in production: you generate the data locally, build a `dist/` folder,
 and upload it to any static host. Free, fast, and scales to a lot of traffic.
 
+> **One-time (Stage 0 regions):** if the Supabase backend is live, apply
+> `backend/migrations/2026-07-09-region.sql` in the SQL editor **before** the next
+> `npm run load` / alert-worker run. The loader and digest degrade gracefully
+> without it (they warn and skip region scoping), but saved-search alerts only
+> become region-safe once the migration is in.
+>
+> Also: `data/history-texas.json` replaced `history.json` as the live project-history
+> store — re-commit it after data runs like the other state files (history.json stays
+> as the frozen pre-region seed).
+
 ## The two commands
 
 ```bash

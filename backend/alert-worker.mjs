@@ -78,35 +78,60 @@ async function runAlerts() {
 // ── Free weekly digest ──────────────────────────────────────────────────────
 
 async function runDigest() {
-  const subsRes = await sb('digest_subscribers?active=eq.true&select=id,email');
+  // Region-aware: each subscriber gets their region's digest. On databases
+  // that predate the region migration, fall back to region-less queries
+  // (everything is Texas there by definition).
+  let regioned = true;
+  let subsRes = await sb('digest_subscribers?active=eq.true&select=id,email,region');
+  if (!subsRes.ok && subsRes.status === 400) {
+    regioned = false;
+    console.error('⚠ digest_subscribers.region missing — apply backend/migrations/2026-07-09-region.sql. Sending the Texas digest to everyone.');
+    subsRes = await sb('digest_subscribers?active=eq.true&select=id,email');
+  }
   if (!subsRes.ok) { console.error(`digest_subscribers failed: HTTP ${subsRes.status}\n${await subsRes.text()}`); process.exit(1); }
   const subs = await subsRes.json();
   if (!subs.length) { console.error('No digest subscribers.'); return; }
 
-  const since = new Date(Date.now() - 7 * 864e5).toISOString();
-  const top = await (await sb(
-    `projects?select=permit_number,facility_name,address,category,valuation,owner&first_seen=gte.${since}&order=valuation.desc.nullslast&limit=12`
-  )).json();
-  const newCount = await countWhere(`first_seen=gte.${since}`);
-  const startedCount = await countWhere(`started_at=gte.${since.slice(0, 10)}`);
-  if (!newCount && !startedCount) { console.error('Nothing new this week — skipping digest.'); return; }
-
-  const subject = `This week in Texas construction: ${newCount.toLocaleString()} new project${newCount === 1 ? '' : 's'}`;
-  const week = new Date().toISOString().slice(0, 10);
-  console.error(`Digest to ${subs.length} subscriber(s): ${newCount} new, ${startedCount} started…`);
-
-  let ok = 0;
+  const byRegion = new Map();
   for (const s of subs) {
-    try {
-      const idem = 'digest-' + createHash('sha256').update(`${s.id}|${week}`).digest('hex').slice(0, 32);
-      await sendEmail(s.email, subject, digestHtml(top, newCount, startedCount, s.id), idem);
-      ok++;
-    } catch (err) {
-      console.error(`  ✗ ${s.email}: ${err.message}`);
+    const region = (regioned && s.region) || 'texas';
+    if (!byRegion.has(region)) byRegion.set(region, []);
+    byRegion.get(region).push(s);
+  }
+
+  const since = new Date(Date.now() - 7 * 864e5).toISOString();
+  const week = new Date().toISOString().slice(0, 10);
+  let ok = 0, all = 0;
+  for (const [region, regionSubs] of byRegion) {
+    const label = REGION_LABELS[region] || region;
+    const scope = regioned ? `&region=eq.${encodeURIComponent(region)}` : '';
+    const top = await (await sb(
+      `projects?select=permit_number,facility_name,address,category,valuation,owner&first_seen=gte.${since}${scope}&order=valuation.desc.nullslast&limit=12`
+    )).json();
+    const newCount = await countWhere(`first_seen=gte.${since}${scope}`);
+    const startedCount = await countWhere(`started_at=gte.${since.slice(0, 10)}${scope}`);
+    if (!newCount && !startedCount) { console.error(`Nothing new this week in ${label} — skipping its digest.`); continue; }
+
+    const subject = `This week in ${label} construction: ${newCount.toLocaleString()} new project${newCount === 1 ? '' : 's'}`;
+    console.error(`Digest [${label}] to ${regionSubs.length} subscriber(s): ${newCount} new, ${startedCount} started…`);
+
+    for (const s of regionSubs) {
+      all++;
+      try {
+        const idem = 'digest-' + createHash('sha256').update(`${s.id}|${week}`).digest('hex').slice(0, 32);
+        await sendEmail(s.email, subject, digestHtml(top, newCount, startedCount, s.id, label), idem);
+        ok++;
+      } catch (err) {
+        console.error(`  ✗ ${s.email}: ${err.message}`);
+      }
     }
   }
-  console.error(`Done. Digest sent to ${ok}/${subs.length}.`);
+  console.error(`Done. Digest sent to ${ok}/${all}.`);
 }
+
+// Display labels for digest copy; falls back to the raw region id. Kept as a
+// local map (not an import of src/config.js) so the worker stays standalone.
+const REGION_LABELS = { texas: 'Texas' };
 
 async function countWhere(filter) {
   const r = await sb(`projects?select=id&${filter}&limit=1`, { headers: { Prefer: 'count=exact' } });
@@ -172,9 +197,9 @@ function alertHtml(rows) {
     <p style="margin-top:20px"><a href="${SITE}" style="display:inline-block;background:#313f9f;color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:999px">Open the map →</a></p>`);
 }
 
-function digestHtml(top, newCount, startedCount, subscriberId) {
+function digestHtml(top, newCount, startedCount, subscriberId, regionLabel = 'Texas') {
   return shell(`
-    <h2 style="margin:0 0 4px">This week in Texas construction</h2>
+    <h2 style="margin:0 0 4px">This week in ${esc(regionLabel)} construction</h2>
     <p style="color:#7a7f9e;margin:0 0 16px;font-size:14px">
       <b style="color:#232a52">${newCount.toLocaleString()}</b> new project${newCount === 1 ? '' : 's'} registered
       · <b style="color:#232a52">${startedCount.toLocaleString()}</b> broke ground

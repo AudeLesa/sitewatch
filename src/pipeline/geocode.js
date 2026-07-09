@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { config, activeCity } from '../config.js';
+import { config, activeRegion } from '../config.js';
 import { projectRoot } from '../util/env.js';
 import { fetchJson, mapLimit, sleep } from '../util/http.js';
 import { writeFileAtomic, loadStateFile } from '../util/fsafe.js';
@@ -40,7 +40,7 @@ const NEGATIVE_TTL_DAYS = 60; // a miss older than this is worth asking again
 
 export async function geocodeMissing(records, { log = () => {} } = {}) {
   const cache = loadCache();
-  const bbox = activeCity().bbox;
+  const bbox = activeRegion().bbox;
   const needs = records.filter((r) => !r.location && oneLine(r.address));
 
   // Each pending item carries the providers already tried (from cache).
@@ -92,32 +92,36 @@ export async function geocodeMissing(records, { log = () => {} } = {}) {
     }
   }
 
-  // Pass 3 — hard cases via TxGIO statewide address points: brand-new addresses
-  // the classic geocoders don't know yet, nearest-number street snaps, and
-  // "A & B" intersections. Same cache/TTL bookkeeping under provider 'txpts'.
+  // Pass 3 — hard cases via a region-specific address-point provider (texas:
+  // TxGIO statewide points — brand-new addresses the classic geocoders don't
+  // know yet, nearest-number street snaps, and "A & B" intersections). The
+  // provider is chosen by the region manifest; GEOCODER_HARD overrides.
+  const hardName = config.geocoder.hard ?? activeRegion().geocoder?.hard ?? 'none';
   let hardUsed = 0;
   let hardHits = 0;
-  if (config.geocoder.hard !== 'none') {
+  if (hardName !== 'none' && hardName !== 'txpts') {
+    log(`[geocode] unknown hard-tier provider "${hardName}" — skipping pass 3.`);
+  } else if (hardName === 'txpts') {
     const todo = pending.filter(
-      (p) => !p.rec.location && !p.tried.has('txpts') && isHardCandidate(p.rec.address.line1)
+      (p) => !p.rec.location && !p.tried.has(hardName) && isHardCandidate(p.rec.address.line1)
     );
     const limit = Math.min(todo.length, config.geocoder.hardMax);
-    if (limit) log(`[geocode] txpts hard cases: trying ${limit} of ${todo.length} (address points: exact / nearest-number / intersections)...`);
+    if (limit) log(`[geocode] ${hardName} hard cases: trying ${limit} of ${todo.length} (address points: exact / nearest-number / intersections)...`);
     await mapLimit(todo.slice(0, limit), 4, async (p) => {
       const hit = await resolveHard({
         line1: p.rec.address.line1,
         city: p.rec.address.city,
         county: p.rec.address.county,
       }).catch(() => null);
-      record(cache, p, hit, 'txpts', bbox);
+      record(cache, p, hit, hardName, bbox);
       hardUsed++;
       if (hit && inBbox(hit, bbox)) hardHits++;
       if (hardUsed % 100 === 0) {
-        log(`[geocode] txpts ${hardUsed}/${limit} (+${hardHits} recovered)`);
+        log(`[geocode] ${hardName} ${hardUsed}/${limit} (+${hardHits} recovered)`);
         saveCache(cache); // checkpoint
       }
     });
-    if (limit) log(`[geocode] txpts done: +${hardHits}/${hardUsed} placed.`);
+    if (limit) log(`[geocode] ${hardName} done: +${hardHits}/${hardUsed} placed.`);
   }
 
   saveCache(cache);
@@ -128,7 +132,7 @@ export async function geocodeMissing(records, { log = () => {} } = {}) {
     attempted: needs.length,
     fromCache,
     fallback: provider ? { provider: provider.name, used: fallbackUsed, hits: fallbackHits } : null,
-    hard: hardUsed ? { used: hardUsed, hits: hardHits } : null,
+    hard: hardUsed ? { provider: hardName, used: hardUsed, hits: hardHits } : null,
   };
 }
 
@@ -157,16 +161,30 @@ function applyHit(rec, entry) {
     matched: entry.matched ?? null,
     precision: entry.precision ?? inferPrecision(entry),
   };
-  // TABS never supplies a ZIP, but the geocoder's matched string usually does —
-  // backfill it (TX ZIPs are 75xxx–79xxx). Output enrichment only: the cache
-  // key was computed from the original address, so lookups stay stable.
+  // Sources often omit the ZIP, but the geocoder's matched string usually has
+  // it — backfill using the active region's ZIP ranges (texas: 75xxx–79xxx).
+  // Output enrichment only: the cache key was computed from the original
+  // address, so lookups stay stable.
   if (rec.address && !rec.address.zip) {
-    const zip = /\b(7[5-9]\d{3})(?:-\d{4})?\b/.exec(String(entry.matched || ''))?.[1];
+    const zip = zipRegexForRegion().exec(String(entry.matched || ''))?.[1];
     if (zip) {
       rec.address.zip = zip;
       if (rec.address.full && !rec.address.full.includes(zip)) rec.address.full += ` ${zip}`;
     }
   }
+}
+
+let zipRegexCache = { regionId: null, re: null };
+function zipRegexForRegion() {
+  const region = activeRegion();
+  if (zipRegexCache.regionId !== region.id) {
+    const prefixes = region.zipPrefixes?.length ? region.zipPrefixes : ['\\d\\d'];
+    zipRegexCache = {
+      regionId: region.id,
+      re: new RegExp(`\\b((?:${prefixes.join('|')})\\d{3})(?:-\\d{4})?\\b`),
+    };
+  }
+  return zipRegexCache.re;
 }
 
 /** Is this provider's cached negative still trustworthy? Entries from before

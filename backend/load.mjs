@@ -28,22 +28,23 @@ try {
   process.exit(1);
 }
 
-const rows = records.map(toRow);
+let rows = records.map(toRow);
 console.error(`Loading ${rows.length} ${city} projects into Supabase…`);
 
 let done = 0;
+let regionless = false; // pre-migration database — retry once without the column
 for (let i = 0; i < rows.length; i += BATCH) {
   const batch = rows.slice(i, i + BATCH);
-  const res = await fetch(`${URL}/rest/v1/projects?on_conflict=id`, {
-    method: 'POST',
-    headers: {
-      apikey: KEY,
-      Authorization: `Bearer ${KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'resolution=merge-duplicates,return=minimal',
-    },
-    body: JSON.stringify(batch),
-  });
+  let res = await upsert(batch);
+  if (!res.ok && res.status === 400 && !regionless && /'region' column/.test(await res.clone().text())) {
+    console.error(
+      `\n⚠ projects.region does not exist — apply backend/migrations/2026-07-09-region.sql. ` +
+        `Loading WITHOUT region so tonight's data still lands; alerts stay un-scoped until the migration runs.`
+    );
+    regionless = true;
+    rows = rows.map(({ region, ...rest }) => rest);
+    res = await upsert(rows.slice(i, i + BATCH));
+  }
   if (!res.ok) {
     console.error(`\nBatch @${i} failed: HTTP ${res.status}\n${await res.text()}`);
     process.exit(1);
@@ -53,12 +54,32 @@ for (let i = 0; i < rows.length; i += BATCH) {
 }
 console.error(`\n✔ Loaded ${done} projects into ${URL}/rest/v1/projects`);
 
+function upsert(batch) {
+  return fetch(`${URL}/rest/v1/projects?on_conflict=id`, {
+    method: 'POST',
+    headers: {
+      apikey: KEY,
+      Authorization: `Bearer ${KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify(batch),
+  });
+}
+
+// Operational pull presets that are subsets of a public region.
+const PUBLIC_REGION_OF = { houston: 'texas' };
+
 // Map a normalized pipeline record -> a `projects` table row (snake_case columns).
 function toRow(r) {
   const a = r.address || {};
   return {
     id: r.id,
     permit_number: r.permitNumber ?? null,
+    // records from pre-region pulls carry no region — the pull's dataset id
+    // (the CLI arg) maps to its covering public region (kept in sync with
+    // REGIONS in src/config.js; subset presets must never re-region DB rows).
+    region: r.region ?? PUBLIC_REGION_OF[city] ?? city,
     category: r.category ?? null,
     work_class: r.workClass ?? null,
     status: r.status ?? null,

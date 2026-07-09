@@ -42,14 +42,18 @@ jobs:
       - name: Restore caches
         uses: actions/cache@v4
         with:
-          # The three state files also live in git as a warm seed for run #1;
+          # The state files also live in git as a warm seed for run #1;
           # the cache restores newer generations over them on later runs.
           # texas.geojson is cached so the publish guard (writers.js) has a
           # previous-run baseline to compare against in CI, not just locally.
+          # history.json is the legacy pre-region store — kept restorable so
+          # the one-time history-texas.json migration seeds from it; the
+          # per-region history-*.json files are the live stores now.
           path: |
             data/geocode-cache.json
             data/tabs-detail-cache.json
             data/history.json
+            data/history-*.json
             data/texas.geojson
           key: sitewatch-caches-${{ github.run_id }}
           restore-keys: |

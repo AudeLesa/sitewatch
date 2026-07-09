@@ -46,7 +46,25 @@ const isCompany = (n) => n && String(n).trim().length >= 3 && !JUNK.test(String(
 // fat-fingered number can't headline "largest projects".
 const val = (p) => (p.valuationSuspect ? 0 : p.valuation || 0);
 
-export function generateSeo(dist, features, { siteUrl }) {
+// Region copy used by every template. Defaults mirror the Texas launch region
+// so a region-less call renders the exact same pages it always did; build.mjs
+// passes the active region's manifest entry.
+let R = {
+  label: 'Texas',
+  state: 'TX',
+  stateName: 'Texas',
+  sourceShort: 'TDLR',
+  exampleCities: 'Houston, Dallas, Austin, San Antonio',
+  permitLinks: [{ prefix: 'TABS', label: 'TDLR', url: 'https://www.tdlr.texas.gov/TABS/Search/Project/{permit}' }],
+};
+// Official source record for a permit, from the region's per-source templates.
+const srcLink = (permit) => {
+  const l = (R.permitLinks || []).find((x) => permit && String(permit).startsWith(x.prefix));
+  return l ? l.url.replace('{permit}', permit) : null;
+};
+
+export function generateSeo(dist, features, { siteUrl, region } = {}) {
+  if (region) R = { ...R, ...region };
   const site = (siteUrl || 'https://sitewatch-eyt.pages.dev').replace(/\/$/, '');
   mkdirSync(join(dist, 'project'), { recursive: true });
   mkdirSync(join(dist, 'where'), { recursive: true });
@@ -139,13 +157,13 @@ function head(title, desc, canonical, jsonld) {
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ''}
 </head><body>`;
 }
-const foot = (site) => `<footer>SiteWatch — live commercial construction across Texas, from public building-permit records. <a href="${site}/">Map</a> · <a href="${site}/insights">Market report</a> · <a href="${site}/where/">Metros</a> · <a href="${site}/companies">Companies</a></footer></body></html>`;
+const foot = (site) => `<footer>SiteWatch — live commercial construction across ${R.stateName}, from public building-permit records. <a href="${site}/">Map</a> · <a href="${site}/insights">Market report</a> · <a href="${site}/where/">Metros</a> · <a href="${site}/companies">Companies</a></footer></body></html>`;
 
 function projectPage(p, cname, cslug, url, site, coLink) {
   const name = p.facilityName || p.address || 'Construction project';
   const work = WORK[p.workClass] || 'Construction', cat = CAT[p.category] || 'Commercial';
-  const title = `${name} — ${cname ? cname + ', ' : ''}TX ${cat.toLowerCase()} construction | SiteWatch`;
-  const desc = `${name}${cname ? ` in ${cname}, TX` : ''}. ${[work, usd(p.valuation), p.squareFeet ? Number(p.squareFeet).toLocaleString() + ' ft²' : null, p.owner ? `Owner ${p.owner}` : null].filter(Boolean).join(' · ')}.`;
+  const title = `${name} — ${cname ? cname + ', ' : ''}${R.state} ${cat.toLowerCase()} construction | SiteWatch`;
+  const desc = `${name}${cname ? ` in ${cname}, ${R.state}` : ''}. ${[work, usd(p.valuation), p.squareFeet ? Number(p.squareFeet).toLocaleString() + ' ft²' : null, p.owner ? `Owner ${p.owner}` : null].filter(Boolean).join(' · ')}.`;
   const rows = [];
   const add = (k, v) => { if (v) rows.push(`<tr><th>${k}</th><td>${v}</td></tr>`); };
   const tel = (n) => { const d = String(n || '').replace(/[^0-9+]/g, ''); return d ? `<a href="tel:${d}">${esc(n)}</a>` : ''; };
@@ -167,37 +185,37 @@ function projectPage(p, cname, cslug, url, site, coLink) {
   add('Funding', p.publicFunds == null ? null : (p.publicFunds ? 'Public' : 'Private'));
   add('Permit', esc(p.permitNumber));
   const breadcrumb = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Texas construction', item: `${site}/where/` },
-    cname ? { '@type': 'ListItem', position: 2, name: `${cname}, TX`, item: `${site}/where/${cslug}` } : null,
+    { '@type': 'ListItem', position: 1, name: `${R.stateName} construction`, item: `${site}/where/` },
+    cname ? { '@type': 'ListItem', position: 2, name: `${cname}, ${R.state}`, item: `${site}/where/${cslug}` } : null,
     { '@type': 'ListItem', position: cname ? 3 : 2, name, item: url }].filter(Boolean) };
-  const tdlr = /^TABS/.test(p.permitNumber || '') ? `https://www.tdlr.texas.gov/TABS/Search/Project/${p.permitNumber}` : null;
+  const official = srcLink(p.permitNumber);
   return head(title, desc, url, breadcrumb) +
-    `<header><a class="logo" href="/">● SiteWatch</a><nav>${cname ? `<a href="/where/${cslug}">${esc(cname)}, TX</a> · ` : ''}<a href="/insights">Report</a></nav></header>
+    `<header><a class="logo" href="/">● SiteWatch</a><nav>${cname ? `<a href="/where/${cslug}">${esc(cname)}, ${R.state}</a> · ` : ''}<a href="/insights">Report</a></nav></header>
 <main>
 <h1>${esc(name)}</h1>
-<p class="sub">${esc(work)}${cname ? ` in ${esc(cname)}, Texas` : ''}${p.valuation ? ` — <strong>${usd(p.valuation)}</strong>` : ''}</p>
+<p class="sub">${esc(work)}${cname ? ` in ${esc(cname)}, ${R.stateName}` : ''}${p.valuation ? ` — <strong>${usd(p.valuation)}</strong>` : ''}</p>
 <table>${rows.join('')}</table>
-<p class="cta"><a class="btn" href="/#p=${encodeURIComponent(p.permitNumber)}">View on the live map →</a>${tdlr ? ` <a href="${tdlr}" rel="nofollow">State TDLR record ↗</a>` : ''}</p>
-${cname ? `<p class="rel">More <a href="/where/${cslug}">commercial construction in ${esc(cname)}, TX</a>.</p>` : ''}
+<p class="cta"><a class="btn" href="/#p=${encodeURIComponent(p.permitNumber)}">View on the live map →</a>${official ? ` <a href="${official}" rel="nofollow">State ${R.sourceShort} record ↗</a>` : ''}</p>
+${cname ? `<p class="rel">More <a href="/where/${cslug}">commercial construction in ${esc(cname)}, ${R.state}</a>.</p>` : ''}
 </main>` + foot(site);
 }
 
 function cityPage(c, cslug, url, site, cityList) {
   const items = c.items.slice().sort((a, b) => val(b) - val(a));
   const total = items.reduce((s, p) => s + val(p), 0);
-  const title = `Commercial construction in ${c.name}, TX — ${items.length} active projects | SiteWatch`;
-  const desc = `${items.length} commercial construction projects tracked in ${c.name}, Texas` + (total ? `, ${usd(total)} in declared value` : '') + `. Owners, architects, value and status from public permit records.`;
+  const title = `Commercial construction in ${c.name}, ${R.state} — ${items.length} active projects | SiteWatch`;
+  const desc = `${items.length} commercial construction projects tracked in ${c.name}, ${R.stateName}` + (total ? `, ${usd(total)} in declared value` : '') + `. Owners, architects, value and status from public permit records.`;
   const list = items.slice(0, 250).map((p) => `<li><a href="/project/${fileOf(p.permitNumber)}">${esc(p.facilityName || p.address || 'Project')}</a> <span class="m">${[short(p.valuation), CAT[p.category]].filter(Boolean).join(' · ')}</span></li>`).join('');
   const others = cityList.filter(([s]) => s !== cslug).slice(0, 24).map(([s, cc]) => `<a href="/where/${s}">${esc(cc.name)}</a>`).join(' · ');
   return head(title, desc, url, null) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/where/">All metros</a></nav></header>
 <main>
-<h1>Commercial construction in ${esc(c.name)}, Texas</h1>
-<p class="sub"><strong>${items.length}</strong> active projects${total ? ` · <strong>${usd(total)}</strong> declared value` : ''}. From public TDLR building-permit records.</p>
+<h1>Commercial construction in ${esc(c.name)}, ${R.stateName}</h1>
+<p class="sub"><strong>${items.length}</strong> active projects${total ? ` · <strong>${usd(total)}</strong> declared value` : ''}. From public ${R.sourceShort} building-permit records.</p>
 <p class="cta"><a class="btn" href="/">Explore ${esc(c.name)} on the live map →</a></p>
 <ul class="projlist">${list}</ul>
 ${items.length > 250 ? `<p class="rel">Showing the 250 largest by value — see all on the <a href="/">live map</a>.</p>` : ''}
-<p class="rel">Other Texas metros: ${others}</p>
+<p class="rel">Other ${R.stateName} metros: ${others}</p>
 </main>` + foot(site);
 }
 
@@ -205,8 +223,8 @@ function companyPage(c, cslug, url, site) {
   const all = [...new Map([...c.owned, ...c.designed].map((p) => [p.permitNumber, p])).values()];
   const total = all.reduce((s, p) => s + val(p), 0);
   const roles = [c.owned.length ? `owner on ${c.owned.length}` : null, c.designed.length ? `architect on ${c.designed.length}` : null].filter(Boolean).join(', ');
-  const title = `${c.name} — Texas construction projects | SiteWatch`;
-  const desc = `${c.name} is tracked on ${all.length} commercial construction projects in Texas (${roles})${total ? `, ${usd(total)} in declared value` : ''}. Locations, value and status.`;
+  const title = `${c.name} — ${R.stateName} construction projects | SiteWatch`;
+  const desc = `${c.name} is tracked on ${all.length} commercial construction projects in ${R.stateName} (${roles})${total ? `, ${usd(total)} in declared value` : ''}. Locations, value and status.`;
   const role = (p) => c.owned.includes(p) ? (c.designed.includes(p) ? 'owner & architect' : 'owner') : 'architect';
   const list = all.sort((a, b) => val(b) - val(a)).slice(0, 300).map((p) =>
     `<li><a href="/project/${fileOf(p.permitNumber)}">${esc(p.facilityName || p.address || 'Project')}</a> <span class="m">${[short(p.valuation), cityOf(p.address), role(p)].filter(Boolean).join(' · ')}</span></li>`).join('');
@@ -215,20 +233,20 @@ function companyPage(c, cslug, url, site) {
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/companies">All companies</a></nav></header>
 <main>
 <h1>${esc(c.name)}</h1>
-<p class="sub"><strong>${all.length}</strong> Texas construction projects · ${esc(roles)}${total ? ` · <strong>${usd(total)}</strong> declared value` : ''}.</p>
+<p class="sub"><strong>${all.length}</strong> ${R.stateName} construction projects · ${esc(roles)}${total ? ` · <strong>${usd(total)}</strong> declared value` : ''}.</p>
 <ul class="projlist">${list}</ul>
-<p class="rel"><a href="/insights">Texas construction market report →</a></p>
+<p class="rel"><a href="/insights">${R.stateName} construction market report →</a></p>
 </main>` + foot(site);
 }
 
 function companiesIndex(coList, site) {
-  const title = `Top Texas construction owners & architects | SiteWatch`;
-  const desc = `The most active owners and architecture firms in Texas commercial construction, by project count.`;
+  const title = `Top ${R.stateName} construction owners & architects | SiteWatch`;
+  const desc = `The most active owners and architecture firms in ${R.stateName} commercial construction, by project count.`;
   const links = coList.slice(0, 600).map(([s, c]) => `<li><a href="/company/${s}">${esc(c.name)}</a> <span class="m">${c.owned.length + c.designed.length}</span></li>`).join('');
   return head(title, desc, `${site}/companies`, null) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/insights">Report</a></nav></header>
 <main>
-<h1>Most active companies in Texas construction</h1>
+<h1>Most active companies in ${R.stateName} construction</h1>
 <p class="sub">Owners and architecture firms ranked by tracked projects.</p>
 <ul class="dirlist">${links}</ul>
 </main>` + foot(site);
@@ -247,8 +265,8 @@ function insightsPage(valid, cityList, coList, site) {
   const archs = coList.filter(([, c]) => c.designed.length).sort((a, b) => b[1].designed.length - a[1].designed.length).slice(0, 12).map(([s, c]) => ({ s, name: c.name, n: c.designed.length }));
   const bars = (rows, max, fmt, link) => rows.map((r) => `<div class="bar"><span class="bl">${link && r.s ? `<a href="/company/${r.s}">${esc(r.name)}</a>` : esc(r.name)}</span><span class="bt" style="width:${Math.max(4, Math.round((r._w / max) * 100))}%"></span><span class="bv">${fmt(r)}</span></div>`).join('');
   const withW = (rows, key) => rows.map((r) => ({ ...r, _w: r[key] }));
-  const title = `Texas commercial construction report — ${short(totalVal)} across ${total.toLocaleString()} projects | SiteWatch`;
-  const desc = `Live market report: ${total.toLocaleString()} commercial construction projects across Texas worth ${short(totalVal)}, by metro, category, owner and architect. Updated from public permit records.`;
+  const title = `${R.stateName} commercial construction report — ${short(totalVal)} across ${total.toLocaleString()} projects | SiteWatch`;
+  const desc = `Live market report: ${total.toLocaleString()} commercial construction projects across ${R.stateName} worth ${short(totalVal)}, by metro, category, owner and architect. Updated from public permit records.`;
   const catRows = Object.entries(byCat).sort((a, b) => b[1].v - a[1].v).map(([k, v]) => ({ name: k, n: v.n, v: v.v, _w: v.v }));
   const maxCatV = Math.max(...catRows.map((r) => r.v), 1);
   const maxMetroV = Math.max(...metros.map((m) => m.v), 1);
@@ -256,8 +274,8 @@ function insightsPage(valid, cityList, coList, site) {
   return head(title, desc, `${site}/insights`, null) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/where/">Metros</a> · <a href="/companies">Companies</a></nav></header>
 <main>
-<h1>Texas commercial construction — live market report</h1>
-<p class="sub"><strong>${total.toLocaleString()}</strong> active projects · <strong>${usd(totalVal)}</strong> declared value · ${cityList.length} metros tracked${started ? ` · <strong>${started}</strong> just started construction` : ''}. From public TDLR permit records.</p>
+<h1>${R.stateName} commercial construction — live market report</h1>
+<p class="sub"><strong>${total.toLocaleString()}</strong> active projects · <strong>${usd(totalVal)}</strong> declared value · ${cityList.length} metros tracked${started ? ` · <strong>${started}</strong> just started construction` : ''}. From public ${R.sourceShort} permit records.</p>
 <h2>By category</h2><div class="bars">${bars(catRows, maxCatV, (r) => `${short(r.v)} · ${r.n}`, false)}</div>
 <h2>Top metros by value</h2><div class="bars">${bars(withW(metros, 'v'), maxMetroV, (r) => `${short(r.v)} · ${r.n}`, false)}</div>
 <h2>Most active owners</h2><div class="bars">${bars(withW(owners, 'n'), maxOwn, (r) => `${r.n} projects`, true)}</div>
@@ -268,13 +286,13 @@ function insightsPage(valid, cityList, coList, site) {
 }
 
 function directoryPage(cityList, site) {
-  const title = `Commercial construction by Texas metro | SiteWatch`;
-  const desc = `Browse active commercial construction projects across ${cityList.length} Texas cities — Houston, Dallas, Austin, San Antonio and more.`;
-  const links = cityList.map(([s, c]) => `<li><a href="/where/${s}">${esc(c.name)}, TX</a> <span class="m">${c.items.length}</span></li>`).join('');
+  const title = `Commercial construction by ${R.stateName} metro | SiteWatch`;
+  const desc = `Browse active commercial construction projects across ${cityList.length} ${R.stateName} cities — ${R.exampleCities} and more.`;
+  const links = cityList.map(([s, c]) => `<li><a href="/where/${s}">${esc(c.name)}, ${R.state}</a> <span class="m">${c.items.length}</span></li>`).join('');
   return head(title, desc, `${site}/where/`, null) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/insights">Report</a></nav></header>
 <main>
-<h1>Texas commercial construction by metro</h1>
+<h1>${R.stateName} commercial construction by metro</h1>
 <p class="sub">Active projects tracked across ${cityList.length} cities, live from public permit records.</p>
 <ul class="dirlist">${links}</ul>
 </main>` + foot(site);

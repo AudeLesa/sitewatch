@@ -55,6 +55,9 @@ export function makeRecord(partial) {
   const rec = {
     id: null, // set below
     source: partial.source,
+    // Which region dataset this record belongs to (region registry id) —
+    // stamped by the pull pipeline; sources may pre-set it.
+    region: partial.region ?? null,
     sourceId: partial.sourceId != null ? String(partial.sourceId) : null,
     permitNumber: partial.permitNumber ?? null,
     category: partial.category ?? CATEGORY.UNKNOWN,

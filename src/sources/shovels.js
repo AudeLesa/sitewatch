@@ -1,4 +1,4 @@
-import { config, activeCity } from '../config.js';
+import { config, activeRegion } from '../config.js';
 import { fetchJson } from '../util/http.js';
 import { makeRecord, CATEGORY, WORK_CLASS, STATUS } from '../schema.js';
 
@@ -79,7 +79,7 @@ export async function resolveGeoIds(log = console.error) {
   const cfg = config.sources.shovels;
   if (cfg.geoIds?.length) return cfg.geoIds; // SHOVELS_GEO_IDS override
 
-  const city = activeCity();
+  const city = activeRegion();
   if (city.shovels?.geoIds?.length) return city.shovels.geoIds; // preset (Harris County)
 
   const zip = city.shovels?.seedZip;

@@ -392,6 +392,8 @@
 
       <section class="pane" data-pane="places">
         <div class="pane-h">Places</div>
+        <label class="lbl" id="regions-lbl" hidden>Region</label>
+        <div class="chips" id="regions" hidden></div>
         <label class="lbl">Jump to metro</label>
         <div class="chips" id="metros"></div>
         <div id="nearrow" hidden>
@@ -513,14 +515,17 @@
     const fmtSqft = (n) => !n ? null : Number(n).toLocaleString()+' ft²';
     const statusText = (p) => { const m = /\(([^)]+)\)\s*$/.exec(p.description||''); return m ? m[1] : (p.status||'—'); };
 
+    // Pre-data view (Texas centroid, the default region); load() reframes to
+    // the active region's data. The per-region data attribution is added
+    // dynamically once the region is known.
     const map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([31.2, -98.5], 6);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    const ATTR = '&copy; OpenStreetMap &copy; CARTO · data: TDLR TABS';
+    const ATTR = '&copy; OpenStreetMap &copy; CARTO';
     const baseLayers = {
       'Soft': L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: ATTR, subdomains: 'abcd', maxZoom: 20 }),
       'Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: ATTR, subdomains: 'abcd', maxZoom: 20 }),
       'Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: ATTR, subdomains: 'abcd', maxZoom: 20 }),
-      'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery &copy; Esri · data: TDLR TABS', maxZoom: 19 }),
+      'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Imagery &copy; Esri', maxZoom: 19 }),
     };
     baseLayers['Soft'].addTo(map);
     // bottomright (above zoom): topright would sit under the search pill
@@ -537,6 +542,19 @@
     const pinsGroup = L.layerGroup().addTo(map);
 
     let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now(), DATA_AGE_DAYS = null, LOADED = false;
+
+    // Active region (an entry from /data/regions.json). Null on dev serves
+    // without a built manifest — everything falls back to the Texas defaults.
+    let REGION = null;
+    const TX_PERMIT_LINKS = [{ prefix: 'TABS', label: 'TDLR ↗', url: 'https://www.tdlr.texas.gov/TABS/Search/Project/{permit}' }];
+    // The official source record for a permit, from the region's per-source
+    // deep-link templates (prefix-matched against the permit number).
+    function permitLink(permitNumber) {
+      if (!permitNumber) return null;
+      const links = REGION?.permitLinks?.length ? REGION.permitLinks : TX_PERMIT_LINKS;
+      const l = links.find((x) => permitNumber.startsWith(x.prefix));
+      return l ? { label: l.label, url: l.url.replace('{permit}', encodeURIComponent(permitNumber)) } : null;
+    }
     const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, followedOnly:false, dimOthers:false, sort:'new', center:null, radiusMi:30 };
 
     // ── Followed companies ("my fleet") — stored locally, no account needed ──
@@ -689,7 +707,7 @@
         ['Architect', p => p.designFirm], ['Architect phone', p => p.designFirmPhone], ['Contact', p => p.contactName],
         ['Tenant', p => p.tenantName], ['Tenant phone', p => p.tenantPhone], ['RAS', p => p.rasName], ['RAS phone', p => p.rasPhone], ['ZIP', p => p.zip],
         ['Lat', p => byId.get(p.permitNumber)?.ll.lat], ['Lng', p => byId.get(p.permitNumber)?.ll.lng],
-        ['TDLR page', p => /^TABS/.test(p.permitNumber || '') ? `https://www.tdlr.texas.gov/TABS/Search/Project/${p.permitNumber}` : ''],
+        ['Source page', p => permitLink(p.permitNumber)?.url || ''],
       ];
       const cell = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
       const lines = [cols.map(c => c[0]).join(',')];
@@ -851,8 +869,8 @@
       add('Permit', p.permitNumber);
       add('Source', (p.sources||[]).join(', '));
       document.getElementById('d-kv').innerHTML = rows.join('');
-      const tdlr = document.getElementById('d-tdlr');
-      if (/^TABS/.test(p.permitNumber||'')) { tdlr.style.display=''; tdlr.href = `https://www.tdlr.texas.gov/TABS/Search/Project/${p.permitNumber}`; }
+      const src = permitLink(p.permitNumber), tdlr = document.getElementById('d-tdlr');
+      if (src) { tdlr.style.display = ''; tdlr.href = src.url; tdlr.textContent = src.label; }
       else tdlr.style.display = 'none';
       document.getElementById('d-page').href = '/project/' + (p.permitNumber||'').replace(/[^A-Za-z0-9_-]/g,'');
       const entry = byId.get(p.permitNumber), sv = document.getElementById('d-street');
@@ -948,8 +966,21 @@
     let t; const debounce = (fn) => { clearTimeout(t); t = setTimeout(fn, 140); };
 
     async function load() {
+      // Region manifest: which datasets this deployment ships. Dev serves
+      // (no build step) have no manifest — fall back to the classic probe list.
+      let regions = [];
+      try { const r = await fetch('/data/regions.json'); if (r.ok) regions = await r.json(); } catch (e) {}
+      if (Array.isArray(regions) && regions.length) {
+        const want = new URLSearchParams(location.search).get('r') ||
+          (() => { try { return localStorage.getItem('sw-region'); } catch (e) { return null; } })();
+        REGION = regions.find((x) => x.id === want) || regions[0];
+        try { localStorage.setItem('sw-region', REGION.id); } catch (e) {}
+        renderRegions(regions);
+      }
+
       let loaded = null;
-      for (const url of ['/data/texas.geojson','/data/houston.geojson','/data/houston-demo.geojson']) {
+      const candidates = REGION ? [REGION.file] : ['/data/texas.geojson','/data/houston.geojson','/data/houston-demo.geojson'];
+      for (const url of candidates) {
         try { const r = await fetch(url); if (r.ok) { loaded = { url, fc: await r.json() }; break; } } catch (e) {}
       }
       const badge = document.getElementById('badge');
@@ -965,7 +996,11 @@
       };
       if (!loaded) { document.querySelector('#loading span').textContent = 'No data. Run `npm run pull:texas` (or `npm run demo`).'; badge.textContent='no data'; syncBrand(); return; }
       FEATURES = (loaded.fc.features||[]).filter(f => f.geometry && f.geometry.coordinates);
-      document.getElementById('region').textContent = loaded.url.includes('texas') ? 'Texas' : 'Houston';
+      const regionLabel = REGION ? REGION.label : (loaded.url.includes('texas') ? 'Texas' : 'Houston');
+      document.getElementById('region').textContent = regionLabel;
+      document.title = `SiteWatch — ${regionLabel} Commercial Construction, Live`;
+      map.attributionControl.addAttribution((REGION && REGION.attribution) || 'data: TDLR TABS');
+      if (REGION?.metros?.length) renderMetros(REGION.metros);
       const isDemo = loaded.url.includes('-demo');
 
       // build markers + indexes (dup counter drives the stacked-coordinate offsets)
@@ -986,7 +1021,7 @@
       DATA_AGE_DAYS = through ? Math.max(0, Math.floor((now - through) / DAY)) : null;
       if (isDemo) { badge.textContent = 'demo data'; badge.className = 'demo'; }
       else if (DATA_AGE_DAYS != null && DATA_AGE_DAYS > 3) { badge.textContent = `updated ${DATA_AGE_DAYS} days ago`; badge.className = 'stale'; }
-      else { badge.textContent = 'live · TDLR'; badge.className = 'live'; }
+      else { badge.textContent = `live · ${REGION?.sourceShort || 'TDLR'}`; badge.className = 'live'; }
       syncBrand();
       document.getElementById('through').textContent = through ? `data through ${new Date(through).toISOString().slice(0,10)} · ${FEATURES.length.toLocaleString()} sites` : `${FEATURES.length.toLocaleString()} sites`;
       if (newCount) document.getElementById('newcnt').textContent = `(${newCount})`;
@@ -1163,6 +1198,9 @@
       if (state.q) f.q = state.q;
       if (state.startedOnly) f.event = 'started';
       if (state.center) { f.center = { lat: state.center.lat, lng: state.center.lng }; f.radiusMi = state.radiusMi; }
+      // Region scoping: saved searches must never start matching other regions'
+      // projects when a second region loads into the shared projects table.
+      if (REGION) f.region = REGION.id;
       return f;
     }
     function filtersSummary(f) {
@@ -1174,7 +1212,7 @@
       if (f.q) b.push('"' + f.q + '"');
       if (f.event === 'started') b.push('🚧 just started');
       if (f.center) b.push(`within ${f.radiusMi} mi`);
-      return b.join(' · ') || 'All Texas commercial construction';
+      return b.join(' · ') || `All ${REGION?.label || 'Texas'} commercial construction`;
     }
 
     function openSave() {
@@ -1202,16 +1240,44 @@
       sheet.querySelectorAll('.x').forEach((btn) => (btn.onclick = async () => { await sb.from('saved_searches').delete().eq('id', btn.dataset.id); btn.closest('.alertrow').remove(); toast('Alert deleted'); }));
     }
 
-    // metro quick-jumps
+    // metro quick-jumps — Texas defaults until the region manifest loads
     const METROS = [
-      ['Houston', 29.76, -95.37, 10], ['DFW', 32.85, -97.03, 9], ['Austin', 30.27, -97.74, 10],
-      ['San Antonio', 29.42, -98.49, 10], ['El Paso', 31.77, -106.44, 10],
+      { name: 'Houston', lat: 29.76, lng: -95.37, zoom: 10 }, { name: 'DFW', lat: 32.85, lng: -97.03, zoom: 9 },
+      { name: 'Austin', lat: 30.27, lng: -97.74, zoom: 10 }, { name: 'San Antonio', lat: 29.42, lng: -98.49, zoom: 10 },
+      { name: 'El Paso', lat: 31.77, lng: -106.44, zoom: 10 },
     ];
     const metroEl = document.getElementById('metros');
-    for (const [name, lat, lng, z] of METROS) {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = name;
-      b.onclick = () => { map.flyTo([lat, lng], z, { duration: 1.1 }); if (window.innerWidth <= 760) appEl.classList.add('peek'); };
-      metroEl.appendChild(b);
+    function renderMetros(list) {
+      // rebuild the metro chips; the near-me chip (appended below) stays put
+      for (const el of [...metroEl.children]) if (el.id !== 'nearme') el.remove();
+      const anchor = document.getElementById('nearme');
+      for (const m of list) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = m.name;
+        b.onclick = () => { map.flyTo([m.lat, m.lng], m.zoom, { duration: 1.1 }); if (window.innerWidth <= 760) appEl.classList.add('peek'); };
+        metroEl.insertBefore(b, anchor);
+      }
+    }
+    renderMetros(METROS);
+
+    // Region switcher — hidden until a deployment ships more than one region.
+    function renderRegions(regions) {
+      if (regions.length < 2) return;
+      document.getElementById('regions-lbl').hidden = false;
+      const el = document.getElementById('regions');
+      el.hidden = false;
+      el.innerHTML = '';
+      for (const r of regions) {
+        const b = document.createElement('button'); b.type = 'button';
+        b.className = 'chip' + (REGION && r.id === REGION.id ? ' on' : '');
+        b.textContent = r.label;
+        b.onclick = () => {
+          if (REGION && r.id === REGION.id) return;
+          try { localStorage.setItem('sw-region', r.id); } catch (e) {}
+          const u = new URL(location.href); u.searchParams.set('r', r.id); u.hash = '';
+          location.href = u.toString(); // full reload — clean dataset swap
+        };
+        el.appendChild(b);
+      }
     }
 
     // "Near me": geolocate once, then filter to a radius (slider appears).
@@ -1265,7 +1331,10 @@
       try {
         const r = await fetch('/api/ask', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q.slice(0, 300) }),
+          body: JSON.stringify({
+            question: q.slice(0, 300),
+            region: REGION ? { id: REGION.id, label: REGION.label, state: REGION.state, sourceName: REGION.sourceName } : undefined,
+          }),
         });
         if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
         await applyAiFilters(await r.json());

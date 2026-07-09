@@ -22,7 +22,8 @@ create extension if not exists postgis;
 -- ---------------------------------------------------------------------------
 create table if not exists projects (
   id              text primary key,              -- stable record id from the pipeline
-  permit_number   text unique,
+  permit_number   text unique,                    -- prefix-scoped per source (pipeline-asserted)
+  region          text not null default 'texas',  -- region registry id (src/config.js REGIONS)
   category        text,                           -- commercial | industrial | institutional
   work_class      text,                           -- new_construction | addition | ...
   status          text,
@@ -67,6 +68,8 @@ create index if not exists projects_geom_idx       on projects using gist (geom)
 create index if not exists projects_first_seen_idx  on projects (first_seen desc);
 create index if not exists projects_category_idx    on projects (category);
 create index if not exists projects_value_idx       on projects (valuation desc);
+create index if not exists projects_region_idx      on projects (region);
+-- (databases created before regions existed: apply backend/migrations/2026-07-09-region.sql)
 
 -- ---------------------------------------------------------------------------
 -- profiles: per-user billing state (is_pro is flipped by the Stripe webhook).
@@ -92,6 +95,7 @@ create index if not exists profiles_customer_idx on profiles (stripe_customer_id
 create table if not exists digest_subscribers (
   id         uuid primary key default gen_random_uuid(),
   email      text not null unique,
+  region     text not null default 'texas',  -- which region's digest they get
   active     boolean not null default true,
   created_at timestamptz not null default now()
 );
@@ -112,7 +116,7 @@ create table if not exists saved_searches (
   user_id       uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name          text not null,
   email         text,                             -- notify-to address (set from the user's email at save time)
-  filters       jsonb not null default '{}',      -- {categories, workClasses, minValue, minConfidence, q, center:{lat,lng}, radiusMi}
+  filters       jsonb not null default '{}',      -- {region, categories, workClasses, minValue, minConfidence, q, center:{lat,lng}, radiusMi}
   alert_email   boolean not null default true,
   active        boolean not null default true,
   last_alert_at timestamptz not null default now(),
@@ -145,6 +149,9 @@ language sql stable as $$
   -- a normal alert fires when a project first appears; a "started" alert fires when
   -- it crosses into construction (started_at). null started_at is excluded for those.
   where (case when s.filters->>'event' = 'started' then p.started_at::timestamptz else p.first_seen end) > since
+    -- region scoping: a search only ever matches its own region's projects.
+    -- Searches saved before regions existed carry no region key -> 'texas'.
+    and p.region = coalesce(s.filters->>'region', 'texas')
     and (s.filters->'categories'   is null or p.category   = any (select jsonb_array_elements_text(s.filters->'categories')))
     and (s.filters->'workClasses'  is null or p.work_class = any (select jsonb_array_elements_text(s.filters->'workClasses')))
     and (s.filters->>'minValue'      is null or p.valuation  >= (s.filters->>'minValue')::bigint)

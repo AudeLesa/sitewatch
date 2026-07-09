@@ -6,6 +6,7 @@
 import { readdirSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { generateSeo } from './seo.mjs';
+import { REGIONS } from '../src/config.js';
 
 const root = join(import.meta.dirname, '..');
 const dist = join(root, 'dist');
@@ -19,7 +20,7 @@ copyFileSync(join(root, 'web', 'icon.svg'), join(dist, 'icon.svg'));
 writeFileSync(
   join(dist, 'manifest.webmanifest'),
   JSON.stringify({
-    name: 'SiteWatch — Texas Construction, Live',
+    name: 'SiteWatch — Commercial Construction, Live',
     short_name: 'SiteWatch',
     start_url: '/',
     display: 'standalone',
@@ -47,14 +48,47 @@ for (const f of readdirSync(dataDir)) {
 //    from the project root at deploy time, and copying them here would serve
 //    the backend source as public static files.
 
-// 4. SEO: static project + metro pages, sitemap, robots.txt (crawlable long tail).
-const texasPath = join(dataDir, 'texas.geojson');
-if (existsSync(texasPath)) {
-  const fc = JSON.parse(readFileSync(texasPath, 'utf8'));
-  generateSeo(dist, fc.features || [], { siteUrl: process.env.SITE_URL });
+// 4. The region manifest the app boots from: every public region whose data
+//    actually exists in this build. Ships the display metadata (labels, metro
+//    chips, permit deep links) so the frontend carries no per-region copy.
+const liveRegions = Object.values(REGIONS).filter(
+  (r) => r.public && existsSync(join(dataDir, `${r.id}.geojson`))
+);
+writeFileSync(
+  join(dist, 'data', 'regions.json'),
+  JSON.stringify(
+    liveRegions.map((r) => ({
+      id: r.id,
+      label: r.label,
+      state: r.state,
+      stateName: r.stateName,
+      file: `/data/${r.id}.geojson`,
+      bbox: r.bbox,
+      map: r.map ?? null,
+      metros: r.metros ?? [],
+      attribution: r.attribution ?? null,
+      sourceShort: r.sourceShort ?? null,
+      sourceName: r.sourceName ?? null,
+      permitLinks: r.permitLinks ?? [],
+    }))
+  )
+);
+console.log(`  + data/regions.json  (${liveRegions.map((r) => r.id).join(', ') || 'no regions'})`);
+
+// 5. SEO: static project + metro pages, sitemap, robots.txt (crawlable long tail).
+//    NOTE: the SEO namespaces (where/, company/, sitemap.xml, insights) are
+//    currently single-region — generating a second public region would clobber
+//    the first. Stage 1 (SSR + per-region namespaces) must land before that.
+if (liveRegions.length > 1) {
+  console.error('  ✗ Multiple public regions found but SEO namespaces are single-region (Stage 1 work). Refusing to build overlapping pages.');
+  process.exit(1);
+}
+for (const r of liveRegions) {
+  const fc = JSON.parse(readFileSync(join(dataDir, `${r.id}.geojson`), 'utf8'));
+  generateSeo(dist, fc.features || [], { siteUrl: process.env.SITE_URL, region: r });
 }
 
-// 5. A real 404 page. (The old `/* -> /index.html 200` catch-all made every
+// 6. A real 404 page. (The old `/* -> /index.html 200` catch-all made every
 //    missing URL answer 200 with the app shell — including sitemap.xml before
 //    the SEO pages were deployed — which hides deploy drift from crawlers and
 //    humans alike. Hash-based deep links mean the app needs no SPA fallback.)

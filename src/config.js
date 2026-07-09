@@ -2,16 +2,33 @@ import { loadEnv } from './util/env.js';
 
 loadEnv();
 
-// City presets. Each preset describes how to target a metro across sources.
-// bbox is used both to sanity-filter geocoded points and (later) to request
-// only the relevant tiles from each source.
-export const CITIES = {
+// Region registry. A region is one publishable dataset: how to pull it (which
+// sources, targeted how), how to geocode it, and how the product presents it
+// (labels, metro chips, permit deep links). Adding a market = adding an entry
+// here + a source adapter; ids drive output filenames (data/<id>.geojson) and
+// the `region` value on every record, so they must never be renamed casually.
+// `public: true` regions are exported to dist/data/regions.json for the map;
+// the rest are operational pull presets.
+export const REGIONS = {
   houston: {
     id: 'houston',
     label: 'Houston, TX',
     state: 'TX',
+    stateName: 'Texas',
+    public: false, // pull preset only — the public Texas region covers it
+    // Records pulled with this preset are a subset of the public Texas dataset
+    // and must carry ITS region, or a houston load would flip shared DB rows
+    // out of 'texas' and hide them from alerts and the digest.
+    publicRegion: 'texas',
     // Harris County-ish bounding box [W,S,E,N]
     bbox: { minLng: -95.96, minLat: 29.49, maxLng: -94.91, maxLat: 30.17 },
+    zipPrefixes: ['75', '76', '77', '78', '79'],
+    valuation: { floor: 50000, cap: 5e9 },
+    geocoder: { hard: 'txpts' },
+    permitLinks: [{ prefix: 'TABS', label: 'TDLR ↗', url: 'https://www.tdlr.texas.gov/TABS/Search/Project/{permit}' }],
+    sourceShort: 'TDLR',
+    sourceName: 'TDLR TABS permit registrations',
+    attribution: 'data: TDLR TABS',
     // Shovels targets geographies by id. Harris County (resolved from permit
     // geo_ids) spans the Houston metro core — Houston, Katy, Spring, Cypress,
     // Baytown, Bellaire, Tomball, etc. seedZip is a bootstrap fallback only.
@@ -43,21 +60,52 @@ export const CITIES = {
     },
   },
 
-  // Whole-state preset. TABS is statewide, so we skip the county filter entirely
+  // Whole-state region. TABS is statewide, so we skip the county filter entirely
   // and page the registry by date in one pass (~50k projects / 24mo; ~19k once
   // filtered to new construction + additions). A full run is long — see README.
   texas: {
     id: 'texas',
-    label: 'Texas (all)',
+    label: 'Texas',
     state: 'TX',
+    stateName: 'Texas',
+    public: true,
     // Texas bounding box [W,S,E,N] (El Paso → Orange, Brownsville → Panhandle).
     bbox: { minLng: -106.65, minLat: 25.84, maxLng: -93.51, maxLat: 36.5 },
+    // Pre-data map view + the quick-jump chips the app's Places pane shows.
+    map: { center: [31.2, -98.5], zoom: 6 },
+    metros: [
+      { name: 'Houston', lat: 29.76, lng: -95.37, zoom: 10 },
+      { name: 'DFW', lat: 32.85, lng: -97.03, zoom: 9 },
+      { name: 'Austin', lat: 30.27, lng: -97.74, zoom: 10 },
+      { name: 'San Antonio', lat: 29.42, lng: -98.49, zoom: 10 },
+      { name: 'El Paso', lat: 31.77, lng: -106.44, zoom: 10 },
+    ],
+    // ZIP ranges for geocoder backfill; valuation sanity window ("fat-fingered"
+    // flagging — TABS's legal floor is $50k, nothing in Texas exceeds a few $B).
+    zipPrefixes: ['75', '76', '77', '78', '79'],
+    valuation: { floor: 50000, cap: 5e9 },
+    // Hard-case geocode tier: TxGIO statewide address points (Texas-only data).
+    geocoder: { hard: 'txpts' },
+    // Per-source permit deep links (prefix-matched against permitNumber).
+    permitLinks: [{ prefix: 'TABS', label: 'TDLR ↗', url: 'https://www.tdlr.texas.gov/TABS/Search/Project/{permit}' }],
+    sourceShort: 'TDLR',
+    // Reads as "projects from <sourceName>" in the Ask-the-map prompt — keep
+    // it phrased that way (matches the endpoint's Texas fallback exactly).
+    sourceName: 'TDLR TABS permit registrations',
+    attribution: 'data: TDLR TABS',
+    exampleCities: 'Houston, Dallas, Austin, San Antonio', // SEO metro-directory copy
     tabs: {
       statewide: true, // no LocationCounty filter — query the whole state at once
       maxDetails: 100000, // effectively uncapped; override with TABS_MAX_DETAILS
     },
   },
 };
+
+// Permit-number prefixes, by source id. A source that declares one guarantees
+// every permitNumber it emits carries it (asserted at pull time) — that is what
+// keeps history keys and the DB's permit_number collision-safe across regions.
+// Sources without a prefix get history-keyed by the source-scoped record id.
+export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS' };
 
 const env = process.env;
 
@@ -153,9 +201,11 @@ export const config = {
     // Max fallback lookups per run (politeness + bounded runtime). The disk cache
     // makes runs additive — re-run to keep filling in misses. Raise/lower freely.
     fallbackMax: Number(env.GEOCODER_FALLBACK_MAX || 2500),
-    // Hard-case tier (TxGIO statewide address points: exact new-address hits,
-    // nearest-number street snaps, intersections). GEOCODER_HARD=none disables.
-    hard: env.GEOCODER_HARD || 'txpts',
+    // Hard-case tier (e.g. 'txpts' — TxGIO statewide address points: exact
+    // new-address hits, nearest-number street snaps, intersections). Default
+    // comes from the active region's manifest; GEOCODER_HARD overrides
+    // ('none' disables).
+    hard: env.GEOCODER_HARD || null,
     hardMax: Number(env.GEOCODER_HARD_MAX || 800),
     locationiqKey: env.LOCATIONIQ_KEY || '',
     // Nominatim requires a real, identifying User-Agent.
@@ -165,12 +215,12 @@ export const config = {
   output: { dir: 'data' },
 };
 
-export function activeCity() {
-  return cityById(config.city);
+export function activeRegion() {
+  return regionById(config.city);
 }
 
-export function cityById(id) {
-  const c = CITIES[id];
-  if (!c) throw new Error(`Unknown city preset: ${id}. Known: ${Object.keys(CITIES).join(', ')}`);
-  return c;
+export function regionById(id) {
+  const r = REGIONS[id];
+  if (!r) throw new Error(`Unknown region preset: ${id}. Known: ${Object.keys(REGIONS).join(', ')}`);
+  return r;
 }

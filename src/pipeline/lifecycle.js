@@ -1,4 +1,5 @@
 import { STATUS } from '../schema.js';
+import { activeRegion } from '../config.js';
 
 // ---------------------------------------------------------------------------
 // Lifecycle-aware confidence: P(actively under construction NOW).
@@ -29,6 +30,11 @@ const GRACE_DAYS = 60; // don't start decaying the moment an estimate slips
 export function applyLifecycle(records, now = new Date()) {
   const kept = [];
   let finished = 0;
+  // Plausible-valuation window from the region manifest (texas: the $50k legal
+  // registration floor, and nothing in the state legitimately exceeds a few $B).
+  const val = activeRegion().valuation || {};
+  const valFloor = val.floor ?? 50000;
+  const valCap = val.cap ?? 5e9;
   for (const r of records) {
     const stage = r.lifecycleStage;
     const past = r.estEndDate ? (now - new Date(r.estEndDate)) / DAY : null;
@@ -45,9 +51,8 @@ export function applyLifecycle(records, now = new Date()) {
 
     r.confidence = timelineAdjusted(r.confidence, r.estStartDate, past, now);
     // Registrants fat-finger valuations; flag the implausible ones so rankings
-    // ("largest projects", top-owner tallies) can skip them. TABS's legal floor
-    // is $50k, and nothing in Texas legitimately exceeds a few $B.
-    r.valuationSuspect = r.valuation != null && (r.valuation < 50000 || r.valuation > 5e9);
+    // ("largest projects", top-owner tallies) can skip them.
+    r.valuationSuspect = r.valuation != null && (r.valuation < valFloor || r.valuation > valCap);
     kept.push(r);
   }
   return { records: kept, finished };

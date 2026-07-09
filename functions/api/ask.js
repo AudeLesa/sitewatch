@@ -12,7 +12,12 @@
 
 const MODEL = 'claude-sonnet-5';
 
-const SYSTEM = `You translate questions about a Texas commercial-construction map into its filter model. The map shows ~14k projects from TDLR TABS permit registrations, each with: category, work class, declared value (USD), a 0-1 confidence that construction is active now, registration date, scope-of-work free text, owner (the developer/company building it), architect/design firm, tenant, and address.
+// The system prompt is region-templated: the client sends its active region
+// (from /data/regions.json) so one endpoint serves every regional map. The
+// Texas fallback keeps old clients and region-less requests working.
+const DEFAULT_REGION = { label: 'Texas', sourceName: 'TDLR TABS permit registrations' };
+
+const systemFor = (region) => `You translate questions about a ${region.label} commercial-construction map into its filter model. The map shows projects from ${region.sourceName}, each with: category, work class, declared value (USD), a 0-1 confidence that construction is active now, registration date, scope-of-work free text, owner (the developer/company building it), architect/design firm, tenant, and address.
 
 Rules:
 - categories: only commercial | industrial | institutional | multifamily. Warehouses/factories/data centers → industrial. Schools/hospitals/churches/government → institutional. Retail/office/restaurants/hotels → commercial. Apartments → multifamily. Leave null when the question doesn't imply one.
@@ -25,7 +30,7 @@ Rules:
 - sinceDays: when the user asks for recent/new registrations ("this month" → 30). Null otherwise.
 - startedOnly: true only for "just broke ground"/"just started construction".
 - nearMe: true when the user references their own location ("near me", "nearby", "around here"); radiusMi from the question ("within 20 miles" → 20) or null for the default.
-- Contractors/GCs are NOT in this data — if asked about contractors, use the term as a company keyword and say in the explanation that general-contractor names aren't in public Texas data (owners and architects are).
+- Contractors/GCs are NOT in this data — if asked about contractors, use the term as a company keyword and say in the explanation that general-contractor names aren't in this public permit data (owners and architects are).
 - explanation: one short friendly sentence stating the filters you chose.`;
 
 const SCHEMA = {
@@ -54,6 +59,13 @@ export async function onRequestPost({ request, env }) {
   const question = typeof body?.question === 'string' ? body.question.trim().slice(0, 300) : '';
   if (!question) return json({ error: 'Ask a question about construction projects' }, 400);
 
+  // Region context from the client (length-capped strings only — this is a
+  // public endpoint and the values land in the prompt).
+  const region = { ...DEFAULT_REGION };
+  for (const k of ['label', 'sourceName']) {
+    if (typeof body?.region?.[k] === 'string' && body.region[k].trim()) region[k] = body.region[k].trim().slice(0, 60);
+  }
+
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -69,7 +81,8 @@ export async function onRequestPost({ request, env }) {
       // off here: filter translation needs speed, not deliberation.
       thinking: { type: 'disabled' },
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
-      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+      // One cache entry per region (the prompt is region-templated).
+      system: [{ type: 'text', text: systemFor(region), cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: question }],
     }),
   });

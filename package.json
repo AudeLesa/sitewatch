@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Live data pipeline for U.S. commercial construction sites. MVP: Houston, TX.",
+  "description": "Live map + data pipeline for U.S. commercial construction sites, organized by region (Texas first).",
   "engines": {
     "node": ">=20"
   },
