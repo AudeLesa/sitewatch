@@ -157,7 +157,12 @@ export const config = {
     // built" signal. This is the primary source; Shovels/Houston are supplemental.
     tdlrTabs: {
       enabled: env.TABS_ENABLED ? env.TABS_ENABLED !== 'false' : true,
+      // TDLR blocks datacenter IPs (CI runners). Point TABS_BASE_URL at the
+      // Cloudflare Pages proxy (/tdlr/TABS) + set TABS_PROXY_KEY to route the
+      // pull through Cloudflare's egress. Unset = hit TDLR directly (works from
+      // residential IPs / local runs).
       baseUrl: env.TABS_BASE_URL || 'https://www.tdlr.texas.gov/TABS',
+      proxyKey: env.TABS_PROXY_KEY || '',
       // County codes to pull; else the active city preset's tabs.countyCodes.
       countyCodes: env.TABS_COUNTY_CODES
         ? env.TABS_COUNTY_CODES.split(',').map((s) => Number(s.trim()))

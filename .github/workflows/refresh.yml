@@ -64,6 +64,11 @@ jobs:
           # Bound the slow OSM fallback in CI; the cache fills the long tail over
           # successive daily runs. (Run it uncapped locally for the first full seed.)
           GEOCODER_FALLBACK_MAX: '800'
+          # TDLR's WAF blocks datacenter IPs (Azure, where this runner lives), so
+          # a direct pull fails with "fetch failed". Route it through the Cloudflare
+          # Pages proxy (functions/tdlr) — Cloudflare's egress is not blocked.
+          TABS_BASE_URL: https://sitewatch-eyt.pages.dev/tdlr/TABS
+          TABS_PROXY_KEY: ${{ secrets.TABS_PROXY_KEY }}
         run: npm run refresh
 
       - name: Load projects into Supabase

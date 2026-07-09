@@ -152,7 +152,7 @@ export async function fetchPermits({ log = console.error } = {}) {
 // --- session / lookups ------------------------------------------------------
 
 async function openSession(cfg, log) {
-  const res = await fetchWithRetry(`${cfg.baseUrl}/search`, { headers: { 'User-Agent': UA } });
+  const res = await fetchWithRetry(`${cfg.baseUrl}/search`, { headers: { 'User-Agent': UA, ...proxyHeaders(cfg) } });
   const cookie = (res.headers.getSetCookie?.() || []).map((c) => c.split(';')[0]).join('; ');
   const html = await res.text();
   const lookup = {
@@ -249,6 +249,7 @@ async function searchPage(cfg, session, county, from, to, start, log) {
         Referer: `${cfg.baseUrl}/search`,
         Origin: 'https://www.tdlr.texas.gov',
         Cookie: session.cookie,
+        ...proxyHeaders(cfg),
       },
       body: searchBody({ county, from, to, start, length: cfg.pageSize }),
     });
@@ -295,7 +296,7 @@ function searchBody({ county, from, to, start, length }) {
 async function fetchDetail(cfg, session, projectNumber) {
   const html = await fetchText(
     `${cfg.baseUrl}/Search/Project/${encodeURIComponent(projectNumber)}`,
-    { headers: { 'User-Agent': UA, Cookie: session.cookie } },
+    { headers: { 'User-Agent': UA, Cookie: session.cookie, ...proxyHeaders(cfg) } },
     { retries: 2, timeoutMs: 15000 }
   );
   return parseDetail(html);
@@ -406,6 +407,12 @@ function classifyCategory(text) {
 // --- helpers ----------------------------------------------------------------
 
 const UA = 'Mozilla/5.0 (SiteWatch; +https://github.com/sitewatch) construction-radar';
+
+// When TABS_BASE_URL points at the Cloudflare proxy, authenticate to it; empty
+// object (no proxy configured) leaves every request unchanged.
+function proxyHeaders(cfg) {
+  return cfg.proxyKey ? { 'X-Proxy-Key': cfg.proxyKey } : {};
+}
 
 // Strip unit/building/floor designators and half-addresses that defeat the
 // Census geocoder; the bare street number + name geocodes far more reliably.
