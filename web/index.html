@@ -97,6 +97,10 @@
       border-radius: 999px; cursor: pointer; box-shadow: 0 2px 8px rgba(49,63,159,.08); font-family: inherit; }
     #csv:hover { filter: brightness(.97); }
     #digestbox { margin-top: 14px; }
+    #ask-note { margin-top: 8px; font-size: 12px; color: var(--muted); background: var(--primary-soft); border-radius: 12px; padding: 8px 12px; line-height: 1.45; }
+    #ask-note button { background: none; border: none; color: var(--primary); font-weight: 600; font-size: 12px; cursor: pointer; padding: 0; }
+    .chip.on { background: var(--primary); color: #fff; }
+    .chip.on .sw { background: #fff !important; }
     .digestrow { display: flex; gap: 7px; }
     .digestrow input { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 999px; border: 1px solid var(--border);
       background: var(--card); color: var(--ink); font-size: 12.5px; font-family: inherit; }
@@ -249,11 +253,22 @@
       </div>
 
       <div class="controls">
-        <label class="lbl" for="search">Search address · owner · architect · project</label>
-        <input id="search" type="text" placeholder="e.g. warehouse, ISD, Hines, Westheimer…" autocomplete="off" />
+        <label class="lbl" for="ask">✨ Ask the map</label>
+        <div class="digestrow">
+          <input id="ask" type="text" placeholder="e.g. tilt-wall warehouses near me over $5M" autocomplete="off" />
+          <button id="ask-go">Ask</button>
+        </div>
+        <div id="ask-note" hidden></div>
+
+        <label class="lbl" for="search">Search address · owner · architect · scope</label>
+        <input id="search" type="text" placeholder="e.g. tilt wall, ISD, Hines, Westheimer…" autocomplete="off" />
 
         <label class="lbl">Jump to metro</label>
         <div class="chips" id="metros"></div>
+        <div id="nearrow" hidden>
+          <label class="lbl" for="radius">Within <span id="radiusout" class="rangeval">30 mi</span> of your location</label>
+          <input id="radius" type="range" min="5" max="150" step="5" value="30" />
+        </div>
 
         <label class="lbl">Category</label>
         <div class="chips" id="cats"></div>
@@ -388,13 +403,13 @@
     const pinsGroup = L.layerGroup().addTo(map);
 
     let FEATURES = [], MARKERS = [], byId = new Map(), now = Date.now(), DATA_AGE_DAYS = null;
-    const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, sort:'new' };
+    const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, sort:'new', center:null, radiusMi:30 };
     // Three size tiers by declared value — enough to read hierarchy at a glance
     // without the mushy continuum the old radius formula produced.
     const pinSize = (v) => (v >= 25e6 ? 30 : v >= 2e6 ? 24 : 19);
     const isNew = (p) => p.issuedDate && (now - Date.parse(p.issuedDate)) <= 7*DAY;
 
-    function passes(p) {
+    function passes(p, m) {
       if (!state.cats.has(p.category)) return false;
       if (state.works.size && !state.works.has(p.workClass)) return false;
       if ((p.confidence||0)*100 < state.minConf) return false;
@@ -402,16 +417,32 @@
       if (state.since && (!p.issuedDate || (now - Date.parse(p.issuedDate)) > state.since*DAY)) return false;
       if (state.newOnly && !isNew(p)) return false;
       if (state.startedOnly && !p.justStarted) return false;
-      if (state.q) { const q = state.q.toLowerCase();
-        const hay = [p.address, p.description, p.owner, p.designFirm, p.facilityName].filter(Boolean).join(' ').toLowerCase();
-        if (!hay.includes(q)) return false; }
+      if (state.center && m) {
+        if (milesBetween(state.center, m.ll) > state.radiusMi) return false;
+      }
+      if (state.q) {
+        // Every term must match somewhere — including the scope-of-work text,
+        // which is where trade/material language ("tilt wall", "metal building",
+        // "sitework") actually lives in TABS records.
+        const hay = [p.address, p.description, p.owner, p.designFirm, p.facilityName, p.scopeOfWork, p.tenantName]
+          .filter(Boolean).join(' ').toLowerCase();
+        for (const t of state.q.toLowerCase().split(/\s+/)) {
+          if (t && !hay.includes(t)) return false;
+        }
+      }
       return true;
+    }
+
+    function milesBetween(a, b) {
+      const dLat = (a.lat - b.lat) * 69;
+      const dLng = (a.lng - b.lng) * 69 * Math.cos((a.lat * Math.PI) / 180);
+      return Math.sqrt(dLat * dLat + dLng * dLng);
     }
 
     let LAST_VISIBLE = [];
     function apply() {
       const visible = [];
-      for (const m of MARKERS) if (passes(m._p)) visible.push(m);
+      for (const m of MARKERS) if (passes(m._p, m)) visible.push(m);
       LAST_VISIBLE = visible;
       redrawMap();
       let total = 0; for (const v of visible) total += v._p.valuation || 0;
@@ -594,7 +625,7 @@
     function buildChips(containerId, values, labels, stateSet, colored) {
       const el = document.getElementById(containerId); el.innerHTML='';
       for (const v of values) { stateSet.add(v);
-        const chip = document.createElement('button'); chip.type = 'button'; chip.className='chip'; chip.setAttribute('aria-pressed','true');
+        const chip = document.createElement('button'); chip.type = 'button'; chip.className='chip'; chip.dataset.v = v; chip.setAttribute('aria-pressed','true');
         chip.innerHTML = (colored ? `<span class="sw" style="background:${COLORS[v]||COLORS.unknown}"></span>` : '') + (labels[v]||v);
         chip.onclick = () => { const on = stateSet.has(v);
           if (on) { stateSet.delete(v); chip.classList.add('off'); } else { stateSet.add(v); chip.classList.remove('off'); }
@@ -662,6 +693,7 @@
         document.getElementById('since').value='0'; document.getElementById('newonly').checked=false; document.getElementById('startedonly').checked=false; document.getElementById('search').value='';
         state.cats=new Set(cats); state.works=new Set(works);
         buildChips('cats', cats, CAT_LABELS, state.cats, true); buildChips('works', works, WORK_LABELS, state.works, false);
+        if (state.center) setNear(null); // also clears the near-me radius filter
         apply();
       };
 
@@ -801,6 +833,7 @@
       if (state.minConf) f.minConfidence = state.minConf / 100;
       if (state.q) f.q = state.q;
       if (state.startedOnly) f.event = 'started';
+      if (state.center) { f.center = { lat: state.center.lat, lng: state.center.lng }; f.radiusMi = state.radiusMi; }
       return f;
     }
     function filtersSummary(f) {
@@ -811,6 +844,7 @@
       if (f.minConfidence) b.push('≥' + Math.round(f.minConfidence * 100) + '% building');
       if (f.q) b.push('"' + f.q + '"');
       if (f.event === 'started') b.push('🚧 just started');
+      if (f.center) b.push(`within ${f.radiusMi} mi`);
       return b.join(' · ') || 'All Texas commercial construction';
     }
 
@@ -851,6 +885,106 @@
       const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = name;
       b.onclick = () => { map.flyTo([lat, lng], z, { duration: 1.1 }); if (window.innerWidth <= 760) appEl.classList.add('peek'); };
       metroEl.appendChild(b);
+    }
+
+    // "Near me": geolocate once, then filter to a radius (slider appears).
+    const nearBtn = document.createElement('button');
+    nearBtn.type = 'button'; nearBtn.className = 'chip'; nearBtn.id = 'nearme'; nearBtn.textContent = '📍 Near me';
+    metroEl.appendChild(nearBtn);
+    const nearRow = document.getElementById('nearrow');
+    const radiusEl = document.getElementById('radius');
+
+    function getLocation() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => resolve(null),
+          { timeout: 8000, maximumAge: 300000 }
+        );
+      });
+    }
+    function setNear(center, radiusMi) {
+      state.center = center;
+      if (radiusMi) { state.radiusMi = radiusMi; radiusEl.value = String(Math.min(150, Math.max(5, radiusMi))); }
+      nearBtn.classList.toggle('on', !!center);
+      nearRow.hidden = !center;
+      document.getElementById('radiusout').textContent = state.radiusMi + ' mi';
+      if (center) map.flyTo([center.lat, center.lng], state.radiusMi <= 15 ? 11 : state.radiusMi <= 40 ? 9 : 8, { duration: 1.1 });
+      apply();
+    }
+    nearBtn.onclick = async () => {
+      if (state.center) return setNear(null);
+      nearBtn.textContent = '📍 Locating…';
+      const loc = await getLocation();
+      nearBtn.textContent = '📍 Near me';
+      if (!loc) return toast('Location unavailable — allow location access and try again');
+      setNear(loc);
+    };
+    radiusEl.oninput = () => {
+      state.radiusMi = +radiusEl.value;
+      document.getElementById('radiusout').textContent = state.radiusMi + ' mi';
+      debounce(apply);
+    };
+
+    // ✨ Ask the map: Claude turns a plain-English question into map filters
+    // (/api/ask). If the endpoint isn't configured, fall back to keyword search.
+    const askEl = document.getElementById('ask'), askBtn = document.getElementById('ask-go'), askNote = document.getElementById('ask-note');
+    async function runAsk() {
+      const q = askEl.value.trim();
+      if (!q) return;
+      askBtn.disabled = true; askBtn.textContent = '…';
+      try {
+        const r = await fetch('/api/ask', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q.slice(0, 300) }),
+        });
+        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
+        await applyAiFilters(await r.json());
+      } catch (e) {
+        // graceful degradation: keyword search on the question, minus filler
+        // words that would zero out the ALL-terms-must-match search.
+        const STOP = /^(projects?|construction|sites?|buildings?|show|me|all|the|a|an|in|of|for|near|nearby|around|with|that|are|is|being|built|new|currently)$/i;
+        const kept = q.split(/\s+/).filter((t) => !STOP.test(t)).join(' ') || q;
+        document.getElementById('reset').click();
+        state.q = kept; document.getElementById('search').value = kept; apply();
+        askNote.hidden = false;
+        askNote.innerHTML = `AI search unavailable (${esc(String(e.message || e))}) — ran a keyword search instead. <button id="ask-clear">Clear</button>`;
+        document.getElementById('ask-clear').onclick = clearAsk;
+      }
+      askBtn.disabled = false; askBtn.textContent = 'Ask';
+    }
+    askBtn.onclick = runAsk;
+    askEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') runAsk(); });
+    function clearAsk() { askNote.hidden = true; askEl.value = ''; document.getElementById('reset').click(); }
+
+    async function applyAiFilters(f) {
+      document.getElementById('reset').click(); // clean slate (also clears near-me)
+      // category / work-type chips: turn OFF everything not requested
+      if (Array.isArray(f.categories) && f.categories.length) {
+        for (const chip of document.querySelectorAll('#cats .chip')) if (!f.categories.includes(chip.dataset.v)) chip.click();
+      }
+      if (Array.isArray(f.workClasses) && f.workClasses.length) {
+        for (const chip of document.querySelectorAll('#works .chip')) if (!f.workClasses.includes(chip.dataset.v)) chip.click();
+      }
+      if (f.minValue) { state.minVal = f.minValue; document.getElementById('valout').textContent = fmtShort(f.minValue) + '+';
+        const val = document.getElementById('val'); if (+val.max >= f.minValue) val.value = String(f.minValue); }
+      if (f.minConfidence) { const pct = Math.min(90, Math.round(f.minConfidence * 10) * 10);
+        state.minConf = pct; document.getElementById('conf').value = String(pct); document.getElementById('confout').textContent = pct + '%'; }
+      if (f.sinceDays) { const opts = [7, 30, 90, 180, 365]; const pick = opts.find((o) => o >= f.sinceDays) || 365;
+        state.since = pick; document.getElementById('since').value = String(pick); }
+      if (f.startedOnly) { state.startedOnly = true; document.getElementById('startedonly').checked = true; }
+      const terms = [...(f.keywords || []), ...(f.companies || [])].join(' ').trim();
+      if (terms) { state.q = terms; document.getElementById('search').value = terms; }
+      if (f.nearMe) {
+        const loc = await getLocation();
+        if (loc) setNear(loc, f.radiusMi || 30);
+        else toast('Location unavailable — showing statewide results');
+      }
+      apply();
+      askNote.hidden = false;
+      askNote.innerHTML = `${esc(f.explanation || 'Filters applied.')} · <b>${document.getElementById('stat-count').textContent}</b> sites match. <button id="ask-clear">Clear</button>`;
+      document.getElementById('ask-clear').onclick = clearAsk;
     }
 
     // mobile bottom sheet: tap the handle to swap panel <-> map real estate

@@ -220,6 +220,10 @@ depth, so it's safe to defer.)
 
 ## Config knobs (`.env`)
 
+- `ANTHROPIC_API_KEY` — **Cloudflare Pages env var** (not `.env`): enables the map's
+  "✨ Ask the map" natural-language search (`functions/api/ask.js`, Claude translates
+  questions like "tilt-wall warehouses near me over $5M" into filters). Without it
+  the box gracefully falls back to keyword search.
 - `SITEWATCH_LOOKBACK_MONTHS` (default 24) — how far back an issued permit still counts as "active."
 - `SHOVELS_GEO_ID` — pin Shovels to a specific Houston/Harris geography id.
 - `commercialCategories`, `includeMultifamily`, `buildWorkClasses` — in `src/config.js`.
