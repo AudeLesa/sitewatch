@@ -64,8 +64,11 @@ export function makeRecord(partial) {
     workClass: partial.workClass ?? WORK_CLASS.UNKNOWN,
     status: partial.status ?? STATUS.UNKNOWN,
     description: partial.description ?? null,
-    valuation: partial.valuation ?? null,
-    squareFeet: partial.squareFeet ?? null,
+    // Whole dollars / whole feet: the DB columns are bigint, and Seattle-class
+    // sources declare costs with cents ("2164755.87") — the first unattended
+    // multi-region load failed on exactly that.
+    valuation: partial.valuation != null ? Math.round(partial.valuation) : null,
+    squareFeet: partial.squareFeet != null ? Math.round(partial.squareFeet) : null,
     appliedDate: partial.appliedDate ?? null,
     issuedDate: partial.issuedDate ?? null,
     finalizedDate: partial.finalizedDate ?? null,

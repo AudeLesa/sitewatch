@@ -2,153 +2,153 @@
 
 Generated 2026-07-10.
 
-- **BOS-ALT1662836** issued/building conf=0.12 · addition · $2,000
-  704-712 Boylston ST, Boston, MA 02199 · Addition/alteration — ALT for Sprinkler &; Fire Alarm works SF 1632140. Fire alarm approval only. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1662836%22%7D)
-- **BOS-ALT1806190** issued/building conf=0.81 · addition · $3,600
-  66-76 Brighton AV, Allston, MA 02134 · Addition/alteration — Existing awnings changed the fabric only (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1806190%22%7D)
-- **BOS-ALT1823924** issued/building conf=0.81 · addition · $18,860
-  40-46 Summer ST, Boston, MA 02110 · Addition/alteration — Painting and the addition of new FA strobes in private offices that are converting to huddle rooms. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1823924%22%7D)
-- **BOS-ALT1812091** issued/building conf=0.81 · addition · $15,240
-  349-351 Newbury ST, Boston, MA 02115 · Addition/alteration — Repositioning of existing fire sprinkler heads as required due to ceiling updates. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1812091%22%7D)
-- **BOS-ALT1797412** issued/building conf=0.81 · addition · $176,000
-  185 Franklin ST, Boston, MA 02110 · Addition/alteration — Install 2 in row coolers that tie into the chilled water system, they also have interior smoke detectors which will tie into the BMS . (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1797412%22%7D)
-- **BOS-ALT1641406** issued/building conf=0.07 · addition · $2,516,362
-  1 Post Office SQ, Boston, MA 02110 · Addition/alteration — Interior tenant fit-out of 5,000 SF of retail space on 2 floors of One Post Office Square with an interconnecting stair. Scope includes dem… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1641406%22%7D)
-- **BOS-ALT1774278** issued/building conf=0.81 · addition · $407,341
-  200 State ST, Boston, MA 02109 · Addition/alteration — The project consists of interior renovation of 3rd floor of the existing building for future tenant. Scope of work includes finish replacem… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1774278%22%7D)
-- **BOS-ALT1750877** issued/building conf=0.81 · addition · $3,027,040
-  15 Necco ST, Boston, MA 02210 · Addition/alteration — PHASED approval: Fitout for new restaurant #37, change of use for 1st time occupancy. Work incl partitions, ceilings, floor/wall finishes a… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1750877%22%7D)
-- **BOS-ALT1602559** issued/building conf=0.05 · addition · $325,000
-  500 Boylston ST, Boston, MA 02116 · Addition/alteration — We are upgrading existing Audio Amplifiers on the existing Fire alarm System. Reason for upgrade is the existing amplifiers are no longer a… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1602559%22%7D)
-- **BOS-ALT1745776** issued/building conf=0.4 · addition · $675
-  1493-1501 Dorchester AV, Dorchester, MA 02122 · Addition/alteration — New panels same size, color and locations as existing TMOBILE, adding AUTHORIZED RETAILER. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1745776%22%7D)
-- **BOS-ALT1689218** issued/building conf=0.2 · addition · $62,000
-  206 Seaver ST, Dorchester, MA 02121 · Addition/alteration — ; Replace existing fire alarm control panel and addressable initiating devices with new due to the existing system being proprietary and in… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1689218%22%7D)
-- **BOS-ALT1672457** issued/building conf=0.11 · addition · $8,232,866
-  60 Western AV, Allston, MA 02134 · Addition/alteration — Interior fitout of the 2nd floor consisting of office & lab space. Work includes: new drywall partitions, act, new lighting, new architectu… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1672457%22%7D)
-- **BOS-ALT1833768** issued/building conf=0.81 · addition · $16,000
-  179-195 Freeport ST, Dorchester, MA 02122 · Addition/alteration — Alteration of the existing fire alarm system in accordance with NFPA 72 2019, 527 CMR, and NFPA 70 to accommodate new office space renovati… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1833768%22%7D)
-- **BOS-ALT1698571** issued/building conf=0.23 · addition · $5,000
-  1676 Dorchester AV, Dorchester, MA 02122 · Addition/alteration — Install ones et of 1" deep letters to read "REVAMP" & 3/8" thick letters to read "TRAINING" painted 2 colors stud mount to brick with adhes… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1698571%22%7D)
-- **BOS-ALT1603993** issued/building conf=0.07 · addition · $500,000
-  300-310 Pier 4 BL, Boston, MA 02210 · Addition/alteration — "Woods Hill Table" Renovations to existing restaurant contiguous space for additional seating and food services. Plan APPROVED by ISD Healt… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1603993%22%7D)
+- **BOS-ALT1844456** issued/building conf=0.81 · addition · $10,065
+  220 Longwood AV, Boston, MA 02115 · Addition/alteration — Installation of one 1 AES at FACP. Wiring of one 1 monitor module. (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1844456%22%7D)
+- **BOS-ALT1603906** issued/building conf=0.06 · addition · $5,000
+  11A Allstate RD, Dorchester, MA 02125 · Addition/alteration — Replacement of wall signs and canopies (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1603906%22%7D)
+- **BOS-ALT1769627** issued/building conf=0.81 · addition · $750,000
+  10-18 Bowdoin ST, Dorchester, MA 02121 · Addition/alteration — Changing occupancy of 1 store into restaurant. New MEP and Finishes.*Existing present use:;;32 Units, 3 Stores #ALT1727751/2025 (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1769627%22%7D)
+- **BOS-ALT1830427** issued/building conf=0.81 · addition · $700,000
+  7-11 Edgewater DR, Mattapan, MA 02126 · Addition/alteration — This is to do an interior fit-out of a restaurant with a seating capacity of 100 people between the bar liquor and hot/cold sandwiches. GC… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1830427%22%7D)
+- **BOS-ALT1681449** issued/building conf=0.13 · addition · $1,500
+  879-881 Blue Hill AV, Dorchester, MA 02124 · Addition/alteration — Install Sign based on stamped BPDA approved plans, attached (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1681449%22%7D)
+- **BOS-ALT1611752** issued/building conf=0.13 · addition · no value
+  105 Bowdoin AV, Dorchester, MA 02121 · Addition/alteration — Existing restaurant to remove existing seating to have take out only.;This permit is for the removal of the proviso not for any work. Any w… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1611752%22%7D)
+- **BOS-ALT1743558** issued/building conf=0.81 · addition · $275,000
+  91-95 Summer ST, Boston, MA 02111 · Addition/alteration — Change of occupancy to include wireless communication. Verizon proposes to install 3 new antennas, 2 of which have integrated RRHs, 2 stand… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1743558%22%7D)
+- **BOS-ALT1803177** issued/building conf=0.81 · addition · $348,000
+  288-304 A ST, Boston, MA 02210 · Addition/alteration — Red Hat - 5th floor work includes remove all non bearing load partitions, remove mechanical, electrical, plumbing and finishes back to shel… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1803177%22%7D)
+- **BOS-ALT1851280** issued/building conf=0.81 · addition · $19,500
+  25-35 Chesterton ST, Roxbury, MA 02119 · Addition/alteration — Remove existing signs and install new signs x3 (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1851280%22%7D)
+- **BOS-ALT1708126** issued/building conf=0.81 · addition · $200,000
+  232-234 Commercial ST, Boston, MA 02109 · Addition/alteration — The space at 232 Commercial Street Unit A will house Seven Hills Pasta Company and will be used primarily Studio/live entertainment hosting… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1708126%22%7D)
+- **BOS-ALT1788001** issued/building conf=0.81 · addition · no value
+  99-111 Seaport BL, Boston, MA 02210 · Addition/alteration — We are submitting this application change to facilitate the required amendment to the existing Certificate of Occupancy in order incorporat… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1788001%22%7D)
+- **BOS-ALT1724263** issued/building conf=0.29 · addition · no value
+  190-200 Berkeley ST, Boston, MA 02116 · Addition/alteration — Removal and disposal of interior walls, ceilings, and flooring at 4th floor suite. Sprinklers - install temp uprights throughout suite for… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1724263%22%7D)
+- **BOS-ALT1526276** issued/building conf=0.2 · addition · $36,000
+  16 Sidlaw RD, Brighton, MA 02135 · Addition/alteration — 2nd &; 3rd Level. Interior Work All work done per attached architect’s plan dated 2/23/23: -Remove partition walls -Construction new warmin… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1526276%22%7D)
+- **BOS-ALT1823815** issued/building conf=0.81 · addition · $7,800,000
+  1-27 Boston Wharf RD, Boston, MA 02210 · Addition/alteration — Amazon 2-4th &; 8-17th floors work to consist of HVAC duct loop, HVAC equipment &; accommodations and adjustments to existing electrical an… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1823815%22%7D)
+- **BOS-ALT1790404** issued/building conf=0.81 · addition · $1,200,000
+  125-135 Congress ST, Boston, MA 02110 · Addition/alteration — Renovation to the 3rd floor of 30 Federal St, including MEP, Sprinkler, FA and finishes and adding a small conference room.*Application ass… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1790404%22%7D)
+- **BOS-ALT1728827** issued/building conf=0.37 · addition · $34,465
+  736 Cambridge ST, Brighton, MA 02135 · Addition/alteration — Replace the face of an existing wall sign, 5 face replacements, and 2 sets of dimensional letters. (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1728827%22%7D)
+- **BOS-ALT1733900** issued/building conf=0.58 · addition · $35,000
+  60 Henshaw ST, Brighton, MA 02135 · Addition/alteration — Remove existing parking area in front yard and install a new playground with climbing equipment and 4' high fence and gate. (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1733900%22%7D)
+- **BOS-ALT1608627** issued/building conf=0.06 · addition · $2,000,000
+  36-44 Broad ST, Boston, MA 02109 · Addition/alteration — 8th Floor renovation to include minor demolition, new non structural partitions, new finishes to include flooring, ceilings, millwork, pain… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1608627%22%7D)
+- **BOS-ALT1813737** issued/building conf=0.81 · addition · $7,800,000
+  30-80 Warren ST, Allston, MA 02134 · Addition/alteration — Install Geothermal Wells, new FP feed, temporary oxygen farm tank and UG fuel oil, Plumbing water service room and air curtain.;Demolition… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1813737%22%7D)
+- **BOS-ALT1685420** issued/building conf=0.22 · addition · $8,500
+  961 Commonwealth AV, Boston, MA 02215 · Addition/alteration — Channel lettering mounted to faceade and a blade sign mounted to the sign (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1685420%22%7D)
+- **BOS-ALT1860613** issued/building conf=0.81 · addition · $7,743
+  125 Newbury ST, Boston, MA 02116 · Addition/alteration — Installation of one 8. 5" h x 76.375" w x " deep aluminum sign cabinet reading Joe & The Juice, face is routed s o that only the lettering… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1860613%22%7D)
+- **BOS-ALT1662838** issued/building conf=0.11 · addition · $1,380
+  4395-4407 Washington ST, Roslindale, MA 02131 · Addition/alteration — Replace the existing aluminum panel sign and install a same size new aluminum panel sign. work being done at 4403 4401 Washington St (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1662838%22%7D)
+- **BOS-ALT1704995** issued/building conf=0.29 · addition · $149,252
+  2 Hawthorne PL, Boston, MA 02114 · Addition/alteration — Unit 106N. Renovate existing 700 sq ft medical offices. Add accessible washroom. Replace suspended ceiling. Remove carpet and install vinyl… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1704995%22%7D)
+- **BOS-ALT1661693** issued/building conf=0.13 · addition · $180,000
+  350 S Huntington AV, Jamaica Plain, MA 02130 · Addition/alteration — Replace fire pump, no changes to the system, just maintenance (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1661693%22%7D)
+- **BOS-ALT1757620** issued/building conf=0.48 · addition · $150,000
+  48-54 Northern AV, Boston, MA 02210 · Addition/alteration — Remove existing foam tanks on floors 1-3 and install foam tank on floor 1 and Fire Dos proportioner (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1757620%22%7D)
+- **BOS-ALT1808205** issued/building conf=0.81 · addition · $77,500
+  7 Congress ST, Boston, MA 02109 · Addition/alteration — 8th Floor tenant fitout (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1808205%22%7D)
+- **BOS-ALT1679015** issued/building conf=0.24 · addition · $23,347,261
+  466-472 Atlantic AV, Boston, MA 02210 · Addition/alteration — Change of occupancy to include laboratory use. Interior fit out of laboratory and office for future tenant spaces on levels 2, 3, 9 and 10.… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1679015%22%7D)
+- **BOS-ALT1696563** issued/building conf=0.19 · addition · $262,895
+  15 Gorham ST, Allston, MA 02134 · Addition/alteration — Interior repairs/renovation to fitness club "Crunch Fitness". The project calls for the removal of some petition walls, but no structural a… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1696563%22%7D)
+- **BOS-ALT1811031** issued/building conf=0.81 · addition · $49,000
+  895 Massachusetts AV, Roxbury, MA 02119 · Addition/alteration — Reimage existing Sunoco gas station. Reface existing Pylon sign, maintain size and location. Reskin OH canopy fascia, install 3 three new s… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1811031%22%7D)
+- **BOS-ALT1819513** issued/building conf=0.81 · addition · $4,000
+  3589-3611 Washington ST, Jamaica Plain, MA 02130 · Addition/alteration — INSTALL 2 STROBE ONLY DEVICES IN THE BREAKROOM AND BATHROOM ON THE FIRST FLOOR. (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1819513%22%7D)
+- **BOS-ALT1849260** issued/building conf=0.81 · addition · $700,000
+  90 Oliver ST, Boston, MA 02110 · Addition/alteration — Renovation of 5th Floor Postman Offices. All work per submitted plans including sprinkler fire protection will be done per submitted engine… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1849260%22%7D)
+- **BOS-ALT1843568** issued/building conf=0.81 · addition · $520,791
+  1 Exeter PZ, Boston, MA 02116 · Addition/alteration — Renovations of existing space on the 9th Floor. Work includes offices, conference rooms and common areas. Includes removal of finishes, dry… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1843568%22%7D)
+- **BOS-ALT1617139** issued/building conf=0.05 · addition · $9,500
+  39 Dalton ST, Boston, MA 02199 · Addition/alteration — we will be moving ansul bottles for the kitchen suppression system 6' from one part of the wall to the other. this will require us to redo… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1617139%22%7D)
+- **BOS-ALT1823831** issued/building conf=0.81 · addition · $815,000
+  772-778 Boylston ST, Boston, MA 02199 · Addition/alteration — WORK UNDER THIS APPLICATION IS LIMITED TO THE INTERIOR &; EXTERIOR RENOVATION OF THE TENANT SPACE LOCATED AT THE ABOVE ADDRESS WITHIN TENAN… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1823831%22%7D)
 - **BOS-ALT1817591** issued/building conf=0.81 · addition · no value
   50 Malden ST, Roxbury, MA 02118 · Addition/alteration — Change the number of seats from 126 to 106. We have done the short form. This application is to change seat number so we can submit to for… (Open)
   [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1817591%22%7D)
-- **BOS-ALT1673689** issued/building conf=0.13 · addition · $450,000
-  100 Hood Park DR, Charlestown, MA 02129 · Addition/alteration — Tier I Sprinkler Application. Modification of existing garage sprinkler system. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1673689%22%7D)
-- **BOS-ALT1672914** issued/building conf=0.15 · addition · $5,389.38
-  1-9 N Beacon ST, Allston, MA 02134 · Addition/alteration — Install a front-lit channel letter sign (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1672914%22%7D)
-- **BOS-ALT1705903** issued/building conf=0.25 · addition · $8,000
-  1403-1405 Dorchester AV, Dorchester, MA 02122 · Addition/alteration — To replace an existing sign with a set of 21"Hx163"W backlit letter "Pho Bar Express" that are space mounted onto a 35"Hx191"W aluminum sig… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1705903%22%7D)
-- **BOS-ALT1683367** issued/building conf=0.16 · addition · $3,125
-  227-275 Washington ST, Boston, MA 02108 · Addition/alteration — Install 1 set of face lit channel letters and logo Install 1 set of non illuminated channel letters and logo Install a double sided illumin… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1683367%22%7D)
-- **BOS-ALT1850887** issued/building conf=0.81 · addition · $444,280
-  100 Summer ST, Boston, MA 02110 · Addition/alteration — This project includes demolition on the 6th floor at an existing building located at 100 summer street. Work to be completed includes, but… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1850887%22%7D)
-- **BOS-ALT1749680** issued/building conf=0.48 · addition · $14,700,000
-  640-750 Atlantic AV, Boston, MA 02111 · Addition/alteration — Use Group B office, Use Group R-2 Multi-Family Condominiums, Use Group S-2 parking, Use Group, M retail, Use Group A-3 Assembly;South Stati… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1749680%22%7D)
-- **BOS-ALT1805093** issued/building conf=0.81 · addition · $39,680
-  465 Medford ST, Charlestown, MA 02129 · Addition/alteration — Refresh of the site Directionals: Replacement Faces for Existing Sign 1A.1 Refurbish existing Directional and relocate for better visibilit… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1805093%22%7D)
-- **BOS-ALT1786295** issued/building conf=0.67 · addition · $28,570
-  416 Pond ST, Jamaica Plain, MA 02130 · Addition/alteration — Build two wood platforms 6'x8' at the back of the building Build a wood canopy 84"x90" at the back of the building (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1786295%22%7D)
-- **BOS-ALT1817986** issued/building conf=0.81 · addition · $625,000
-  10 ST JAMES AV, Boston, MA 02116 · Addition/alteration — Removal of existing 16th to 17th fl staircase. Infill with structural steel and concrete. Installation of drywall, ceilings, flooring, pain… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1817986%22%7D)
-- **BOS-ALT1796757** issued/building conf=0.81 · addition · $15,000
-  30-40 Western AV, Allston, MA 02134 · Addition/alteration — New "ATLAS HOTEL" sign . Approved by BPDA Article 80 Design Review. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1796757%22%7D)
-- **BOS-ALT1819013** issued/building conf=0.81 · addition · $175,000
-  320-324 Congress ST, Boston, MA 02210 · Addition/alteration — Build new modular room in existing open office space on the 2nd floor, includes new power, lighting, sprinkler heads and fire alarm work. E… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1819013%22%7D)
-- **BOS-ALT1789283** issued/building conf=0.65 · addition · $4,039.06
-  36-38 Hichborn ST, Brighton, MA 02135 · Addition/alteration — Install a 32.56'' x 23.77'' wall sign and a 24'' x 20'' double-sided blade sign. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1789283%22%7D)
-- **BOS-ALT1788534** issued/building conf=0.68 · addition · $1,522,627
-  115 Federal ST, Boston, MA 02110 · Addition/alteration — Demo of slab for future commuting stairwell 10th and 11th (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1788534%22%7D)
-- **BOS-ALT1834008** issued/building conf=0.81 · addition · $356,745
-  2565 Washington ST, Roxbury, MA 02119 · Addition/alteration — Reno of 1st floor gym into offices, 4 therapy rooms, art room, gym, and 3 accessible toilet rooms for new tenant providing ABA therapy for… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1834008%22%7D)
-- **BOS-ALT1733783** issued/building conf=0.46 · addition · $2,341,805
-  15 Enterprise ST, Dorchester, MA 02125 · Addition/alteration — Provide exterior infrastructure for EV chargers. Includes electrical scope, carport repairs and roof demo and sitework.eplan (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1733783%22%7D)
-- **BOS-ALT1621701** issued/building conf=0.07 · addition · $150,000
-  18-32 Tremont ST, Boston, MA 02108 · Addition/alteration — Dish Wireless Rooftop Cellular/Eligible Facilities Request: Antennas w/support Equip. RRHS,OVP, Junction Boxes + Associated Cabling &; Cond… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1621701%22%7D)
-- **BOS-ALT1786296** issued/building conf=0.62 · addition · $10,490.63
-  1-27 Boston Wharf RD, Boston, MA 02210 · Addition/alteration — Installation of 1 set of illuminated channel letters to read "Moleskine" and the installation of 1 illuminated blade sign to read "Moleskin… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1786296%22%7D)
-- **BOS-ALT1673149** issued/building conf=0.19 · addition · $1,100
-  140 Neponset Valley PW, Hyde Park, MA 02136 · Addition/alteration — Face replacement for existing freestanding sign cabinet. New sign face to read "Extra Space Storage" White lettering, green background. 8'-… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1673149%22%7D)
-- **BOS-ALT1603524** issued/building conf=0.07 · addition · $48,000
-  192 Chelsea ST, East Boston, MA 02128 · Addition/alteration — Change occupancy from store and 2 apartments to a Daycare Use Group E and Two apartments. Demo walls in commercial area. Build dividing wal… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1603524%22%7D)
-- **BOS-ALT1718153** issued/building conf=0.4 · addition · $78,000
-  57-63 Franklin ST, Boston, MA 02110 · Addition/alteration — Replace fire pump controller for building. Existing fire pump to remain in place (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1718153%22%7D)
-- **BOS-ALT1795768** issued/building conf=0.81 · addition · $1,202,397
-  190-200 Berkeley ST, Boston, MA 02116 · Addition/alteration — Renovations to existing space on the 7th Floor. Work to be performed in 3 Phases as shown on the drawings. Work includes minor demolition,… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1795768%22%7D)
-- **BOS-ALT1631647** issued/building conf=0.07 · addition · $886,631
-  1001 Boylston ST, Boston, MA 02215 · Addition/alteration — New corridor and lobby entrance for 1001 Boylston St. Interior work to include new stairs, electrical, flooring, sprinkler/ fire alarm modi… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1631647%22%7D)
+- **BOS-ALT1794927** issued/building conf=0.69 · addition · $4,910,000
+  50-150 Causeway ST, Boston, MA 02114 · Addition/alteration — ServiceNow - 27&;28th floors Commercial office renovation buildout new offices, conference rooms and bathrooms. Work includes prep demo, dr… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1794927%22%7D)
+- **BOS-ALT1727751** issued/building conf=0.3 · addition · $2,233
+  10-18 Bowdoin ST, Dorchester, MA 02121 · Addition/alteration — Install a 24'' double-sided blade sign and three window decals at 16 Bowdoin St, Dorchester, MA 02121 (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1727751%22%7D)
+- **BOS-ALT1755430** issued/building conf=0.53 · addition · $8,952
+  168 Seaver ST, Dorchester, MA 02121 · Addition/alteration — Install one freestanding, fabricated, aluminum post and panel ground sign, BLUE ELM United Estates, 34" high x 60" wide, per BPDA approved… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1755430%22%7D)
+- **BOS-ALT1641406** issued/building conf=0.07 · addition · $2,516,362
+  1 Post Office SQ, Boston, MA 02110 · Addition/alteration — Interior tenant fit-out of 5,000 SF of retail space on 2 floors of One Post Office Square with an interconnecting stair. Scope includes dem… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1641406%22%7D)
+- **BOS-ALT1643481** issued/building conf=0.26 · addition · $1,500
+  993 Hyde Park AV, Hyde Park, MA 02136 · Addition/alteration — Change occupancy from a Store to; Barbershop and Nail Salon.*ZBA required-FD Counter (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1643481%22%7D)
+- **BOS-ALT1807782** issued/building conf=0.81 · addition · $6,216,410
+  1 Post Office SQ, Boston, MA 02110 · Addition/alteration — 6th Floor buildout of common area, offices, amenity, salon and clinic. All work per submitted plans including fire protection. No change in… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1807782%22%7D)
 - **BOS-ALT1849216** issued/building conf=0.81 · addition · $633,300
   149 Thirteenth ST, Charlestown, MA 02129 · Addition/alteration — replacement of AHU to include sprinkler and fire alarm modifications. (Open)
   [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1849216%22%7D)
-- **BOS-ALT1623536** issued/building conf=0.24 · addition · $6,680,953
-  2-4 Fidelis WY, Brighton, MA 02135 · Addition/alteration — The Project consists of construction of two new elevators and modernization of the existing two elevators at two buildings at the Commonwea… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1623536%22%7D)
-- **BOS-ALT1614863** issued/building conf=0.05 · addition · $220,340
-  31 Heath ST, Jamaica Plain, MA 02130 · Addition/alteration — Renovations of existing space on the 3rd Floor for The Possible Zone. Work includes removal of interior finishes, drywall, patching, patchi… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1614863%22%7D)
-- **BOS-ALT1689476** issued/building conf=0.48 · addition · $53,000
-  500 Morton ST, Jamaica Plain, MA 02124 · Addition/alteration — ON BEHALF OF T-MOBILE THE PROPOSED WORK INVOLVES MODIFYING/UPGRADING THEIR EQUIPMENT AT THE EXISTING CELL SITE. PLEASE NOTE THE ADDRESS FOR… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1689476%22%7D)
-- **BOS-ALT1820033** issued/building conf=0.81 · addition · $424,500
-  276-278 Washington ST, Boston, MA 02109 · Addition/alteration — Preventative replacement of existing fire pump and the assopciated driver, pump controller, and associated diesel fuel tank. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1820033%22%7D)
-- **BOS-ALT1668915** issued/building conf=0.13 · addition · $194,000
-  50 Park PZ, Boston, MA 02116 · Addition/alteration — Replacement of the fire alarm system and initiation devices at 20 Park Plaza. Panels will be set up to cross trip during installation, so t… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1668915%22%7D)
-- **BOS-ALT1735045** issued/building conf=0.34 · addition · $2,600,295
-  283 Longwood AV, Boston, MA 02115 · Addition/alteration — Interior modifications in an existing retail pharmacy on the first floor of the Boston Children’s Hospital Patient and Family Parking Garag… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1735045%22%7D)
-- **BOS-ALT1843694** issued/building conf=0.81 · addition · $11,763.28
-  10-50 Old Colony AV, South Boston, MA 02127 · Addition/alteration — Install one set of face-lit channel letters with dimmer, white faces and LED lighting with red overlay, black trimcap and 5" deep returns,… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1843694%22%7D)
-- **BOS-ALT1803707** issued/building conf=0.81 · addition · $335,804.4
-  399 Boylston ST, Boston, MA 02116 · Addition/alteration — Work is to be done on the 7th floor and include an interior office fitout. Scope will include architectural upgrades along with MEP/FP upda… (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1803707%22%7D)
-- **BOS-ALT1710433** issued/building conf=0.25 · addition · $592,970
-  12 Channel ST, Boston, MA 02210 · Addition/alteration — City of Boston project for BDPA department, new offices, conf rm, finishes, new/reworked MEP's, FA/FPFee waiver BPDA project (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1710433%22%7D)
-- **BOS-ALT1769950** issued/building conf=0.81 · addition · $20,644
-  500 Morton ST, Jamaica Plain, MA 02124 · Addition/alteration — replace existing concealment canisters on the American Tower cellular flagpole.eplan; (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1769950%22%7D)
-- **BOS-ALT1851662** issued/building conf=0.81 · addition · $100,000
-  245 Summer ST, Boston, MA 02111 · Addition/alteration — Fire Alarm upgrades due to room type changes on the 6th floor from Office to Huddle. (Open)
-  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1851662%22%7D)
+- **BOS-ALT1745324** issued/building conf=0.43 · addition · $21,714
+  1610 Tremont ST, Mission Hill, MA 02120 · Addition/alteration — Install 1 set of raceway-mounted, face-lit channel letters to existing sign support structure, letters are 50"h x 234.77"w 51.1 SF, "Logo H… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1745324%22%7D)
+- **BOS-ALT1774495** issued/building conf=0.81 · addition · $4,072,245
+  150 Oliver ST, Boston, MA 02110 · Addition/alteration — Partial renovations of a 10,300 SF existing tenant space for Prince Lobel on Floors 36, 37 to include renovation to modifications to electr… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1774495%22%7D)
+- **BOS-ALT1763618** issued/building conf=0.53 · addition · $8,000
+  44 Charles River AV, Charlestown, MA 02129 · Addition/alteration — RESIDENCE INN REBRAND SIGNAGE: Replace 2 channel letter sets on the West and South Elevations, Replace 1 monument sign and 1 wall plaque -… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1763618%22%7D)
+- **BOS-ALT1731814** issued/building conf=0.35 · addition · $85,746
+  272 D ST, South Boston, MA 02127 · Addition/alteration — Change of occupancy to include wireless communication. Installation of 2 Antennas onto rooftop penthouse wall.;City of Boston building.;epl… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1731814%22%7D)
+- **BOS-ALT1766353** issued/building conf=0.59 · addition · $615,663
+  370-410 Summer ST, Boston, MA 02210 · Addition/alteration — Hardware modifications to doors on Levels 1, 3, 4 & 5 with fire alarm–initiated hold opens and other fire alarm updates on Levels 1, 3–6. L… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1766353%22%7D)
+- **BOS-ALT1679353** issued/building conf=0.14 · addition · $184,000
+  5275 Washington ST, West Roxbury, MA 02132 · Addition/alteration — construction of concrete surge tank for swimming pool within old surge tank footprint. In conjunction with;SF1681191eplanApplication assign… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1679353%22%7D)
+- **BOS-ALT1637337** issued/building conf=0.81 · addition · no value
+  121-123 Norfolk AV, Roxbury, MA 02119 · Addition/alteration — Installation of 1 20' tall pole that will house battery-powered security cameras. Job valuation was entered on permit ALT1620862. Confirmed… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1637337%22%7D)
+- **BOS-ALT1826725** issued/building conf=0.81 · addition · $9,200
+  1857 Centre ST, West Roxbury, MA 02132 · Addition/alteration — Install 6 strobes & 3 Smoke detectors and tie into existing system. We are presently working under Short Form Permit SF1814708, which was i… (Open)
+  [dataset row](https://data.boston.gov/api/3/action/datastore_search?resource_id=6ddcd912-32a0-43df-9908-63574f8c7e77&filters=%7B%22permitnumber%22%3A%22ALT1826725%22%7D)
