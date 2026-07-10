@@ -165,7 +165,10 @@ export const REGIONS = {
       { name: 'Staten Island', lat: 40.58, lng: -74.15, zoom: 12 },
     ],
     zipPrefixes: ['10', '11'],
-    valuation: { floor: 1000, cap: 5e9 },
+    // Floor high enough to catch the $1,000 placeholder costs SCA/agency
+    // filings carry (a new BUILDING under $25k isn't a real declared cost —
+    // the flag only excludes them from rankings, never from the map).
+    valuation: { floor: 25000, cap: 5e9 },
     geocoder: {}, // rows carry lat/lon; Census picks up stragglers
     permitLinks: [], // deep links are record-computed (sourceUrl) — the DOB NOW portal is login-walled
     sourceShort: 'DOB',

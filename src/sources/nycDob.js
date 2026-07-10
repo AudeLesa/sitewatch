@@ -110,7 +110,12 @@ export async function fetchPermits({ log = console.error } = {}) {
   for (const p of gcRows) {
     const root = String(p.job_filing_number || '').replace(/-[A-Z]\d+$/, '');
     const prev = gcByRoot.get(root);
-    if (!prev || String(p.issued_date || '') > String(prev.issued_date || '')) gcByRoot.set(root, p);
+    // Newest issue wins; same-day rows tie-break on the LATER expiry (a
+    // renewal pair issued together otherwise decays off the shorter one).
+    if (!prev || String(p.issued_date || '') > String(prev.issued_date || '') ||
+        (String(p.issued_date || '') === String(prev.issued_date || '') && String(p.expired_date || '') > String(prev.expired_date || ''))) {
+      gcByRoot.set(root, p);
+    }
   }
 
   // Feed B: legacy BIS non-residential NB permits with recent issuance
@@ -121,8 +126,15 @@ export async function fetchPermits({ log = console.error } = {}) {
   years.add(new Date().getFullYear());
   const bisRows = await fetchDataset({
     domain, datasetId: cfg.bisDataset,
+    // permit_type='NB' is load-bearing: the dataset holds one row per PERMIT
+    // (NB construction, PL plumbing, EQ fences, FO fuel-oil…) under a job.
+    // Without it, residential jobs leak in through their blank-residential
+    // plumbing rows, plumbers get labeled as the GC, and a fence renewal can
+    // keep a job whose construction permit lapsed in 2018 looking freshly
+    // active (all found by the 50-record audit). Only the actual New
+    // Building permit rows carry the facts we publish.
     where:
-      `job_type = 'NB' AND residential IS NULL` +
+      `job_type = 'NB' AND permit_type = 'NB' AND residential IS NULL` +
       ` AND (${[...years].map((y) => `issuance_date LIKE '%/${y}'`).join(' OR ')})`,
     order: 'job__', log, tag: `${id}/bis`,
   });
@@ -131,7 +143,12 @@ export async function fetchPermits({ log = console.error } = {}) {
     const when = usDate(r.issuance_date);
     if (!when || when < iso) continue;
     const prev = bisByJob.get(r.job__);
-    if (!prev || when > usDate(prev.issuance_date)) bisByJob.set(r.job__, r);
+    // Newest issuance wins; same-day renewals tie-break on permit sequence
+    // (strict > alone kept whichever row the API happened to return first).
+    if (!prev || when > usDate(prev.issuance_date) ||
+        (when === usDate(prev.issuance_date) && Number(r.permit_sequence__ || 0) > Number(prev.permit_sequence__ || 0))) {
+      bisByJob.set(r.job__, r);
+    }
   }
 
   const dobRecords = jobs.map((j) => mapDobNow(j, gcByRoot)).filter(Boolean);
@@ -164,9 +181,17 @@ export function mergeByBin(dobRecords, bisRecords) {
   return { merged, dropped };
 }
 
+// building_type='Other' + zero units is the residential screen, but source
+// rows self-contradict (audit found "SIX FAMILY RESIDENTIAL BUILDING" filed
+// with building_type='Other' and 0 proposed units) — backstop on the text.
+// Deliberately narrow: "N-family" / "dwelling units" / townhomes only, so
+// hotels ("Residence Inn"), dorms, and office condos never false-drop.
+const RESIDENTIAL_TEXT = /\b(?:one|two|three|four|five|six|seven|eight|single|multi|\d+)[- ]?family\b|\bdwelling units?\b|\btownho(?:me|use)s?\b/i;
+
 function mapDobNow(j, gcByRoot) {
   const root = String(j.job_filing_number || '').replace(/-I1$/, '');
   if (!root) return null;
+  if (RESIDENTIAL_TEXT.test(j.job_description || '')) return null;
   let st = j.signoff_date ? DOBNOW_STATUS['LOC Issued'] : DOBNOW_STATUS[j.filing_status];
   if (!st && /^On ?Hold/i.test(j.filing_status || '')) st = onHold;
   if (!st) st = { status: STATUS.UNKNOWN, confidence: null, stage: null };
