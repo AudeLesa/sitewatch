@@ -8,9 +8,14 @@
 // Zero dependencies, pure string templating. Number formatting pins 'en-US'
 // so Node (build) and workerd (edge) emit identical bytes.
 
-// Bump when the template output changes — it feeds the function's ETag so
-// crawlers re-fetch after a template deploy instead of 304ing stale copies.
-export const TEMPLATE_VERSION = '1';
+// Bump BOTH when the template output changes. TEMPLATE_VERSION feeds the
+// function's ETag — but Cloudflare strips custom ETags on pages.dev, where
+// crawlers revalidate via If-Modified-Since instead. TEMPLATE_MODIFIED (the
+// date the template last changed) floors Last-Modified and the sitemap
+// lastmod so those crawlers actually re-fetch after a template deploy; the
+// version alone can't reach them.
+export const TEMPLATE_VERSION = '2';
+export const TEMPLATE_MODIFIED = '2026-07-10';
 
 export const CAT = { commercial: 'Commercial', industrial: 'Industrial', institutional: 'Institutional', multifamily: 'Multifamily', residential: 'Residential', unknown: 'Project' };
 export const WORK = { new_construction: 'New construction', addition: 'Addition', shell: 'Shell', remodel: 'Renovation', other: 'Construction', unknown: 'Construction' };
@@ -22,10 +27,13 @@ export const fileOf = (permit) => String(permit || '').replace(/[^A-Za-z0-9_-]/g
 
 // Region copy defaults — the Texas launch region. Callers merge their region
 // manifest entry over these; a region-less render is exactly the classic page.
+// `ns` is the region's URL namespace (lowercased state code): city pages live
+// at /<ns>/<city>, the report at /<ns>/insights, companies at /<ns>/company/….
 export const TX_REGION = {
   label: 'Texas',
   state: 'TX',
   stateName: 'Texas',
+  ns: 'tx',
   sourceShort: 'TDLR',
   exampleCities: 'Houston, Dallas, Austin, San Antonio',
   permitLinks: [{ prefix: 'TABS', label: 'TDLR', url: 'https://www.tdlr.texas.gov/TABS/Search/Project/{permit}' }],
@@ -51,7 +59,7 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(
 </head><body>`;
 }
 
-export const foot = (site, region) => `<footer>SiteWatch — live commercial construction across ${region.stateName}, from public building-permit records. <a href="${site}/">Map</a> · <a href="${site}/insights">Market report</a> · <a href="${site}/where/">Metros</a> · <a href="${site}/companies">Companies</a></footer></body></html>`;
+export const foot = (site, region) => `<footer>SiteWatch — live commercial construction across ${region.stateName}, from public building-permit records. <a href="${site}/">Map</a> · <a href="${site}/${region.ns}/insights">Market report</a> · <a href="${site}/${region.ns}/">Metros</a> · <a href="${site}/${region.ns}/companies">Companies</a></footer></body></html>`;
 
 /**
  * Render one project page.
@@ -89,18 +97,18 @@ export function renderProjectPage(entry, { site, region }) {
   add('Funding', p.publicFunds == null ? null : (p.publicFunds ? 'Public' : 'Private'));
   add('Permit', esc(p.permitNumber));
   const breadcrumb = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
-    { '@type': 'ListItem', position: 1, name: `${R.stateName} construction`, item: `${site}/where/` },
-    cname ? { '@type': 'ListItem', position: 2, name: `${cname}, ${R.state}`, item: `${site}/where/${cslug}` } : null,
+    { '@type': 'ListItem', position: 1, name: `${R.stateName} construction`, item: `${site}/${R.ns}/` },
+    cname ? { '@type': 'ListItem', position: 2, name: `${cname}, ${R.state}`, item: `${site}/${R.ns}/${cslug}` } : null,
     { '@type': 'ListItem', position: cname ? 3 : 2, name, item: url }].filter(Boolean) };
   const official = srcLink(p.permitNumber, R);
   return head(title, desc, url, breadcrumb) +
-    `<header><a class="logo" href="/">● SiteWatch</a><nav>${cname ? `<a href="/where/${cslug}">${esc(cname)}, ${R.state}</a> · ` : ''}<a href="/insights">Report</a></nav></header>
+    `<header><a class="logo" href="/">● SiteWatch</a><nav>${cname ? `<a href="/${R.ns}/${cslug}">${esc(cname)}, ${R.state}</a> · ` : ''}<a href="/${R.ns}/insights">Report</a></nav></header>
 <main>
 <h1>${esc(name)}</h1>
 <p class="sub">${esc(work)}${cname ? ` in ${esc(cname)}, ${R.stateName}` : ''}${p.valuation ? ` — <strong>${usd(p.valuation)}</strong>` : ''}</p>
 <table>${rows.join('')}</table>
 <p class="cta"><a class="btn" href="/#p=${encodeURIComponent(p.permitNumber)}">View on the live map →</a>${official ? ` <a href="${official}" rel="nofollow">State ${R.sourceShort} record ↗</a>` : ''}</p>
-${cname ? `<p class="rel">More <a href="/where/${cslug}">commercial construction in ${esc(cname)}, ${R.state}</a>.</p>` : ''}
+${cname ? `<p class="rel">More <a href="/${R.ns}/${cslug}">commercial construction in ${esc(cname)}, ${R.state}</a>.</p>` : ''}
 </main>` + foot(site, R);
 }
 

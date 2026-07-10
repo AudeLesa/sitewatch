@@ -436,7 +436,7 @@
         </div>
         <div id="through"></div>
         <p class="pane-p" style="margin-top:12px">Every dot is a commercial construction project registered with the State of Texas (TDLR TABS). Color = category · size = declared value · faded = likely finished. Green ring = just broke ground, amber ring = new this week.</p>
-        <div class="seolinks"><a href="/insights">📊 Texas construction report</a> · <a href="/companies">Companies</a></div>
+        <div class="seolinks"><a id="link-insights" href="/tx/insights">📊 Texas construction report</a> · <a id="link-companies" href="/tx/companies">Companies</a></div>
         <p class="pane-p" style="margin-top:12px">Map © OpenStreetMap · CARTO · Esri. Project data: TDLR TABS, refreshed daily.</p>
       </section>
     </aside>
@@ -976,6 +976,14 @@
         REGION = regions.find((x) => x.id === want) || regions[0];
         try { localStorage.setItem('sw-region', REGION.id); } catch (e) {}
         renderRegions(regions);
+        // Info-pane SEO links follow the active region's URL namespace
+        // (/tx/insights, /wa/insights, …). Static hrefs stay as the Texas
+        // defaults so crawlers see valid links without running this.
+        if (REGION.ns) {
+          const li = document.getElementById('link-insights'), lc = document.getElementById('link-companies');
+          if (li) { li.href = `/${REGION.ns}/insights`; li.textContent = `📊 ${REGION.stateName || REGION.label} construction report`; }
+          if (lc) lc.href = `/${REGION.ns}/companies`;
+        }
       }
 
       let loaded = null;

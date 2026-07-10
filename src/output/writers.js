@@ -22,14 +22,35 @@ export async function writeOutputs(cityId, records) {
   // against whatever we published last; a big drop needs an explicit override.
   const geojsonPath = join(dir, `${cityId}.geojson`);
   let prevCount = 0;
+  let prevBySource = new Map();
   try {
-    prevCount = JSON.parse(await readFile(geojsonPath, 'utf8')).features?.length ?? 0;
+    const prev = JSON.parse(await readFile(geojsonPath, 'utf8')).features ?? [];
+    prevCount = prev.length;
+    prevBySource = countBySource(prev.map((f) => f.properties?.sources));
   } catch {} // no previous output — first run, nothing to guard
-  if (prevCount >= 500 && geocoded.length < prevCount * 0.7 && process.env.SITEWATCH_FORCE_PUBLISH !== '1') {
+  const force = process.env.SITEWATCH_FORCE_PUBLISH === '1';
+  if (prevCount >= 500 && geocoded.length < prevCount * 0.7 && !force) {
     throw new Error(
       `Refusing to publish ${cityId}: ${geocoded.length} mapped sites vs ${prevCount} previously (>30% drop — ` +
         `likely a partial pull). Set SITEWATCH_FORCE_PUBLISH=1 to override.`
     );
+  }
+
+  // Per-source tripwire: in a multi-source region the total can look healthy
+  // while one feed silently collapses (auth expiry, schema change, portal
+  // outage). Same 30% rule, per contributing source — and the printed counts
+  // double as a per-source time series in the nightly CI log.
+  const bySource = countBySource(geocoded.map((r) => r.contributingSources));
+  for (const [src, n] of new Map([...prevBySource, ...bySource])) {
+    const prev = prevBySource.get(src) ?? 0;
+    const now = bySource.get(src) ?? 0;
+    console.log(`  source ${src}: ${now} mapped site(s)${prev ? ` (previous run: ${prev})` : ' (new source)'}`);
+    if (prev >= 200 && now < prev * 0.7 && !force) {
+      throw new Error(
+        `Refusing to publish ${cityId}: source '${src}' fell to ${now} mapped sites vs ${prev} previously ` +
+          `(>30% drop — likely a broken or partial feed). Set SITEWATCH_FORCE_PUBLISH=1 to override.`
+      );
+    }
   }
 
   const geojson = {
@@ -48,6 +69,16 @@ export async function writeOutputs(cityId, records) {
     geocoded: geocoded.length,
     ungeocoded: ungeocoded.length,
   };
+}
+
+// Tally records per contributing source. `lists` is an iterable of
+// sources-arrays (['tdlr_tabs'], possibly several per merged record).
+function countBySource(lists) {
+  const counts = new Map();
+  for (const list of lists) {
+    for (const src of list || []) counts.set(src, (counts.get(src) || 0) + 1);
+  }
+  return counts;
 }
 
 function toFeature(rec) {

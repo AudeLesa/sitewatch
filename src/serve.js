@@ -17,9 +17,44 @@ const TYPES = {
   '.ico': 'image/x-icon', '.xml': 'application/xml', '.txt': 'text/plain', '.png': 'image/png',
 };
 
+// Mirror Cloudflare Pages' _redirects in dist mode so local previews exercise
+// the same 301s production serves (exact rules + one trailing `/*` splat form —
+// the only shapes build.mjs emits).
+let redirectRules = null;
+async function applyRedirects(urlPath) {
+  if (!DIST) return null;
+  if (!redirectRules) {
+    redirectRules = [];
+    try {
+      const text = await readFile(join(ROOT, '_redirects'), 'utf8');
+      for (const line of text.split('\n')) {
+        const [from, to, status] = line.trim().split(/\s+/);
+        if (from && to) redirectRules.push({ from, to, status: Number(status) || 301 });
+      }
+    } catch {} // no _redirects in this build
+  }
+  for (const r of redirectRules) {
+    if (r.from.endsWith('/*')) {
+      const base = r.from.slice(0, -1); // '/where/*' -> '/where/'
+      if (urlPath.startsWith(base) && urlPath.length > base.length) {
+        return { to: r.to.replace(':splat', urlPath.slice(base.length)), status: r.status };
+      }
+    } else if (urlPath === r.from) {
+      return { to: r.to, status: r.status };
+    }
+  }
+  return null;
+}
+
 const server = createServer(async (req, res) => {
   try {
     let urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    const redir = await applyRedirects(urlPath);
+    if (redir) {
+      res.writeHead(redir.status, { Location: redir.to });
+      res.end();
+      return;
+    }
     if (urlPath === '/') urlPath = '/index.html';
 
     let filePath;
@@ -58,9 +93,17 @@ const server = createServer(async (req, res) => {
     try {
       body = await readFile(filePath);
     } catch (err) {
-      if (DIST && err.code === 'ENOENT' && !ext) {
-        // Pretty URLs, like Cloudflare Pages: /insights -> insights.html,
-        // /where/ -> where/index.html.
+      // ENOENT: /tx/insights -> tx/insights.html. EISDIR: /tx/ resolves to the
+      // directory itself -> tx/index.html (Cloudflare Pages serves both forms).
+      if (DIST && err.code === 'EISDIR' && !ext && !urlPath.endsWith('/')) {
+        // Bare directory URL (/tx): Pages 308s to the slash form — mirror it.
+        res.writeHead(308, { Location: `${urlPath}/` });
+        res.end();
+        return;
+      }
+      if (DIST && (err.code === 'ENOENT' || err.code === 'EISDIR') && !ext) {
+        // Pretty URLs, like Cloudflare Pages: /tx/insights -> tx/insights.html,
+        // /tx/ -> tx/index.html.
         try {
           const pretty = urlPath.endsWith('/') ? join(filePath, 'index.html') : `${filePath}.html`;
           body = await readFile(pretty);

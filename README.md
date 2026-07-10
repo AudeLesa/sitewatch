@@ -260,16 +260,18 @@ depth, so it's safe to defer.)
 - [x] **Stripe Pro tier** — map stays free; saved-search alerts gated behind a
       subscription (Checkout + signature-verified webhook as Cloudflare Pages
       Functions, Pro-status RLS, upgrade UI). See [BILLING.md](BILLING.md).
-- [x] **SEO pages** ([scripts/seo.mjs](scripts/seo.mjs)) — static, crawlable
-      `/project/<permit>` pages (one per project) + `/where/<metro>` landing pages +
-      `sitemap.xml`/`robots.txt`, generated at build from the dataset, cross-linked
-      from the app. ~14.9k indexable URLs. The organic-growth engine.
+- [x] **SEO pages** ([scripts/seo.mjs](scripts/seo.mjs)) — crawlable
+      `/project/<permit>` pages (SSR'd from build shards) + `/tx/<metro>` landing pages
+      (region-namespaced by state code; legacy `/where/…` 301s via `_redirects`) +
+      a `sitemap.xml` index of per-region sitemaps + `robots.txt`, generated at build
+      from the dataset, cross-linked from the app. ~16.5k indexable URLs. The
+      organic-growth engine.
 - [x] **Project history + "new starts"** ([src/pipeline/history.js](src/pipeline/history.js))
       — cross-run status diffing (`data/history.json`) → `firstSeenAt` / `startedAt` /
       "🚧 just started construction" feed + an `event:'started'` alert. Surfaced in the
       map, project pages, and DB. Baseline seeded; starts populate as projects advance.
-- [x] **Company pages + market report** — `/company/<slug>` per owner/architect (3+
-      projects, ~1.5k pages), `/companies.html` index, and `/insights.html` (a live
+- [x] **Company pages + market report** — `/tx/company/<slug>` per owner/architect (3+
+      projects, ~1.5k pages), `/tx/companies` index, and `/tx/insights` (a live
       market report: $-by-metro/category, top owners & architects). Cross-linked from
       project pages + the app. `npm run build` now does a clean rebuild (no stale pages).
 - [ ] General-**contractor** name — *not* available in free open data (verified:

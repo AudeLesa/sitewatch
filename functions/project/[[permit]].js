@@ -16,7 +16,7 @@
 //   • a module-level parsed-shard Map: isolates persist across requests
 //   • ETag/Last-Modified + 304s: crawlers revalidate instead of re-downloading
 
-import { renderProjectPage, TX_REGION, TEMPLATE_VERSION, fileOf, shardOf } from '../../scripts/lib/project-page.mjs';
+import { renderProjectPage, TX_REGION, TEMPLATE_VERSION, TEMPLATE_MODIFIED, fileOf, shardOf } from '../../scripts/lib/project-page.mjs';
 
 // Must match the build's canonical origin (scripts/seo.mjs siteUrl default).
 // When a custom domain lands, set SITE_URL in BOTH the CI build env and the
@@ -79,7 +79,12 @@ export async function onRequest({ request, env, params, waitUntil }) {
   } catch (e) { /* fall back to Texas copy rather than 500 */ }
 
   const html = renderProjectPage(entry, { site: env.SITE_URL || DEFAULT_SITE, region });
-  const lastmod = entry.p.statusChangedAt || entry.p.firstSeenAt || null;
+  // Floor at the template's own change date: pages.dev strips the versioned
+  // ETag, so If-Modified-Since is the only validator crawlers hold there — a
+  // data-only lastmod would 304 them onto pre-template-change HTML forever.
+  // (Both are YYYY-MM-DD strings; lexical max is date max.)
+  const dataMod = entry.p.statusChangedAt || entry.p.firstSeenAt || null;
+  const lastmod = !dataMod || TEMPLATE_MODIFIED > dataMod ? TEMPLATE_MODIFIED : dataMod;
   const headers = {
     'Content-Type': 'text/html; charset=utf-8',
     // max-age: browsers, 5 min. s-maxage: honored by caches.default below.

@@ -90,6 +90,13 @@ jobs:
         if: env.SUPABASE_URL != ''
         run: if [ "$(date -u +%u)" = "1" ]; then node backend/alert-worker.mjs digest; fi
 
+      # The nightly log doubles as the engagement time series (signups/searches
+      # are RLS-hidden from the anon key, so this is where growth is visible).
+      - name: Log engagement counts
+        if: env.SUPABASE_URL != ''
+        continue-on-error: true
+        run: node backend/stats.mjs
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:

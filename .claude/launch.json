@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:\\Users\\Owin\\Desktop\\sitewatch\\src\\serve.js"],
       "port": 5173
+    },
+    {
+      "name": "sitewatch-dist",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\Owin\\Desktop\\sitewatch\\src\\serve.js", "dist"],
+      "port": 8788
     }
   ]
 }

@@ -5,7 +5,7 @@
 // It never touches the geocode/detail caches the pipeline relies on.
 import { readdirSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { generateSeo } from './seo.mjs';
+import { generateSeoAll } from './seo.mjs';
 import { REGIONS } from '../src/config.js';
 
 const root = join(import.meta.dirname, '..');
@@ -51,9 +51,25 @@ for (const f of readdirSync(dataDir)) {
 // 4. The region manifest the app boots from: every public region whose data
 //    actually exists in this build. Ships the display metadata (labels, metro
 //    chips, permit deep links) so the frontend carries no per-region copy.
+const nsOf = (r) => String(r.state || 'tx').toLowerCase();
 const liveRegions = Object.values(REGIONS).filter(
   (r) => r.public && existsSync(join(dataDir, `${r.id}.geojson`))
 );
+// Every public region owns a URL namespace (its lowercased state code):
+// /<ns>/<city>, /<ns>/insights, /<ns>/company/<slug>. Two regions in one state
+// would write into the same directory — that needs a real design (merge or
+// sub-namespace), not silent clobbering.
+{
+  const seen = new Map();
+  for (const r of liveRegions) {
+    const ns = nsOf(r);
+    if (seen.has(ns)) {
+      console.error(`  ✗ Regions '${seen.get(ns)}' and '${r.id}' share URL namespace /${ns}/ — same-state regions are unsupported.`);
+      process.exit(1);
+    }
+    seen.set(ns, r.id);
+  }
+}
 writeFileSync(
   join(dist, 'data', 'regions.json'),
   JSON.stringify(
@@ -62,6 +78,7 @@ writeFileSync(
       label: r.label,
       state: r.state,
       stateName: r.stateName,
+      ns: nsOf(r),
       file: `/data/${r.id}.geojson`,
       bbox: r.bbox,
       map: r.map ?? null,
@@ -75,18 +92,40 @@ writeFileSync(
 );
 console.log(`  + data/regions.json  (${liveRegions.map((r) => r.id).join(', ') || 'no regions'})`);
 
-// 5. SEO: static project + metro pages, sitemap, robots.txt (crawlable long tail).
-//    NOTE: the SEO namespaces (where/, company/, sitemap.xml, insights) are
-//    currently single-region — generating a second public region would clobber
-//    the first. Stage 1 (SSR + per-region namespaces) must land before that.
-if (liveRegions.length > 1) {
-  console.error('  ✗ Multiple public regions found but SEO namespaces are single-region (Stage 1 work). Refusing to build overlapping pages.');
-  process.exit(1);
-}
-for (const r of liveRegions) {
-  const fc = JSON.parse(readFileSync(join(dataDir, `${r.id}.geojson`), 'utf8'));
-  generateSeo(dist, fc.features || [], { siteUrl: process.env.SITE_URL, region: r });
-}
+// 5. SEO: per-region metro/company/insights pages + shared project render
+//    shards + a sitemap index — one pass over every live region.
+generateSeoAll(
+  dist,
+  liveRegions.map((r) => ({
+    region: { ...r, ns: nsOf(r) },
+    features: JSON.parse(readFileSync(join(dataDir, `${r.id}.geojson`), 'utf8')).features || [],
+  })),
+  { siteUrl: process.env.SITE_URL }
+);
+
+// 5b. Redirects for the pre-namespace URLs (Texas was the only region when
+//     /where/, /insights, /companies and /company/ lived at the root). One
+//     dynamic splat per family — Cloudflare Pages caps _redirects at 2000
+//     static + 100 dynamic rules, so never emit per-URL rules here.
+writeFileSync(
+  join(dist, '_redirects'),
+  [
+    '/where /tx/ 301',
+    '/where/ /tx/ 301',
+    // The two root pages need every previously-live form spelled out: Pages'
+    // .html→clean and trailing-slash 308s are asset-driven, and the assets are
+    // gone — an unmatched variant would hard-404, not normalize then redirect.
+    '/insights /tx/insights 301',
+    '/insights.html /tx/insights 301',
+    '/insights/ /tx/insights 301',
+    '/companies /tx/companies 301',
+    '/companies.html /tx/companies 301',
+    '/companies/ /tx/companies 301',
+    '/where/* /tx/:splat 301',
+    '/company/* /tx/company/:splat 301',
+    '',
+  ].join('\n')
+);
 
 // 6. A real 404 page. (The old `/* -> /index.html 200` catch-all made every
 //    missing URL answer 200 with the app shell — including sitemap.xml before
