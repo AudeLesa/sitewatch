@@ -27,9 +27,16 @@ npm run build         # 2. assemble dist/    (minified GeoJSON + the map)
 dist/
   index.html          the map app
   data/texas.geojson  the sites (minified; hosts gzip it ~5× smaller over the wire)
+  data/shards/        render data for /project/<permit> pages — the pages themselves
+                      are rendered on demand by functions/project/[[permit]].js
+                      (they were 87% of Cloudflare Pages' 20k-file cap as static files)
   404.html            real not-found page (deep links are hash-based, so no SPA fallback is needed)
-  project/ where/ …   ~16k static SEO pages + sitemap.xml/robots.txt (see scripts/seo.mjs)
+  where/ company/ …   ~2k static SEO pages + sitemap.xml/robots.txt (see scripts/seo.mjs)
 ```
+
+> Project pages need the Functions runtime: preview them with
+> `npx wrangler pages dev dist` or `node src/serve.js dist` (which mirrors the
+> function's shard lookup) — a plain static file server will 404 them.
 
 ## Put it online (pick one)
 

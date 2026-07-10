@@ -38,6 +38,22 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    // Project pages aren't files anymore — in production a Pages Function
+    // renders them from the shards (functions/project/[[permit]].js). Mirror
+    // that here with the same shared template so local previews stay honest.
+    if (DIST && /^\/project\/[^/]+$/.test(urlPath)) {
+      const html = await renderProject(urlPath.slice('/project/'.length));
+      if (html) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(html);
+        return;
+      }
+      const nf = await readFile(join(ROOT, '404.html')).catch(() => 'not found');
+      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(nf);
+      return;
+    }
+
     let body, ext = extname(filePath);
     try {
       body = await readFile(filePath);
@@ -63,6 +79,28 @@ const server = createServer(async (req, res) => {
     res.writeHead(err.code === 'ENOENT' ? 404 : 500).end(String(err.code || err.message));
   }
 });
+
+// Same lookup the Pages Function does: sanitize → shard → shared template.
+async function renderProject(rawName) {
+  let raw = rawName;
+  try { raw = decodeURIComponent(raw); } catch { return null; }
+  if (raw.endsWith('.html')) raw = raw.slice(0, -5); // serve the canonical content
+  const { renderProjectPage, TX_REGION, fileOf, shardOf } = await import('../scripts/lib/project-page.mjs');
+  const file = fileOf(raw);
+  if (!file || file !== raw) return null;
+  let shard;
+  try { shard = JSON.parse(await readFile(join(ROOT, 'data', 'shards', `p-${shardOf(file)}.json`), 'utf8')); } catch { return null; }
+  const entry = Object.hasOwn(shard, file) ? shard[file] : null;
+  if (!entry) return null;
+  let region = TX_REGION;
+  try {
+    const regions = JSON.parse(await readFile(join(ROOT, 'data', 'regions.json'), 'utf8'));
+    const found = regions.find((x) => x.id === (entry.r || 'texas'));
+    if (found) region = { ...TX_REGION, ...found };
+  } catch {}
+  const site = (process.env.SITE_URL || 'https://sitewatch-eyt.pages.dev').replace(/\/$/, '');
+  return renderProjectPage(entry, { site, region });
+}
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {

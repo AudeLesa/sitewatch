@@ -1,6 +1,8 @@
 // Static SEO page generator. Turns the dataset into crawlable HTML so Google can
 // index it — the growth engine. Produces, into dist/:
-//   project/<permit>.html   one rich page per project (the long tail)
+//   data/shards/p-XX.json    render data for /project/<permit> pages — the pages
+//                            themselves render on demand (functions/project/) so
+//                            14k+ projects stop eating Cloudflare's 20k-file cap
 //   where/<city>.html        a landing page per metro ("construction in Houston, TX")
 //   where/index.html         a browsable directory of all metros
 //   company/<slug>.html      a page per owner/architect ("everything Hines is building")
@@ -11,14 +13,10 @@
 // Called from build.mjs. Pure string templating — no dependencies.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { esc, usd, head, foot as libFoot, fileOf, CAT, WORK, TX_REGION, shardOf } from './lib/project-page.mjs';
 
 const MIN_COMPANY_PROJECTS = 3; // a company needs this many projects to get its own page
 
-const CAT = { commercial: 'Commercial', industrial: 'Industrial', institutional: 'Institutional', multifamily: 'Multifamily', residential: 'Residential', unknown: 'Project' };
-const WORK = { new_construction: 'New construction', addition: 'Addition', shell: 'Shell', remodel: 'Renovation', other: 'Construction', unknown: 'Construction' };
-
-const esc = (s) => (s == null ? '' : String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])));
-const usd = (n) => (n ? '$' + Number(n).toLocaleString() : null);
 const short = (n) => (!n ? '$0' : n >= 1e9 ? '$' + (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? '$' + (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + Math.round(n / 1e3) + 'K' : '$' + n);
 const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'tx';
 
@@ -39,7 +37,6 @@ function companyKey(name) {
   return s || String(name || '').toUpperCase().trim();
 }
 const cityOf = (addr) => { const p = String(addr || '').split(','); return p.length >= 2 ? p[p.length - 2].trim() : ''; };
-const fileOf = (permit) => String(permit || '').replace(/[^A-Za-z0-9_-]/g, '');
 const JUNK = /^(n\/?a|tbd|to be determined|unknown|none|owner|self|same|various|n\.a\.)$/i;
 const isCompany = (n) => n && String(n).trim().length >= 3 && !JUNK.test(String(n).trim());
 // Valuation for totals/rankings — flagged-implausible values count as 0 so a
@@ -49,24 +46,13 @@ const val = (p) => (p.valuationSuspect ? 0 : p.valuation || 0);
 // Region copy used by every template. Defaults mirror the Texas launch region
 // so a region-less call renders the exact same pages it always did; build.mjs
 // passes the active region's manifest entry.
-let R = {
-  label: 'Texas',
-  state: 'TX',
-  stateName: 'Texas',
-  sourceShort: 'TDLR',
-  exampleCities: 'Houston, Dallas, Austin, San Antonio',
-  permitLinks: [{ prefix: 'TABS', label: 'TDLR', url: 'https://www.tdlr.texas.gov/TABS/Search/Project/{permit}' }],
-};
-// Official source record for a permit, from the region's per-source templates.
-const srcLink = (permit) => {
-  const l = (R.permitLinks || []).find((x) => permit && String(permit).startsWith(x.prefix));
-  return l ? l.url.replace('{permit}', permit) : null;
-};
+let R = { ...TX_REGION };
+const foot = (site) => libFoot(site, R);
 
 export function generateSeo(dist, features, { siteUrl, region } = {}) {
   if (region) R = { ...R, ...region };
   const site = (siteUrl || 'https://sitewatch-eyt.pages.dev').replace(/\/$/, '');
-  mkdirSync(join(dist, 'project'), { recursive: true });
+  mkdirSync(join(dist, 'data', 'shards'), { recursive: true });
   mkdirSync(join(dist, 'where'), { recursive: true });
   mkdirSync(join(dist, 'company'), { recursive: true });
   writeFileSync(join(dist, 'p.css'), CSS);
@@ -110,14 +96,27 @@ export function generateSeo(dist, features, { siteUrl, region } = {}) {
     { loc: `${site}/companies`, lastmod: today },
   ];
 
-  // ---- project pages ----
+  // ---- project render shards (the pages themselves render on demand in
+  // functions/project/[[permit]].js from exactly this data + the shared
+  // template — see scripts/lib/project-page.mjs) ----
+  const shards = new Map();
+  let shardEntries = 0;
   for (const p of valid) {
     const file = fileOf(p.permitNumber);
     if (!file) continue;
     const cn = cityOf(p.address), cs = slug(cn), url = `${site}/project/${file}`;
-    writeFileSync(join(dist, 'project', `${file}.html`), projectPage(p, cn, cs, url, site, coLink));
+    const entry = {
+      p, cname: cn, cslug: cs, r: region?.id || 'texas',
+      // company links resolved NOW, against the set that actually got pages
+      links: { owner: coLink(p.owner), arch: coLink(p.designFirm), tenant: coLink(p.tenantName), ras: coLink(p.rasName) },
+    };
+    const sh = shardOf(file);
+    if (!shards.has(sh)) shards.set(sh, {});
+    shards.get(sh)[file] = entry;
+    shardEntries++;
     urls.push({ loc: url, lastmod: p.statusChangedAt || p.firstSeenAt || today });
   }
+  for (const [sh, m] of shards) writeFileSync(join(dist, 'data', 'shards', `p-${sh}.json`), JSON.stringify(m));
 
   // ---- metro pages ----
   const cityList = [...cities.entries()].filter(([, c]) => c.items.length >= 3).sort((a, b) => b[1].items.length - a[1].items.length);
@@ -138,67 +137,14 @@ export function generateSeo(dist, features, { siteUrl, region } = {}) {
     urls.map((u) => `  <url><loc>${esc(u.loc)}</loc><lastmod>${esc(u.lastmod)}</lastmod></url>`).join('\n') + `\n</urlset>\n`);
   writeFileSync(join(dist, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${site}/sitemap.xml\n`);
 
-  console.log(`  + ${valid.length} project, ${cityList.length} metro, ${coList.length} company pages + insights, sitemap (${urls.length} urls)`);
-  if (urls.length > 19000) console.log('  ⚠ approaching Cloudflare Pages 20k-file limit — raise MIN_COMPANY_PROJECTS or move project pages to SSR.');
+  console.log(`  + ${shardEntries} project pages via ${shards.size} render shards, ${cityList.length} metro + ${coList.length} company static pages + insights, sitemap (${urls.length} urls)`);
+  const staticFiles = cityList.length + coList.length + 8; // rough non-shard page count
+  if (staticFiles > 15000) console.log('  ⚠ approaching Cloudflare Pages 20k-file limit — move company pages to SSR next.');
 }
 
 // ---------------------------------------------------------------------------
-
-function head(title, desc, canonical, jsonld) {
-  return `<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)}</title>
-<meta name="description" content="${esc(desc)}">
-<link rel="canonical" href="${esc(canonical)}">
-<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">
-<meta property="og:type" content="website"><meta property="og:url" content="${esc(canonical)}">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/p.css">
-${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ''}
-</head><body>`;
-}
-const foot = (site) => `<footer>SiteWatch — live commercial construction across ${R.stateName}, from public building-permit records. <a href="${site}/">Map</a> · <a href="${site}/insights">Market report</a> · <a href="${site}/where/">Metros</a> · <a href="${site}/companies">Companies</a></footer></body></html>`;
-
-function projectPage(p, cname, cslug, url, site, coLink) {
-  const name = p.facilityName || p.address || 'Construction project';
-  const work = WORK[p.workClass] || 'Construction', cat = CAT[p.category] || 'Commercial';
-  const title = `${name} — ${cname ? cname + ', ' : ''}${R.state} ${cat.toLowerCase()} construction | SiteWatch`;
-  const desc = `${name}${cname ? ` in ${cname}, ${R.state}` : ''}. ${[work, usd(p.valuation), p.squareFeet ? Number(p.squareFeet).toLocaleString() + ' ft²' : null, p.owner ? `Owner ${p.owner}` : null].filter(Boolean).join(' · ')}.`;
-  const rows = [];
-  const add = (k, v) => { if (v) rows.push(`<tr><th>${k}</th><td>${v}</td></tr>`); };
-  const tel = (n) => { const d = String(n || '').replace(/[^0-9+]/g, ''); return d ? `<a href="tel:${d}">${esc(n)}</a>` : ''; };
-  const party = (nm, ph) => { if (!nm) return null; const h = coLink(nm); const lbl = h ? `<a href="${h}">${esc(nm)}</a>` : esc(nm); return lbl + (ph ? ' · ' + tel(ph) : ''); };
-  add('Type', work); add('Category', cat); add('Declared value', usd(p.valuation));
-  add('Square footage', p.squareFeet ? Number(p.squareFeet).toLocaleString() + ' ft²' : null);
-  add('Scope', esc(p.scopeOfWork));
-  add('Status', esc((/\(([^)]+)\)\s*$/.exec(p.description || '') || [])[1] || p.status));
-  add('Est. timeline', (p.estStartDate || p.estEndDate) ? `${esc(p.estStartDate || '?')} → ${esc(p.estEndDate || '?')}` : null);
-  add('Registered', esc(p.issuedDate));
-  if (p.startedAt) add('Construction started', `🚧 ${esc(p.startedAt)}`);
-  else if (p.statusChangedAt && p.firstSeenAt && p.statusChangedAt !== p.firstSeenAt) add('Status updated', esc(p.statusChangedAt) + (p.prevStatus ? ` (from ${esc(p.prevStatus)})` : ''));
-  add('Address', esc(p.address));
-  add('Owner', party(p.owner, p.ownerPhone));
-  add('Architect', party(p.designFirm, p.designFirmPhone));
-  add('Tenant', party(p.tenantName, p.tenantPhone));
-  add('Accessibility specialist', party(p.rasName, p.rasPhone));
-  add('Contact', esc(p.contactName));
-  add('Funding', p.publicFunds == null ? null : (p.publicFunds ? 'Public' : 'Private'));
-  add('Permit', esc(p.permitNumber));
-  const breadcrumb = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
-    { '@type': 'ListItem', position: 1, name: `${R.stateName} construction`, item: `${site}/where/` },
-    cname ? { '@type': 'ListItem', position: 2, name: `${cname}, ${R.state}`, item: `${site}/where/${cslug}` } : null,
-    { '@type': 'ListItem', position: cname ? 3 : 2, name, item: url }].filter(Boolean) };
-  const official = srcLink(p.permitNumber);
-  return head(title, desc, url, breadcrumb) +
-    `<header><a class="logo" href="/">● SiteWatch</a><nav>${cname ? `<a href="/where/${cslug}">${esc(cname)}, ${R.state}</a> · ` : ''}<a href="/insights">Report</a></nav></header>
-<main>
-<h1>${esc(name)}</h1>
-<p class="sub">${esc(work)}${cname ? ` in ${esc(cname)}, ${R.stateName}` : ''}${p.valuation ? ` — <strong>${usd(p.valuation)}</strong>` : ''}</p>
-<table>${rows.join('')}</table>
-<p class="cta"><a class="btn" href="/#p=${encodeURIComponent(p.permitNumber)}">View on the live map →</a>${official ? ` <a href="${official}" rel="nofollow">State ${R.sourceShort} record ↗</a>` : ''}</p>
-${cname ? `<p class="rel">More <a href="/where/${cslug}">commercial construction in ${esc(cname)}, ${R.state}</a>.</p>` : ''}
-</main>` + foot(site);
-}
+// (head/foot/projectPage live in scripts/lib/project-page.mjs — shared with
+// the on-demand renderer so both emit byte-identical HTML.)
 
 function cityPage(c, cslug, url, site, cityList) {
   const items = c.items.slice().sort((a, b) => val(b) - val(a));
