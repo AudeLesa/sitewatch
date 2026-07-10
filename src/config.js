@@ -189,7 +189,7 @@ export const REGIONS = {
     label: 'Philadelphia, PA',
     state: 'PA',
     stateName: 'Pennsylvania',
-    public: false, // flips true at launch — after the quality gate + user sign-off
+    public: true, // launched 2026-07-10 (gate passed, user sign-off)
     // Philadelphia city limits-ish [W,S,E,N]
     bbox: { minLng: -75.29, minLat: 39.86, maxLng: -74.95, maxLat: 40.14 },
     map: { center: [39.99, -75.13], zoom: 11 },
@@ -219,7 +219,7 @@ export const REGIONS = {
     label: 'Boston, MA',
     state: 'MA',
     stateName: 'Massachusetts',
-    public: false, // flips true at launch — after the quality gate + user sign-off
+    public: true, // launched 2026-07-10 (gate passed, user sign-off)
     // Boston city limits-ish [W,S,E,N]
     bbox: { minLng: -71.19, minLat: 42.23, maxLng: -70.92, maxLat: 42.4 },
     map: { center: [42.32, -71.07], zoom: 12 },
@@ -241,6 +241,36 @@ export const REGIONS = {
     capabilities: { valuation: true, contractor: false, owner: false, architect: false, squareFeet: true, publicFunds: false, tenant: false },
     isd: { domain: 'data.boston.gov', resourceId: '6ddcd912-32a0-43df-9908-63574f8c7e77' },
   },
+
+  // San Francisco — DBI permits (src/sources/sfDbi.js). Deliberately sparse
+  // (~21 non-res NB/24mo; the map is mostly commercial-use alterations) —
+  // launched at the user's explicit request with the volume known.
+  sf: {
+    id: 'sf',
+    label: 'San Francisco, CA',
+    state: 'CA',
+    stateName: 'California',
+    public: true, // launched 2026-07-10 (gate passed, user sign-off)
+    // SF city limits-ish [W,S,E,N]
+    bbox: { minLng: -122.52, minLat: 37.7, maxLng: -122.35, maxLat: 37.84 },
+    map: { center: [37.77, -122.44], zoom: 12 },
+    metros: [
+      { name: 'Downtown/SoMa', lat: 37.783, lng: -122.401, zoom: 14 },
+      { name: 'Mission Bay', lat: 37.77, lng: -122.392, zoom: 14 },
+      { name: 'Mission', lat: 37.76, lng: -122.419, zoom: 14 },
+      { name: 'Richmond', lat: 37.78, lng: -122.475, zoom: 13 },
+    ],
+    zipPrefixes: ['94'],
+    valuation: { floor: 500, cap: 2e9 },
+    geocoder: {},
+    permitLinks: [], // no public permit-number URL survives unauthenticated
+    sourceShort: 'DBI',
+    sourceName: 'San Francisco DBI building permits',
+    recordNoun: 'Official',
+    attribution: 'data: SF DBI',
+    capabilities: { valuation: true, contractor: false, owner: false, architect: false, squareFeet: false, publicFunds: false, tenant: false },
+    dbi: { domain: 'data.sfgov.org', datasetId: 'i98e-djp9' },
+  },
 };
 
 // Permit-number prefixes, by source id. A source that declares one guarantees
@@ -248,7 +278,7 @@ export const REGIONS = {
 // keeps history keys and the DB's permit_number collision-safe across regions.
 // Multi-feed sources declare one prefix per feed (an array). Sources without
 // a prefix get history-keyed by the source-scoped record id.
-export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS', sdci_seattle: 'SEA-', nyc_dob: ['NYCN-', 'NYCB-'], lni_philly: 'PHL-', isd_boston: 'BOS-' };
+export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS', sdci_seattle: 'SEA-', nyc_dob: ['NYCN-', 'NYCB-'], lni_philly: 'PHL-', isd_boston: 'BOS-', dbi_sf: 'SF-' };
 
 const env = process.env;
 

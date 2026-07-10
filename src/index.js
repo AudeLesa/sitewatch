@@ -7,6 +7,7 @@ import * as seattleSdci from './sources/seattleSdci.js';
 import * as nycDob from './sources/nycDob.js';
 import * as phillyLni from './sources/phillyLni.js';
 import * as bostonIsd from './sources/bostonIsd.js';
+import * as sfDbi from './sources/sfDbi.js';
 import * as demo from './sources/demo.js';
 import { dedupe } from './pipeline/dedupe.js';
 import { applyLifecycle } from './pipeline/lifecycle.js';
@@ -19,7 +20,7 @@ const log = console.error; // keep stdout clean for piping
 
 // tdlrTabs is the primary Texas source; region-scoped sources (seattleSdci)
 // self-skip unless the active region declares their config block.
-const SOURCES = [tdlrTabs, shovels, houston, seattleSdci, nycDob, phillyLni, bostonIsd]; // demo is opt-in via the `demo` command
+const SOURCES = [tdlrTabs, shovels, houston, seattleSdci, nycDob, phillyLni, bostonIsd, sfDbi]; // demo is opt-in via the `demo` command
 
 async function main() {
   const cmd = process.argv[2] || 'help';

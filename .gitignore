@@ -21,11 +21,13 @@ data/*
 !data/history-nyc.json
 !data/history-philly.json
 !data/history-boston.json
+!data/history-sf.json
 # Launch-gate artifact: the 50-record human-audit sample for the Seattle region.
 !data/seattle-audit-50.md
 !data/nyc-audit-50.md
 !data/philly-audit-50.md
 !data/boston-audit-50.md
+!data/sf-audit-50.md
 
 # wrangler's local cache (created by wrangler login/deploy)
 .wrangler/

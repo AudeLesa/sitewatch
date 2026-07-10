@@ -60,6 +60,9 @@ jobs:
             data/texas.geojson
             data/seattle.geojson
             data/nyc.geojson
+            data/philly.geojson
+            data/boston.geojson
+            data/sf.geojson
           key: sitewatch-caches-${{ github.run_id }}
           restore-keys: |
             sitewatch-caches-
@@ -84,7 +87,7 @@ jobs:
         if: env.SUPABASE_URL != ''
         # One load per region — rows are region-scoped (projects.region), so
         # alerts and the digest never leak across markets.
-        run: npm run load && node backend/load.mjs seattle && node backend/load.mjs nyc
+        run: npm run load && node backend/load.mjs seattle && node backend/load.mjs nyc && node backend/load.mjs philly && node backend/load.mjs boston && node backend/load.mjs sf
 
       - name: Send Pro saved-search alerts
         if: env.SUPABASE_URL != ''
