@@ -2,6 +2,24 @@ import { config } from '../config.js';
 import { CATEGORY, WORK_CLASS, TERMINAL_STATUSES } from '../schema.js';
 
 /**
+ * First calendar day INSIDE the lookback window (cutoff day + 1, date-only).
+ * Source adapters filter server-side with `issuedDate >= '<this>'` and the
+ * pipeline filter drops anything before it — same string semantics on both
+ * sides, so portal-parity gates reconcile exactly instead of off-by-one on
+ * the boundary day (whose rows carry times the old `> cutoff-date` kept).
+ */
+export function lookbackFloorIso(now = new Date()) {
+  const c = new Date(now);
+  c.setMonth(c.getMonth() - config.lookbackMonths);
+  c.setDate(c.getDate() + 1);
+  // Render in the SAME (local) frame as the arithmetic above — a toISOString()
+  // render flips the floor a whole day at some local evening hour on non-UTC
+  // machines (pull and gate could disagree). Identical to UTC on the CI runner.
+  const p = (n) => String(n).padStart(2, '0');
+  return `${c.getFullYear()}-${p(c.getMonth() + 1)}-${p(c.getDate())}`;
+}
+
+/**
  * "Currently under commercial construction" heuristic.
  *
  * No public permit feed exposes a literal "being built right now" flag, so we
@@ -26,10 +44,8 @@ export function isUnderConstruction(rec, now = new Date()) {
   if (TERMINAL_STATUSES.has(rec.status)) return reject('terminal_status');
   if (rec.finalizedDate) return reject('finalized');
 
-  if (rec.issuedDate) {
-    const cutoff = new Date(now);
-    cutoff.setMonth(cutoff.getMonth() - config.lookbackMonths);
-    if (new Date(rec.issuedDate) < cutoff) return reject('too_old');
+  if (rec.issuedDate && String(rec.issuedDate).slice(0, 10) < lookbackFloorIso(now)) {
+    return reject('too_old');
   }
 
   return { ok: true };

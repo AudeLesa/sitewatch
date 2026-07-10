@@ -11,6 +11,7 @@
 //   6. placement ≥90%
 //   7. a 50-record audit sample for human review
 import { readFileSync, writeFileSync } from 'node:fs';
+import { lookbackFloorIso } from '../src/pipeline/filter.js';
 import { join } from 'node:path';
 import { fetchAggregate } from '../src/sources/socrata.js';
 
@@ -28,8 +29,7 @@ verdict(mappedTerminal.length === 0, 'terminal ceiling', `${mappedTerminal.lengt
 console.log('   status labels on map:', [...geo.reduce((m, p) => m.set(labelOf(p), (m.get(labelOf(p)) || 0) + 1), new Map())].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(', '));
 
 // ---- 2. no-inflation vs the portal ----
-const from = new Date(); from.setMonth(from.getMonth() - 24);
-const iso = from.toISOString().slice(0, 10);
+const iso = lookbackFloorIso();
 const portal = await fetchAggregate({
   domain: 'data.cityofnewyork.us', datasetId: 'w9ak-ipjd',
   select: 'filing_status,count(*)',

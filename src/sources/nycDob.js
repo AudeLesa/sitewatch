@@ -1,4 +1,5 @@
 import { config, activeRegion } from '../config.js';
+import { lookbackFloorIso } from '../pipeline/filter.js';
 import { makeRecord, CATEGORY, WORK_CLASS, STATUS } from '../schema.js';
 import { fetchDataset } from './socrata.js';
 
@@ -77,9 +78,8 @@ export async function fetchPermits({ log = console.error } = {}) {
   const cfg = activeRegion().nycDob;
   if (!cfg) return []; // this source only exists for the NYC region
 
-  const from = new Date();
-  from.setMonth(from.getMonth() - config.lookbackMonths);
-  const iso = from.toISOString().slice(0, 10);
+  const iso = lookbackFloorIso();
+  const from = new Date(iso);
   const domain = cfg.domain;
 
   // Feed A: non-residential New Building initial filings — every unfinished
@@ -91,7 +91,7 @@ export async function fetchPermits({ log = console.error } = {}) {
       `job_type = 'New Building' AND building_type = 'Other'` +
       ` AND (proposed_dwelling_units IS NULL OR proposed_dwelling_units = '0')` +
       ` AND job_filing_number LIKE '%-I1'` +
-      ` AND ((first_permit_date IS NOT NULL AND signoff_date IS NULL) OR (first_permit_date IS NULL AND filing_date > '${iso}'))`,
+      ` AND ((first_permit_date IS NOT NULL AND signoff_date IS NULL) OR (first_permit_date IS NULL AND filing_date >= '${iso}'))`,
     order: 'job_filing_number', log, tag: `${id}/filings`,
   });
 
@@ -100,7 +100,7 @@ export async function fetchPermits({ log = console.error } = {}) {
   const gcRows = await fetchDataset({
     domain, datasetId: cfg.permitsDataset,
     select: 'job_filing_number,issued_date,expired_date,applicant_business_name,filing_reason',
-    where: `work_type = 'General Construction' AND issued_date > '${iso}'`,
+    where: `work_type = 'General Construction' AND issued_date >= '${iso}'`,
     // ~83k GC permits per 24mo citywide (measured 2026-07) — slim columns,
     // big pages, and headroom for growth. Truncation here would silently
     // null contractors and misfire the too_old filter on renewed jobs.

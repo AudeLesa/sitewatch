@@ -180,6 +180,67 @@ export const REGIONS = {
       bisDataset: 'ipu4-2q9a',      // legacy DOB Permit Issuance (BIS)
     },
   },
+
+  // Philadelphia — L&I permits via the Carto SQL API (src/sources/phillyLni.js).
+  // The FIRST region without valuations: capabilities.valuation:false drives
+  // the $-free UI/SEO degradation. Has owner (OPA) + contractor names.
+  philly: {
+    id: 'philly',
+    label: 'Philadelphia, PA',
+    state: 'PA',
+    stateName: 'Pennsylvania',
+    public: false, // flips true at launch — after the quality gate + user sign-off
+    // Philadelphia city limits-ish [W,S,E,N]
+    bbox: { minLng: -75.29, minLat: 39.86, maxLng: -74.95, maxLat: 40.14 },
+    map: { center: [39.99, -75.13], zoom: 11 },
+    metros: [
+      { name: 'Center City', lat: 39.952, lng: -75.165, zoom: 14 },
+      { name: 'University City', lat: 39.952, lng: -75.193, zoom: 14 },
+      { name: 'Navy Yard', lat: 39.89, lng: -75.177, zoom: 14 },
+      { name: 'Fishtown', lat: 39.972, lng: -75.13, zoom: 14 },
+      { name: 'Northeast', lat: 40.06, lng: -75.05, zoom: 12 },
+    ],
+    zipPrefixes: ['19'],
+    valuation: { floor: 500, cap: 2e9 }, // vestigial — the source has no valuations
+    geocoder: {},
+    permitLinks: [], // deep links are record-computed (Atlas property pages)
+    sourceShort: 'L&I',
+    sourceName: 'Philadelphia L&I building permits',
+    recordNoun: 'Official',
+    attribution: 'data: Philadelphia L&I',
+    capabilities: { valuation: false, contractor: true, owner: true, architect: false, squareFeet: false, publicFunds: false, tenant: false },
+    lni: { domain: 'phl.carto.com' },
+  },
+
+  // Boston — ISD approved building permits via CKAN (src/sources/bostonIsd.js).
+  // Thin lifecycle (Open/Closed) but real valuations + square footage.
+  boston: {
+    id: 'boston',
+    label: 'Boston, MA',
+    state: 'MA',
+    stateName: 'Massachusetts',
+    public: false, // flips true at launch — after the quality gate + user sign-off
+    // Boston city limits-ish [W,S,E,N]
+    bbox: { minLng: -71.19, minLat: 42.23, maxLng: -70.92, maxLat: 42.4 },
+    map: { center: [42.32, -71.07], zoom: 12 },
+    metros: [
+      { name: 'Downtown', lat: 42.356, lng: -71.058, zoom: 14 },
+      { name: 'Seaport', lat: 42.349, lng: -71.043, zoom: 14 },
+      { name: 'Back Bay', lat: 42.35, lng: -71.081, zoom: 14 },
+      { name: 'Dorchester', lat: 42.3, lng: -71.06, zoom: 13 },
+      { name: 'Allston-Brighton', lat: 42.353, lng: -71.13, zoom: 13 },
+    ],
+    zipPrefixes: ['02'],
+    valuation: { floor: 500, cap: 2e9 },
+    geocoder: {},
+    permitLinks: [], // no public permit-number URL scheme
+    sourceShort: 'ISD',
+    sourceName: 'Boston ISD building permits',
+    recordNoun: 'Official',
+    attribution: 'data: City of Boston ISD',
+    capabilities: { valuation: true, contractor: false, owner: false, architect: false, squareFeet: true, publicFunds: false, tenant: false },
+    isd: { domain: 'data.boston.gov', resourceId: '6ddcd912-32a0-43df-9908-63574f8c7e77' },
+  },
 };
 
 // Permit-number prefixes, by source id. A source that declares one guarantees
@@ -187,7 +248,7 @@ export const REGIONS = {
 // keeps history keys and the DB's permit_number collision-safe across regions.
 // Multi-feed sources declare one prefix per feed (an array). Sources without
 // a prefix get history-keyed by the source-scoped record id.
-export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS', sdci_seattle: 'SEA-', nyc_dob: ['NYCN-', 'NYCB-'] };
+export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS', sdci_seattle: 'SEA-', nyc_dob: ['NYCN-', 'NYCB-'], lni_philly: 'PHL-', isd_boston: 'BOS-' };
 
 const env = process.env;
 

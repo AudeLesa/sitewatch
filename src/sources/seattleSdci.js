@@ -1,4 +1,5 @@
 import { config, activeRegion } from '../config.js';
+import { lookbackFloorIso } from '../pipeline/filter.js';
 import { makeRecord, CATEGORY, WORK_CLASS, STATUS } from '../schema.js';
 import { fetchDataset } from './socrata.js';
 
@@ -83,16 +84,14 @@ export async function fetchPermits({ log = console.error } = {}) {
   const cfg = activeRegion().sdci;
   if (!cfg) return []; // this source only exists for the Seattle region
 
-  const from = new Date();
-  from.setMonth(from.getMonth() - config.lookbackMonths);
-  const iso = from.toISOString().slice(0, 10);
+  const iso = lookbackFloorIso();
   // Non-residential BUILDING permits, recent by issue date — or, for permits
   // still in intake/review (no issueddate yet), recent by application date so
   // decade-old zombie applications never enter the pipeline (the downstream
   // lookback filter only bounds issuedDate).
   const where =
     `permitclassmapped = 'Non-Residential' AND permittypemapped = 'Building'` +
-    ` AND (issueddate > '${iso}' OR (issueddate IS NULL AND applieddate > '${iso}'))`;
+    ` AND (issueddate >= '${iso}' OR (issueddate IS NULL AND applieddate >= '${iso}'))`;
 
   const rows = await fetchDataset({
     domain: cfg.domain,

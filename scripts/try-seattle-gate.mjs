@@ -9,6 +9,7 @@
 //   4. placement: ≥90% of kept records must be on the map
 //   5. a 50-record audit sample written for human review
 import { readFileSync, writeFileSync } from 'node:fs';
+import { lookbackFloorIso } from '../src/pipeline/filter.js';
 import { join } from 'node:path';
 import { fetchAggregate } from '../src/sources/socrata.js';
 import { STATUS_MAP, PERMIT_PREFIX } from '../src/sources/seattleSdci.js';
@@ -24,11 +25,10 @@ const verdict = (ok, name, detail) => { console.log(`${ok ? '  ✔' : '  ✘'} $
 // statuses) applied server-side — data/seattle.json holds post-filter records,
 // so the portal side must be filtered identically for the counts to be
 // comparable. What this catches: records we lost that we should have kept.
-const from = new Date(); from.setMonth(from.getMonth() - 24);
-const iso = from.toISOString().slice(0, 10);
+const iso = lookbackFloorIso();
 const TERMINAL_LABELS = Object.entries(STATUS_MAP).filter(([, v]) => v.stage === 'closed').map(([k]) => k);
 const where = `permitclassmapped = 'Non-Residential' AND permittypemapped = 'Building'` +
-  ` AND (issueddate > '${iso}' OR (issueddate IS NULL AND applieddate > '${iso}'))` +
+  ` AND (issueddate >= '${iso}' OR (issueddate IS NULL AND applieddate >= '${iso}'))` +
   ` AND permittypedesc IN ('New','Addition/Alteration')` +
   ` AND statuscurrent NOT IN (${TERMINAL_LABELS.map((s) => `'${s}'`).join(',')})` +
   ` AND completeddate IS NULL`; // the pipeline drops any record with a completion date (filter reason: finalized)

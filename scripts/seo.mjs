@@ -199,11 +199,14 @@ export function generateSeoAll(dist, sets, { siteUrl } = {}) {
 // the on-demand renderer so both emit byte-identical HTML.)
 
 function cityPage(c, cslug, url, site, cityList, R) {
-  const items = c.items.slice().sort((a, b) => val(b) - val(a));
-  const total = items.reduce((s, p) => s + val(p), 0);
+  const total = c.items.reduce((s, p) => s + val(p), 0);
+  // No-valuation regions sort by recency (a value sort over nulls is
+  // arbitrary) and must not claim "largest by value" in the truncation copy.
+  const hasVal = total > 0;
+  const items = c.items.slice().sort((a, b) => (hasVal ? val(b) - val(a) : String(b.issuedDate || '').localeCompare(String(a.issuedDate || ''))));
   const title = `Commercial construction in ${c.name}, ${R.state} — ${items.length} active projects | SiteWatch`;
   const desc = `${items.length} commercial construction projects tracked in ${c.name}, ${R.stateName}` + (total ? `, ${usd(total)} in declared value` : '') + `. Owners, architects, value and status from public permit records.`;
-  const list = items.slice(0, 250).map((p) => `<li><a href="/project/${fileOf(p.permitNumber)}">${esc(p.facilityName || p.address || 'Project')}</a> <span class="m">${[short(p.valuation), CAT[p.category]].filter(Boolean).join(' · ')}</span></li>`).join('');
+  const list = items.slice(0, 250).map((p) => `<li><a href="/project/${fileOf(p.permitNumber)}">${esc(p.facilityName || p.address || 'Project')}</a> <span class="m">${[p.valuation ? short(p.valuation) : null, CAT[p.category]].filter(Boolean).join(' · ')}</span></li>`).join('');
   const others = cityList.filter(([s]) => s !== cslug).slice(0, 24).map(([s, cc]) => `<a href="/${R.ns}/${s}">${esc(cc.name)}</a>`).join(' · ');
   return head(title, desc, url, null) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/${R.ns}/">All metros</a></nav></header>
@@ -212,7 +215,7 @@ function cityPage(c, cslug, url, site, cityList, R) {
 <p class="sub"><strong>${items.length}</strong> active projects${total ? ` · <strong>${usd(total)}</strong> declared value` : ''}. From public ${R.sourceShort} building-permit records.</p>
 <p class="cta"><a class="btn" href="/">Explore ${esc(c.name)} on the live map →</a></p>
 <ul class="projlist">${list}</ul>
-${items.length > 250 ? `<p class="rel">Showing the 250 largest by value — see all on the <a href="/">live map</a>.</p>` : ''}
+${items.length > 250 ? `<p class="rel">Showing the 250 ${hasVal ? 'largest by value' : 'most recent'} — see all on the <a href="/">live map</a>.</p>` : ''}
 <p class="rel">Other ${R.stateName} metros: ${others}</p>
 </main>` + foot(site, R);
 }
@@ -225,7 +228,7 @@ function companyPage(c, cslug, url, site, R) {
   const desc = `${c.name} is tracked on ${all.length} commercial construction projects in ${R.stateName} (${roles})${total ? `, ${usd(total)} in declared value` : ''}. Locations, value and status.`;
   const role = (p) => c.owned.includes(p) ? (c.designed.includes(p) ? 'owner & architect' : 'owner') : c.designed.includes(p) ? 'architect' : 'contractor';
   const list = all.sort((a, b) => val(b) - val(a)).slice(0, 300).map((p) =>
-    `<li><a href="/project/${fileOf(p.permitNumber)}">${esc(p.facilityName || p.address || 'Project')}</a> <span class="m">${[short(p.valuation), cityOf(p.address), role(p)].filter(Boolean).join(' · ')}</span></li>`).join('');
+    `<li><a href="/project/${fileOf(p.permitNumber)}">${esc(p.facilityName || p.address || 'Project')}</a> <span class="m">${[p.valuation ? short(p.valuation) : null, cityOf(p.address), role(p)].filter(Boolean).join(' · ')}</span></li>`).join('');
   const breadcrumb = { '@context': 'https://schema.org', '@type': 'Organization', name: c.name, url };
   return head(title, desc, url, breadcrumb) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/${R.ns}/companies">All companies</a></nav></header>
@@ -264,9 +267,16 @@ function insightsPage(valid, cityList, coList, site, R) {
   const gcs = coList.filter(([, c]) => c.built.length).sort((a, b) => b[1].built.length - a[1].built.length).slice(0, 12).map(([s, c]) => ({ s, name: c.name, n: c.built.length }));
   const bars = (rows, max, fmt, link) => rows.map((r) => `<div class="bar"><span class="bl">${link && r.s ? `<a href="/${R.ns}/company/${r.s}">${esc(r.name)}</a>` : esc(r.name)}</span><span class="bt" style="width:${Math.max(4, Math.round((r._w / max) * 100))}%"></span><span class="bv">${fmt(r)}</span></div>`).join('');
   const withW = (rows, key) => rows.map((r) => ({ ...r, _w: r[key] }));
-  const title = `${R.stateName} commercial construction report — ${short(totalVal)} across ${total.toLocaleString()} projects | SiteWatch`;
-  const desc = `Live market report: ${total.toLocaleString()} commercial construction projects across ${R.stateName} worth ${short(totalVal)}, by metro, category, owner and architect. Updated from public permit records.`;
-  const catRows = Object.entries(byCat).sort((a, b) => b[1].v - a[1].v).map(([k, v]) => ({ name: k, n: v.n, v: v.v, _w: v.v }));
+  // A region whose source publishes no valuations (Philadelphia) degrades to
+  // count-based copy and charts — "$0 across 2,000 projects" is a bug report.
+  const hasVal = totalVal > 0;
+  const title = hasVal
+    ? `${R.stateName} commercial construction report — ${short(totalVal)} across ${total.toLocaleString()} projects | SiteWatch`
+    : `${R.stateName} commercial construction report — ${total.toLocaleString()} active projects | SiteWatch`;
+  const desc = hasVal
+    ? `Live market report: ${total.toLocaleString()} commercial construction projects across ${R.stateName} worth ${short(totalVal)}, by metro, category, owner and architect. Updated from public permit records.`
+    : `Live market report: ${total.toLocaleString()} commercial construction projects across ${R.stateName}, by metro and category. Updated from public permit records.`;
+  const catRows = Object.entries(byCat).sort((a, b) => (hasVal ? b[1].v - a[1].v : b[1].n - a[1].n)).map(([k, v]) => ({ name: k, n: v.n, v: v.v, _w: hasVal ? v.v : v.n }));
   const maxCatV = Math.max(...catRows.map((r) => r.v), 1);
   const maxMetroV = Math.max(...metros.map((m) => m.v), 1);
   const maxOwn = Math.max(...owners.map((o) => o.n), 1), maxArch = Math.max(...archs.map((a) => a.n), 1);
@@ -278,13 +288,14 @@ function insightsPage(valid, cityList, coList, site, R) {
     archs.length ? `<h2>Most active architecture firms</h2><div class="bars">${bars(withW(archs, 'n'), maxArch, (r) => `${r.n} projects`, true)}</div>` : null,
     gcs.length ? `<h2>Most active contractors</h2><div class="bars">${bars(withW(gcs, 'n'), Math.max(...gcs.map((g) => g.n), 1), (r) => `${r.n} projects`, true)}</div>` : null,
   ].filter(Boolean).join('\n');
+  const fmtBar = hasVal ? (r) => `${short(r.v)} · ${r.n}` : (r) => `${r.n} projects`;
   return head(title, desc, `${site}/${R.ns}/insights`, null) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/${R.ns}/">Metros</a> · <a href="/${R.ns}/companies">Companies</a></nav></header>
 <main>
 <h1>${R.stateName} commercial construction — live market report</h1>
-<p class="sub"><strong>${total.toLocaleString()}</strong> active projects · <strong>${usd(totalVal)}</strong> declared value · ${cityList.length} metros tracked${started ? ` · <strong>${started}</strong> just started construction` : ''}. From public ${R.sourceShort} permit records.</p>
-<h2>By category</h2><div class="bars">${bars(catRows, maxCatV, (r) => `${short(r.v)} · ${r.n}`, false)}</div>
-<h2>Top metros by value</h2><div class="bars">${bars(withW(metros, 'v'), maxMetroV, (r) => `${short(r.v)} · ${r.n}`, false)}</div>
+<p class="sub"><strong>${total.toLocaleString()}</strong> active projects${hasVal ? ` · <strong>${usd(totalVal)}</strong> declared value` : ''} · ${cityList.length} metros tracked${started ? ` · <strong>${started}</strong> just started construction` : ''}. From public ${R.sourceShort} permit records.</p>
+<h2>By category</h2><div class="bars">${bars(catRows, hasVal ? maxCatV : Math.max(...catRows.map((r) => r.n), 1), fmtBar, false)}</div>
+<h2>Top metros by ${hasVal ? 'value' : 'project count'}</h2><div class="bars">${bars(withW(metros, hasVal ? 'v' : 'n'), hasVal ? maxMetroV : Math.max(...metros.map((m) => m.n), 1), fmtBar, false)}</div>
 ${partySections}
 <h2>Funding</h2><div class="bars">${bars([{ name: 'Private', _w: byFund.Private, n: byFund.Private }, { name: 'Public', _w: byFund.Public, n: byFund.Public }], Math.max(byFund.Private, byFund.Public, 1), (r) => `${r.n}`, false)}</div>
 <p class="cta"><a class="btn" href="/">Explore on the live map →</a></p>

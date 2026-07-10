@@ -2,153 +2,153 @@
 
 Generated 2026-07-10 — verify each against its official record link.
 
-- **NYCN-B00945638** issued/building conf=0.92 · no value · GC: PROMPT BUILDERS NY INC
-  432 AVENUE U, Brooklyn, NY 11223 · New construction — Proposed new 2 story & cellar commercial building. (Permit Entire)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3192870)
-- **NYCN-B01175823** applied/review conf=0.4 · no value
-  17 NASSAU AVENUE, Brooklyn, NY 11222 · New construction — NEW BUILDING, NO BASEMENT, NO ROOF ACCESS, SEE DRAWINGS. (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3065937)
-- **NYCB-201203278** issued/building conf=0.64 · no value · GC: FORTE CONSTRUCTION CORP
-  639 ST. ANNS AVENUE, Bronx, NY 10455 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=201203278&passdocnumber=01)
-- **NYCB-340801500** issued/building conf=0.92 · no value · GC: DASR CORP
-  2384 ATLANTIC AVENUE, Brooklyn, NY 11233 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=340801500&passdocnumber=01)
-- **NYCN-B01375233** applied/review conf=0.4 · no value
-  319 47 STREET, Brooklyn, NY 11220 · New construction — A 1 story new building for public restrooms at Pena Herrera Playground for NYC Parks Department. (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3011820)
-- **NYCN-Q01169978** applied/review conf=0.55 · no value
-  143-30GAR 110 AVENUE, Queens, NY 11435 · New construction — APPLICATION FILING FOR NEW ACCESSORY TWO 2 CAR GARAGE AS PER PLAN TO OBTAIN CERTIFICATE OF OCCUPANCY. (Approved)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4625434)
-- **NYCB-240293035** issued/building conf=0.92 · no value · GC: SKANSKA USA CIVIL NORTHEA
-  1270P RYAWA AVENUE, Bronx, NY 10474 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=240293035&passdocnumber=01)
-- **NYCN-M01364425** applied/review conf=0.4 · no value
-  231 WEST STREET, Manhattan, NY 10013 · New construction — Filing for new building as per plans filed. (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=1086587)
-- **NYCN-M01098653** applied/review conf=0.4 · no value
-  836 AVENUE OF THE AMERICAS, Manhattan, NY 10001 · New construction — Proposed new 1 story commercial building (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=1091825)
-- **NYCB-220584990** issued/building conf=0.08 · no value · GC: AAH CONTRUCTION CORP
-  2884 SEDGWICK AVENUE, Bronx, NY 10468 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=220584990&passdocnumber=01)
-- **NYCB-420667460** issued/building conf=0.92 · no value · GC: PARK EAST CONSTRUCTION
-  52-35 74TH STREET, Queens, NY 11373 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=420667460&passdocnumber=01)
-- **NYCB-220699714** issued/building conf=0.92 · no value · GC: WEBB DEVELOPMENT SVC CORP
-  2924 TENBROECK AVENUE, Bronx, NY 10469 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=220699714&passdocnumber=01)
-- **NYCN-Q01267989** applied/review conf=0.4 · no value
-  32-35 QUEENS BOULEVARD, Queens, NY 11101 · New construction — PROPOSE 6-STORY COMMUNITY FACILITY BUILDING WITH CELLAR & SUB-CELLAR WITH COMMERCIAL RETAIL STORES ON 1ST FLOOR. ALL RELATED WORKS FILED SU… (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4618205)
-- **NYCN-Q00696251** issued/building conf=0.33 · $712,400 · GC: EAST END BUILDERS AND AS
-  150-04 BEAVER ROAD, Queens, NY 11433 · New construction — NEW ONE STORY WAREHOUSE BUILDING (Permit Entire)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4215639)
-- **NYCN-S01097567** applied/review conf=0.4 · no value
-  2094 RICHMOND AVENUE, Staten Island, NY 10314 · New construction — CONSTRUCT ONE STORY RETAIL BUILDING with CELLAR (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5035473)
-- **NYCN-X01000075** issued/building conf=0.92 · no value · GC: HARLEM VALLEY CORPORATION
-  1958 EASTCHESTER ROAD, Bronx, NY 10461 · New construction — New Building Erect one story masonry warehouse (Permit Entire)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=2046949)
-- **NYCN-X01141291** issued/building conf=0.3 · no value · GC: IVAN ROSA LLC
-  2891 GAR ROEBLING AVENUE, Bronx, NY 10461 · New construction — FILED HEREWITH PLANS AND APPLICATION FOR ACCESSORY OFF-STREET ONE 1 CAR GARAGE NEW BUILDING. FILED IN CONJUNCTION WITH NB# X01105121 (Permit Entire)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=2098506)
-- **NYCB-421899627** issued/building conf=0.64 · no value · GC: MPCC CORP
-  33-59 171 STREET, Queens, NY 11358 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=421899627&passdocnumber=01)
-- **NYCN-B08029487** issued/building conf=0.92 · $2,507,200 · GC: JUN'S CONSTRUCTION INC
-  602 60 STREET, Brooklyn, NY 11220 · New construction — PROPOSED 5 STORY COMMUNITY FACILITY USE BUILDING (Permit Entire)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3429601)
-- **NYCB-121191986** issued/building conf=0.92 · no value · GC: FLINTLOCK CONSTR SERV LLC
-  1227 BROADWAY, Manhattan, NY 10001 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=121191986&passdocnumber=01)
-- **NYCN-X01214396** applied/review conf=0.55 · no value
-  6387 BROADWAY, Bronx, NY 10471 · New construction — Propose to erect a New Building for school use. (Approved)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=2131107)
-- **NYCB-421242630** issued/building conf=0.92 · no value · GC: N/A
-  38-22 208 STREET, Queens, NY 11361 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=421242630&passdocnumber=01)
-- **NYCB-321630749** issued/building conf=0.92 · no value · GC: APS ELECTRIC INC
-  637 AVENUE Z, Brooklyn, NY 11223 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321630749&passdocnumber=01)
-- **NYCN-B01296173** applied/review conf=0.55 · no value
-  35 WYCKOFF AVENUE, Brooklyn, NY 11237 · New construction — ERECT A NEW 1-STORY PRE-FABRICATED METAL BUILDING AS PER THE DRAWINGS FILED HEREIN. (Approved)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3414354)
-- **NYCB-121192690** issued/building conf=0.92 · no value · GC: PRESS BUILDERS INC
-  256 WEST 14 STREET, Manhattan, NY 10011 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=121192690&passdocnumber=01)
-- **NYCB-302582783** issued/building conf=0.92 · no value · GC: PLAZA CONSTRUCTION LLC
-  4308 4 AVENUE, Brooklyn, NY 11232 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=302582783&passdocnumber=01)
-- **NYCB-421133730** issued/building conf=0.92 · no value · GC: LGTB MANAGEMENT INC
-  143-02 135 AVENUE, Queens, NY 11436 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=421133730&passdocnumber=01)
-- **NYCB-210181346** issued/building conf=0.92 · no value · GC: NSP ENTERPRISES,INC
-  1257 MORRIS AVE, Bronx, NY 10456 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=210181346&passdocnumber=01)
-- **NYCB-321598035** issued/building conf=0.92 · no value · GC: CITYSCAPE BUILDERS LLC
-  15 PARKVILLE AVE, Brooklyn, NY 11230 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321598035&passdocnumber=01)
-- **NYCB-421462759** issued/building conf=0.21 · no value · GC: BOBCAT CONSTRUCTION CORP
-  30-17 31ST STREET, Queens, NY 11102 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=421462759&passdocnumber=01)
-- **NYCN-Q00838113** issued/building conf=0.92 · $15,000 · GC: STREAM ROCK CONTSRUCTION*
-  151-32 GAR 19 AVENUE, Queens, NY 11357 · New construction — PROPOSE A NEW ONE STORY TWO CAR GARAGE AT REAR YARD. OBTAIN NEW C OF O. (Permit Entire)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4624618)
+- **NYCN-B01162201** issued/building conf=0.92 · no value · GC: RNH SERVICES INC
+  449 BROADWAY, Brooklyn, NY 11211 · New construction — Proposed four 4 story + cellar and mezzanine commercial / community facility building. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3807575)
+- **NYCN-M01036737** issued/building conf=0.92 · no value · GC: TURNER CONSTRUCTION COMPA
+  635 WEST 165 STREET, Manhattan, NY 10032 · New construction — Construct a new building on the New York Presbyterian Hospital campus, ambulatory care facility 16 stories plus cellar and bulkheads. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=1091883)
 - **NYCN-Q01333361** applied/review conf=0.4 · no value
   302 BEACH 40 STREET, Queens, NY 11691 · New construction — Q517- CONSTRUCTION OF A NEW 5 STORY SCHOOL BUILDING. (Objections)
   [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4626156)
-- **NYCB-401760233** issued/building conf=0.92 · no value · GC: PRIME CONSTRUCTION NEW YO
-  97-16 BRISTOL AVENUE, Queens, NY 11417 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=401760233&passdocnumber=01)
-- **NYCN-X01258549** applied/review conf=0.4 · no value
-  3316 ROMBOUTS AVENUE, Bronx, NY 10475 · New construction — New Building - Erect one story masonry warehouse (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=2072424)
+- **NYCB-420667601** issued/building conf=0.56 · no value · GC: TARGET CONSTRUCTION LLC
+  1212 SEAGIRT BLVD, Queens, NY 11691 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=420667601&passdocnumber=01)
+- **NYCN-Q01213112** applied/review conf=0.55 · no value
+  191 ASCAN AVENUE, Queens, NY 11375 · New construction — New Garage in the rear yard. (Approved)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4078271)
+- **NYCB-320911171** issued/building conf=0.92 · no value · GC: TURNER MCKISSACK, A JOINT
+  2619 OCEAN PARKWAY, Brooklyn, NY 11235 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=320911171&passdocnumber=01)
+- **NYCN-Q00934035** issued/building conf=0.92 · no value · GC: HY DESIGN & DEVELOPMENT L
+  146-70 BAYSIDE AVENUE, Queens, NY 11354 · New construction — ERECTION OF 3 STORIES BUILDING WITH CELLAR OF 24,430 GROSS FLOOR AREA. PROPOSED BUILDING WILL BE USED BY SCHOOL &CHURCH. THERE IS OPEN PARK… (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4108546)
+- **NYCN-S01148939** applied/review conf=0.4 · no value
+  295 RICHMOND VALLEY ROAD, Staten Island, NY 10309 · New construction — APPLICATION FILED FOR NEW ACCESSORY CONVENIENCE STORE WITH GAS ATTENDANT AREA FOR GAS STATION (Objections)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5176928)
+- **NYCN-S01073194** issued/building conf=0.2 · no value · GC: M.S.B. DEVELOPMENT CO INC
+  485GAR BERTRAM AVENUE, Staten Island, NY 10312 · New construction — CONSTRUCT NEW ACCESSORY 1-CAR DETACHED GARAGE FILED IN CONJUNCTION WITH 477 BERTRAM AVENUE DOBNOW JOB #S00981697-I1 (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5176804)
+- **NYCB-321751494** issued/building conf=0.92 · no value · GC: ALEF CONSTRUCTION INC
+  1324 52 STREET, Brooklyn, NY 11219 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321751494&passdocnumber=01)
+- **NYCN-B01156063** applied/review conf=0.4 · no value
+  971 EAST 48 STREET, Brooklyn, NY 11203 · New construction — FILING FOR PROPOSED NEW ACCESSORY ONE CAR GARAGE. (Objections)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3106382)
+- **NYCB-321173403** issued/building conf=0.92 · no value · GC: IHD HOME IMPROVEMENT INC
+  139 SHEFFIELD AVE, Brooklyn, NY 11207 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321173403&passdocnumber=01)
+- **NYCN-B00919516** issued/building conf=0.41 · no value · GC: FORTRESS FORCE CONST. COR
+  2312 AVENUE U, Brooklyn, NY 11229 · New construction — APPLICATION IS FILED TO ERECT A NEW THREE STORY COMMERCIAL WITH COMMUNITY FACILITY BUILDING AS SHOWN ON PLANS. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3429818)
+- **NYCN-S01234523** applied/review conf=0.55 · no value
+  4462 ARTHUR KILL ROAD, Staten Island, NY 10309 · New construction — NEW ONE STORY CONCRETE/METAL BUILDING W/MEZZANINE (Approved)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5086914)
+- **NYCN-X00840278** issued/building conf=0.92 · no value · GC: TRIUMPH CONSTRUCTION CORP
+  29 GLENZ ESTATE, Bronx, NY 10473 · New construction — The proposed New Building NB is a non-accessory Energy Storage System which is less than 10,00 sq-ft. filed per DOB memo 2019-002, 2019-007… (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=2097518)
+- **NYCN-Q01150283** applied/review conf=0.4 · no value
+  182-25 EASTERN ROAD, Queens, NY 11430 · New construction — THIS APPLICATION IS A REFILING OF NB # 421777152 - PROPOSED TO CONSTRUCTION NEW NON-COMBUSTIBLE BLDG. 2 STORY VEHICLE REPAIR SHOP & ACCESSO… (Objections)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4625385)
+- **NYCN-Q00643658** issued/building conf=0.92 · $12,097,042 · GC: WELKIN MECHANICAL, LLC
+  205-10 CROSS ISLAND PARKWAY, Queens, NY 11360 · New construction — 'PS-284 CLEARVIEW PUMP STATION RECONSTRUCTION INCLUDES CONSTRUCTION OF A NEW BUILDING ENVELOPE TO HOUSE NEW ELECTRICAL AND MECHANICAL EQUIP… (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4624039)
+- **NYCN-Q01213011** applied/review conf=0.35 · no value
+  130-34 GAR 129 STREET, Queens, NY 11420 · New construction — NEW ONE-CAR DETACHED GARAGE (Plan Examiner Review)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4625592)
+- **NYCN-M01327425** applied/review conf=0.4 · no value
+  606 CRAIG ROAD SOUTH, Manhattan, NY 10004 · New construction — Construction of new building for NY Climate Exchange North building. MPP 449 (Objections)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=1086321)
+- **NYCN-X00706080** issued/building conf=0.92 · $1,000 · GC: LEON D. DEMATTEIS CONST
+  101 EAST 150 STREET, Bronx, NY 10451 · New construction — HEREWITH FILING FOR NEW 6 STORY SCHOOL BUILDING. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=2805203)
+- **NYCN-Q08026702** issued/building conf=0.92 · $8,500,000 · GC: RAY BUILDERS INC
+  215 BEACH 17 STREET, Queens, NY 11691 · New construction — Construct new four 4 story + basement Community Facility school building as per plans filed. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4624512)
+- **NYCB-321498599** issued/building conf=0.06 · no value · GC: TRIPLE J & R INC
+  1355 55 STREET, Brooklyn, NY 11219 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321498599&passdocnumber=01)
+- **NYCB-321189628** issued/building conf=0.92 · no value · GC: DOBCO, INC
+  2920 WEST 23RD STREET, Brooklyn, NY 11224 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321189628&passdocnumber=01)
+- **NYCN-B01365813** applied/review conf=0.4 · no value
+  670 EASTERN PARKWAY, Brooklyn, NY 11213 · New construction — NEW ACCESSORY CONCRETE BLOCK FREE STANDING GARAGE FOR ONE CAR AT REAR OF PROPERTY.APPLICATION FILED TO ADDDESS ECB VIOLATION 35304383R. JOB… (Objections)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3032975)
+- **NYCB-220632778** issued/building conf=0.92 · no value · GC: ZEFI & CO. LLC
+  3005 GRAND CONCOURSE, Bronx, NY 10468 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=220632778&passdocnumber=01)
+- **NYCN-Q01298847** applied/review conf=0.55 · no value
+  76-29 271 STREET, Queens, NY 11040 · New construction — New detached garage (Approved)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4174232)
+- **NYCB-320911607** issued/building conf=0.08 · no value · GC: RAY BUILDERS INC
+  1360 36 STREET, Brooklyn, NY 11218 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=320911607&passdocnumber=01)
+- **NYCN-Q00618744** issued/building conf=0.05 · $45,000 · GC: GREEN JJ MANAGEMENT INC
+  150-33 GAR HAWTREE STREET, Queens, NY 11417 · New construction — Proposed detached one 1 car garage (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4623588)
+- **NYCN-S01289960** applied/review conf=0.35 · no value
+  330 LAFAYETTE AVENUE, Staten Island, NY 10301 · New construction — New community facility building and open parking facility. (Plan Examiner Review)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5171749)
+- **NYCB-421102327** issued/building conf=0.92 · no value · GC: TECHNICO CONSTRUCTION
+  212-03 23 AVENUE, Queens, NY 11360 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=421102327&passdocnumber=01)
+- **NYCN-B01189052** applied/review conf=0.4 · no value
+  269 HEYWARD STREET, Brooklyn, NY 11206 · New construction — Proposed six 6 story + cellar community facility use building. (Objections)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3430382)
+- **NYCN-Q01102047** issued/building conf=0.92 · no value · GC: ZAQ CONSTRUCTION INC
+  133-20 41 AVENUE, Queens, NY 11355 · New construction — NEW 5 STORY BUILDING FOR HOUSE OF WORSHIP. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4625703)
+- **NYCN-Q00857062** issued/building conf=0.1 · no value · GC: JIN SUN CONSTRUCTION INC
+  58-28 GAR 146 STREET, Queens, NY 11355 · New construction — PROPOSE A NEW ONE STORY ACCESSORY GARAGE AT SIDE YARD. OBTAIN C OF O (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4624918)
+- **NYCN-S00608225** issued/building conf=0.08 · $750,000 · GC: MAMMOTH INC
+  91 ELLIS STREET, Staten Island, NY 10307 · New construction — PROPOSED COMMERCIAL BUILDING (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5088563)
+- **NYCN-S01223429** applied/review conf=0.3 · no value
+  284 MALLORY AVENUE, Staten Island, NY 10305 · New construction — FILE TO LEGALIZE NEW 1-CAR GARAGE AT REAR YARD. OBTAIN C OF O. (Incomplete)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5047809)
+- **NYCN-B01167866** issued/building conf=0.92 · no value · GC: GALAXY G.C. GROUP, LLC
+  1546 EAST NEW YORK AVENUE, Brooklyn, NY 11212 · New construction — Construct a new building - 12 stories in height supportive housing and community facility. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3080668)
 - **NYCN-X01201467** applied/review conf=0.4 · no value
   3257 WESTCHESTER AVENUE, Bronx, NY 10461 · New construction — HUB/APPT WITH RAMI BITAR ON 1/30/25: FILING HEREWITH CONSTRUCTION OF NEW 5 STORY SHELTER AS PER PLANS. (Objections)
   [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=2047718)
-- **NYCN-Q00780252** issued/building conf=0.59 · $10,000 · GC: THC CONSTRUCTION INC
-  172-26 GAR 93 AVENUE, Queens, NY 11433 · New construction — PROPOSE A NEW ACCESSORY GARAGE AT REAR YARD. OBTAIN NEW C OF O. (Permit Entire)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4624387)
-- **NYCB-421763112** issued/building conf=0.92 · no value · GC: NEELAM CONSTRUCTION CORP
-  312A BEACH 54TH STREET, Queens, NY 11692 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=421763112&passdocnumber=01)
-- **NYCN-B01179841** applied/review conf=0.35 · no value · GC: MNC GENERAL CONTR CORP
-  1020 REAR EAST 7 STREET, Brooklyn, NY 11230 · New construction — Accessory bicycle garage in conjunction with B00776983 (On Hold – Administrative Action)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3339475)
-- **NYCB-121185181** issued/building conf=0.92 · no value · GC: FLINTLOCK CONSTR SERV LLC
-  432 WEST 31 STREET, Manhattan, NY 10001 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=121185181&passdocnumber=01)
-- **NYCN-B01314108** applied/review conf=0.4 · no value
-  436 KINGSLAND AVENUE, Brooklyn, NY 11222 · New construction — Construction of a new warehouse Structure with associated vehicle storage at the roof as per plans filed herewith. (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3337724)
-- **NYCN-Q01198604** applied/review conf=0.4 · no value
-  104-09 ROOSEVELT AVENUE, Queens, NY 11368 · New construction — 3 STORY MASANORY COMMERCIAL BUILDING (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4044656)
-- **NYCB-321589820** issued/building conf=0.92 · no value · GC: RAY BUILDERS INC
-  2440 FULTON STREET, Brooklyn, NY 11233 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321589820&passdocnumber=01)
-- **NYCN-B01259456** applied/review conf=0.4 · no value
-  214 26 STREET, Brooklyn, NY 11232 · New construction — PROPOSED A NEW 3-STORY COMMERCIAL AND COMMUNITY FACILITY WITH CELLAR AND THIRD FLOOR MEZZANINE. OBTAIN NEW CERTIFICATE OF OCCUPANCY. (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3801521)
-- **NYCN-X01283776** applied/review conf=0.4 · no value
-  1974 VALENTINE AVENUE, Bronx, NY 10457 · New construction — FILING TO ERECT A 13 STORIES COMUNITY FACILITY BUILDING SUPPORTIVE HOUSING (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=2131168)
-- **NYCN-Q01412444** applied/review conf=0.35 · no value
-  254-11 HILLSIDE AVENUE, Queens, NY 11004 · New construction — Proposed 3400 SF new building with associated site improvements. BSA denial letter required to file for BSA Approval and continue with this… (Plan Examiner Review)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4626082)
-- **NYCB-420977517** issued/building conf=0.92 · no value · GC: P.K. CONSTRUCTION NY INC
-  69-18 60 DRIVE, Queens, NY 11378 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=420977517&passdocnumber=01)
-- **NYCN-M01347992** applied/review conf=0.4 · no value
-  175 PARK AVENUE, Manhattan, NY 10017 · New construction — MPP#385. Application filed to erect new building as per plans. (Objections)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=1091847)
-- **NYCB-421300489** issued/building conf=0.92 · no value · GC: EFIN MANAGEMENT CORP
-  33-73 154TH STREET, Queens, NY 11354 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=421300489&passdocnumber=01)
-- **NYCB-420330378** issued/building conf=0.92 · no value · GC: JCM PRO BUILDERS LLC
-  143-07 45 AVENUE, Queens, NY 11355 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=420330378&passdocnumber=01)
-- **NYCB-520453107** issued/building conf=0.92 · no value · GC: EMPIRE MANAGEMENT & CON*
-  4995 ARTHUR KILL ROAD, Staten Island, NY 10307 · New construction (ISSUED)
-  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=520453107&passdocnumber=01)
+- **NYCB-321965575** issued/building conf=0.73 · no value · GC: V.A BUILDERS CORP
+  335 TOMPKINS AVE, Brooklyn, NY 11216 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321965575&passdocnumber=01)
+- **NYCB-301251730** issued/building conf=0.92 · no value · GC: DEMHA TILE INC
+  203 FORBELL STREET, Brooklyn, NY 11208 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=301251730&passdocnumber=01)
+- **NYCN-B01410529** applied/review conf=0.35 · no value
+  614 SACKETT STREET, Brooklyn, NY 11217 · New construction — CONSTRUCT NEW ONE 1 STORY OVER CELLAR "CORE AND SHELL" STEEL BUILDING (Plan Examiner Review)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3430463)
+- **NYCB-321442024** issued/building conf=0.32 · no value · GC: DYNAMIC DEVELOPMENT AND C
+  1020 ROGERS AVE, Brooklyn, NY 11226 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=321442024&passdocnumber=01)
+- **NYCN-Q00713415** issued/building conf=0.92 · $29,600,000 · GC: STALCO CONSTRUCTION INC
+  63-54 AUSTIN STREET, Queens, NY 11374 · New construction — Filing herewith for new 2 story community facility. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4072812)
+- **NYCN-Q01106337** issued/building conf=0.92 · no value · GC: KE JU CONTRACTING CORP
+  168-13 GAR 65 AVENUE, Queens, NY 11365 · New construction — PROPOSE A NEW ONE STORY ACCESSORY GARAGE. OBTAIN NEW C OF O. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4625252)
+- **NYCN-B00956486** issued/building conf=0.92 · no value · GC: CONSIGLI CONSTRUCTION CO
+  2333 WEST 11 STREET, Brooklyn, NY 11223 · New construction — THE PROPOSED NEW BUILDING FOR THE MARLBORO AGRICULTURAL EDUCATION CENTER LOCATED ON THE NYCHA CAMPUS. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3429699)
+- **NYCB-201197310** issued/building conf=0.92 · no value · GC: TECHNICO CONSTRUCTION
+  311 EAST 237TH STREET, Bronx, NY 10470 · New construction (ISSUED)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=201197310&passdocnumber=01)
+- **NYCN-S00924260** issued/building conf=0.92 · no value · GC: SORRENTINO DEVELOPMENT
+  4285 ARTHUR KILL ROAD, Staten Island, NY 10309 · New construction — CONSTRUCT NEW 1 STORY BLOCK W/BASEMENT & CELLAR LEVELS BUILDING AND ACCESSORY OFF STREET PARKING FOR 24 CARS AND ENCLOSED PARKING FOR 5 CAR… (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5165335)
+- **NYCN-S00920468** issued/building conf=0.92 · no value · GC: J. KOKOLAKIS CONTRACTING
+  1 HANNAH STREET, Staten Island, NY 10301 · New construction — Herewith Filing for New Four 4 Story Building, Community Facility - Recreation Center as the predominant use, with accessory parking at the… (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=5176260)
+- **NYCN-Q00806670** issued/building conf=0.92 · $1 · GC: E.W. HOWELL CO, LLC
+  366 BEACH 75 STREET, Queens, NY 11692 · New construction — HEREWITH FILING FOR A NEW COMMERCIAL BUILDING AS PER PLANS (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=4624700)
+- **NYCN-B01255454** applied/review conf=0.4 · no value
+  5312 21 AVENUE, Brooklyn, NY 11204 · New construction — Filing for DOB denial for BSA - NEW CONSTRUCTION OF EDUCATIONAL COMMUNITY FACILITY (Objections)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3334398)
+- **NYCN-B00941733** issued/building conf=0.92 · no value · GC: GILBANE BUILDING COMPANY
+  452 THOMAS S BOYLAND STREET, Brooklyn, NY 11212 · New construction — PROPOSED NEW MIXED USE COMMUNITY FACILITY AND COMMERCIAL 4 STORY BUILDING. (Permit Entire)
+  [official record](https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=3429855)

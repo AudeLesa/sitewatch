@@ -320,6 +320,9 @@
       #search, select, .sheet input { font-size: 16px; } /* prevent iOS focus zoom */
       .chip { padding: 8px 14px; }
     }
+    /* Capability degradation: regions whose source publishes no valuations
+       (Philadelphia) lose the $-based affordances instead of showing $0s. */
+    body.no-valuation label[for="val"], body.no-valuation #val, body.no-valuation #stat-val-seg { display: none; }
   </style>
 </head>
 <body>
@@ -451,7 +454,7 @@
     </div>
 
     <div id="ambient">
-      <button id="statchip" title="Open the sites list"><b id="stat-count">—</b> sites · <span id="stat-value">—</span> shown</button>
+      <button id="statchip" title="Open the sites list"><b id="stat-count">—</b> sites<span id="stat-val-seg"> · <span id="stat-value">—</span></span> shown</button>
       <button id="badge-chip" hidden title="About this data"></button>
       <button id="legend-btn" aria-pressed="false" title="Legend" aria-label="Toggle the map legend">ⓘ</button>
     </div>
@@ -546,6 +549,10 @@
     // Active region (an entry from /data/regions.json). Null on dev serves
     // without a built manifest — everything falls back to the Texas defaults.
     let REGION = null;
+    // Capability flags from the region manifest — null/absent = full-featured
+    // (the Texas launch shape). hasCap('valuation') false ⇒ the $ slider,
+    // value sort, and $ totals disappear rather than operate on nulls.
+    const hasCap = (k) => !REGION?.capabilities || REGION.capabilities[k] !== false;
     const TX_PERMIT_LINKS = [{ prefix: 'TABS', label: 'TDLR ↗', url: 'https://www.tdlr.texas.gov/TABS/Search/Project/{permit}' }];
     // The official source record for a permit, from the region's per-source
     // deep-link templates (prefix-matched against the permit number).
@@ -744,7 +751,7 @@
       el.innerHTML = shown.map(v => { const p = v._p; const c = COLORS[p.category]||COLORS.unknown;
         return `<div class="item" data-id="${p.permitNumber}">
           <div class="t"><span class="sw" style="background:${c}"></span><span class="name">${esc(p.facilityName || p.address || 'Unknown')}</span>${p.justStarted?'<span class="newdot" style="background:var(--good)">STARTED</span>':isNew(p)?'<span class="newdot">NEW</span>':''}</div>
-          <div class="s"><span class="v">${fmtShort(p.valuation)}</span><span>${WORK_LABELS[p.workClass]||''}</span><span>${esc((p.address||'').split(',').slice(1).join(',').trim())}</span></div>
+          <div class="s"><span class="v">${p.valuation ? fmtShort(p.valuation) : ''}</span><span>${WORK_LABELS[p.workClass]||''}</span><span>${esc((p.address||'').split(',').slice(1).join(',').trim())}</span></div>
         </div>`; }).join('');
       for (const node of el.children) node.onclick = () => focusProject(node.dataset.id, true);
     }
@@ -988,6 +995,15 @@
           if (li) { li.href = `/${REGION.ns}/insights`; li.textContent = `📊 ${REGION.stateName || REGION.label} construction report`; }
           if (lc) lc.href = `/${REGION.ns}/companies`;
         }
+        // Capability degradation (region switch = full reload, so once is enough)
+        if (!hasCap('valuation')) {
+          document.body.classList.add('no-valuation');
+          document.querySelector('#sort option[value="value"]')?.remove();
+          if (state.sort === 'value') { state.sort = 'new'; document.getElementById('sort').value = 'new'; }
+          // A saved view restored before the manifest resolved may have set a
+          // $ floor no record here can satisfy — clear it or the map is empty.
+          if (state.minVal) { state.minVal = 0; document.getElementById('valout').textContent = '$0+'; document.getElementById('val').value = '0'; }
+        }
       }
 
       let loaded = null;
@@ -1048,7 +1064,7 @@
         cats.map((c) => `<div class="lr"><span class="legend-pin" style="background:${COLORS[c] || COLORS.unknown}">${pinSvg(c)}</span>${CAT_LABELS[c] || c}</div>`).join('') +
         `<div class="hr"></div><div class="lr"><span class="sw" style="background:transparent;box-shadow:0 0 0 2px ${RING_STARTED}"></span>just started</div>` +
         `<div class="lr"><span class="sw" style="background:transparent;box-shadow:0 0 0 2px ${RING_NEW}"></span>new this week</div>` +
-        `<div class="lr">larger pin = higher value · faded = likely done</div>`;
+        `<div class="lr">${hasCap('valuation') ? 'larger pin = higher value · ' : ''}faded = likely done</div>`;
 
       const val = document.getElementById('val'); val.max = String(maxVal); val.step = String(Math.max(100000, Math.round(maxVal/100/100000)*100000));
       val.oninput = () => { state.minVal = +val.value; document.getElementById('valout').textContent = fmtShort(state.minVal)+'+'; debounce(apply); };
@@ -1374,8 +1390,14 @@
       if (Array.isArray(f.workClasses) && f.workClasses.length) {
         for (const chip of document.querySelectorAll('#works .chip')) if (!f.workClasses.includes(chip.dataset.v)) chip.click();
       }
-      if (f.minValue) { state.minVal = f.minValue; document.getElementById('valout').textContent = fmtShort(f.minValue) + '+';
+      if (f.minValue && hasCap('valuation')) { state.minVal = f.minValue; document.getElementById('valout').textContent = fmtShort(f.minValue) + '+';
         const val = document.getElementById('val'); if (+val.max >= f.minValue) val.value = String(f.minValue); }
+      else if (f.minValue) {
+        // The AI proposed a $ floor this region can't express — say so instead
+        // of silently showing an explanation chip that claims it's active.
+        toast(`${REGION?.sourceShort || 'This source'} doesn't publish project values — the $ filter was skipped`);
+        if (f.explanation) f.explanation += ' (value filter unavailable here)';
+      }
       if (f.minConfidence) { const pct = Math.min(90, Math.round(f.minConfidence * 10) * 10);
         state.minConf = pct; document.getElementById('conf').value = String(pct); document.getElementById('confout').textContent = pct + '%'; }
       if (f.sinceDays) { const opts = [7, 30, 90, 180, 365]; const pick = opts.find((o) => o >= f.sinceDays) || 365;
@@ -1495,7 +1517,7 @@
       if (v.works?.length) for (const chip of document.querySelectorAll('#works .chip')) if (!v.works.includes(chip.dataset.v)) chip.click();
       state.q = v.q || ''; document.getElementById('search').value = state.q;
       state.minConf = v.minConf || 0; document.getElementById('conf').value = String(state.minConf); document.getElementById('confout').textContent = state.minConf + '%';
-      state.minVal = v.minVal || 0; document.getElementById('valout').textContent = fmtShort(state.minVal) + '+';
+      state.minVal = hasCap('valuation') ? (v.minVal || 0) : 0; document.getElementById('valout').textContent = fmtShort(state.minVal) + '+';
       const valEl = document.getElementById('val'); if (+valEl.max >= state.minVal) valEl.value = String(state.minVal);
       state.since = v.since || 0; document.getElementById('since').value = String(state.since);
       state.newOnly = !!v.newOnly; document.getElementById('newonly').checked = state.newOnly;
