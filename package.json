@@ -15,7 +15,7 @@
     "pull:texas": "node src/index.js pull texas",
     "demo": "node src/index.js demo",
     "build": "node scripts/build.mjs",
-    "refresh": "npm run pull:texas && npm run build",
+    "refresh": "npm run pull:texas && npm run pull:seattle && npm run pull:nyc && npm run build",
     "deploy": "npx wrangler pages deploy dist --project-name sitewatch --branch main",
     "publish": "npm run refresh && npm run deploy",
     "preview": "npm run build && node src/serve.js dist",

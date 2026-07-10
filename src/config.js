@@ -109,10 +109,7 @@ export const REGIONS = {
     label: 'Seattle, WA',
     state: 'WA',
     stateName: 'Washington',
-    // Flips true at launch — after the per-source quality gate passes AND the
-    // user signs off. public:false keeps it out of regions.json/SEO/CI deploys
-    // while the pipeline and gate remain fully runnable locally.
-    public: false,
+    public: true, // launched 2026-07-10 (gate 6/6, audit 50/50 clean, user sign-off)
     // Seattle city limits-ish [W,S,E,N]
     bbox: { minLng: -122.46, minLat: 47.47, maxLng: -122.2, maxLat: 47.76 },
     map: { center: [47.62, -122.33], zoom: 11 },
@@ -153,7 +150,7 @@ export const REGIONS = {
     label: 'New York City',
     state: 'NY',
     stateName: 'New York',
-    public: false, // flips true at launch — after the quality gate + user sign-off
+    public: true, // launched 2026-07-10 (gate 7/7, audit-hardened, user sign-off)
     // NYC five-borough bounding box [W,S,E,N]
     bbox: { minLng: -74.26, minLat: 40.49, maxLng: -73.69, maxLat: 40.92 },
     map: { center: [40.71, -73.98], zoom: 11 },
