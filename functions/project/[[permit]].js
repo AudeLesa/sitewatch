@@ -57,8 +57,10 @@ export async function onRequest({ request, env, params, waitUntil }) {
   if (!file || file !== raw) return notFound();
 
   // Cache API: serve a prior render if this PoP has one (canonical URL key,
-  // query stripped so ?utm= variants share the entry).
-  const cacheKey = new Request(new URL(`/project/${file}`, request.url), { method: 'GET' });
+  // query stripped so ?utm= variants share the entry). The template version is
+  // baked into the key: cache entries survive deploys, so without it a
+  // template deploy keeps serving pre-deploy HTML for up to s-maxage.
+  const cacheKey = new Request(new URL(`/project/${file}?tv=${TEMPLATE_VERSION}`, request.url), { method: 'GET' });
   const cache = caches.default;
   const cached = await cache.match(cacheKey);
   if (cached) return maybe304(request, cached);
