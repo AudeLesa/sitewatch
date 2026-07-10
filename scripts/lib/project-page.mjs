@@ -40,17 +40,19 @@ export const TX_REGION = {
 };
 
 // Official source record for a permit, from the region's per-source templates.
+// {permit} = our permit number; {raw} = with the source prefix stripped, for
+// portals that only know the bare number (synthetic prefixes like 'SEA-').
 export const srcLink = (permit, region) => {
   const l = (region.permitLinks || []).find((x) => permit && String(permit).startsWith(x.prefix));
-  return l ? l.url.replace('{permit}', permit) : null;
+  return l ? l.url.replace('{permit}', permit).replace('{raw}', String(permit).slice(l.prefix.length)) : null;
 };
 
-export function head(title, desc, canonical, jsonld) {
+export function head(title, desc, canonical, jsonld, { noindex = false } = {}) {
   return `<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
-<link rel="canonical" href="${esc(canonical)}">
+${noindex ? '<meta name="robots" content="noindex">\n' : ''}<link rel="canonical" href="${esc(canonical)}">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">
 <meta property="og:type" content="website"><meta property="og:url" content="${esc(canonical)}">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -91,6 +93,7 @@ export function renderProjectPage(entry, { site, region }) {
   add('Address', esc(p.address));
   add('Owner', party(p.owner, p.ownerPhone, links.owner));
   add('Architect', party(p.designFirm, p.designFirmPhone, links.arch));
+  add('Contractor', party(p.contractor, null, links.contractor));
   add('Tenant', party(p.tenantName, p.tenantPhone, links.tenant));
   add('Accessibility specialist', party(p.rasName, p.rasPhone, links.ras));
   add('Contact', esc(p.contactName));

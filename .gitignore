@@ -13,9 +13,13 @@ data/*
 !data/geocode-cache.json
 !data/tabs-detail-cache.json
 !data/history.json
-# history-texas.json is the LIVE per-region store (history.json is its frozen
-# pre-region seed) — re-commit it after data runs like the other state files.
+# history-<region>.json are the LIVE per-region stores (history.json is the
+# frozen pre-region texas seed) — re-commit them after data runs like the
+# other state files.
 !data/history-texas.json
+!data/history-seattle.json
+# Launch-gate artifact: the 50-record human-audit sample for the Seattle region.
+!data/seattle-audit-50.md
 
 # wrangler's local cache (created by wrangler login/deploy)
 .wrangler/

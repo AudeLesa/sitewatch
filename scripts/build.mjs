@@ -87,6 +87,10 @@ writeFileSync(
       sourceShort: r.sourceShort ?? null,
       sourceName: r.sourceName ?? null,
       permitLinks: r.permitLinks ?? [],
+      // Field availability flags — regions without valuation/owner/etc. tell
+      // the UI to degrade (hide the value slider, skip empty party rows)
+      // instead of rendering $0s. Null = full-featured (Texas launch shape).
+      capabilities: r.capabilities ?? null,
     }))
   )
 );

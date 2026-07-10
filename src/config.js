@@ -99,13 +99,55 @@ export const REGIONS = {
       maxDetails: 100000, // effectively uncapped; override with TABS_MAX_DETAILS
     },
   },
+
+  // First non-Texas region: Seattle city limits via SDCI building permits
+  // (src/sources/seattleSdci.js — Socrata, Public Domain, daily refresh,
+  // rows arrive pre-geocoded). Much thinner than statewide TABS: ~100 new
+  // non-res builds + ~2k addition/alterations per 24 months.
+  seattle: {
+    id: 'seattle',
+    label: 'Seattle, WA',
+    state: 'WA',
+    stateName: 'Washington',
+    // Flips true at launch — after the per-source quality gate passes AND the
+    // user signs off. public:false keeps it out of regions.json/SEO/CI deploys
+    // while the pipeline and gate remain fully runnable locally.
+    public: false,
+    // Seattle city limits-ish [W,S,E,N]
+    bbox: { minLng: -122.46, minLat: 47.47, maxLng: -122.2, maxLat: 47.76 },
+    map: { center: [47.62, -122.33], zoom: 11 },
+    metros: [
+      { name: 'Downtown', lat: 47.605, lng: -122.334, zoom: 14 },
+      { name: 'South Lake Union', lat: 47.625, lng: -122.337, zoom: 14 },
+      { name: 'U District', lat: 47.661, lng: -122.313, zoom: 13 },
+      { name: 'Ballard', lat: 47.668, lng: -122.384, zoom: 13 },
+      { name: 'West Seattle', lat: 47.566, lng: -122.387, zoom: 13 },
+    ],
+    zipPrefixes: ['98'],
+    // No legal registration floor (unlike TABS's $50k) — small permits are
+    // legitimate; only flag the truly implausible.
+    valuation: { floor: 500, cap: 2e9 },
+    geocoder: {}, // rows carry lat/lon; Census picks up the stragglers, no hard tier
+    permitLinks: [
+      // {raw} = permit number with the synthetic 'SEA-' prefix stripped —
+      // the portal only knows the bare number.
+      { prefix: 'SEA-', label: 'Seattle SDCI ↗', url: 'https://services.seattle.gov/portal/customize/LinkToRecord.aspx?altId={raw}' },
+    ],
+    sourceShort: 'SDCI',
+    sourceName: 'Seattle SDCI building permits',
+    attribution: 'data: Seattle SDCI',
+    // What this source actually provides — the UI degrades from these flags
+    // (no owner/architect means no "owner" filters or empty company sections).
+    capabilities: { valuation: true, contractor: true, owner: false, architect: false, squareFeet: false, publicFunds: false, tenant: false },
+    sdci: { domain: 'data.seattle.gov', datasetId: '76t5-zqzr' },
+  },
 };
 
 // Permit-number prefixes, by source id. A source that declares one guarantees
 // every permitNumber it emits carries it (asserted at pull time) — that is what
 // keeps history keys and the DB's permit_number collision-safe across regions.
 // Sources without a prefix get history-keyed by the source-scoped record id.
-export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS' };
+export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS', sdci_seattle: 'SEA-' };
 
 const env = process.env;
 

@@ -3,6 +3,7 @@ import { config, activeRegion, SOURCE_PERMIT_PREFIXES } from './config.js';
 import * as tdlrTabs from './sources/tdlrTabs.js';
 import * as shovels from './sources/shovels.js';
 import * as houston from './sources/houstonSoldPermits.js';
+import * as seattleSdci from './sources/seattleSdci.js';
 import * as demo from './sources/demo.js';
 import { dedupe } from './pipeline/dedupe.js';
 import { applyLifecycle } from './pipeline/lifecycle.js';
@@ -13,8 +14,9 @@ import { writeOutputs } from './output/writers.js';
 
 const log = console.error; // keep stdout clean for piping
 
-// tdlrTabs is the primary (free, statewide) source; the others supplement it.
-const SOURCES = [tdlrTabs, shovels, houston]; // demo is opt-in via the `demo` command
+// tdlrTabs is the primary Texas source; region-scoped sources (seattleSdci)
+// self-skip unless the active region declares their config block.
+const SOURCES = [tdlrTabs, shovels, houston, seattleSdci]; // demo is opt-in via the `demo` command
 
 async function main() {
   const cmd = process.argv[2] || 'help';

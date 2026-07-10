@@ -553,7 +553,8 @@
       if (!permitNumber) return null;
       const links = REGION?.permitLinks?.length ? REGION.permitLinks : TX_PERMIT_LINKS;
       const l = links.find((x) => permitNumber.startsWith(x.prefix));
-      return l ? { label: l.label, url: l.url.replace('{permit}', encodeURIComponent(permitNumber)) } : null;
+      // {raw} = permit minus the source prefix, for portals that only know the bare number
+      return l ? { label: l.label, url: l.url.replace('{permit}', encodeURIComponent(permitNumber)).replace('{raw}', encodeURIComponent(permitNumber.slice(l.prefix.length))) } : null;
     }
     const state = { q:'', cats:new Set(), works:new Set(), minConf:0, minVal:0, since:0, newOnly:false, startedOnly:false, followedOnly:false, dimOthers:false, sort:'new', center:null, radiusMi:30 };
 

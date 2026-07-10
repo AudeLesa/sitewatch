@@ -86,12 +86,12 @@ export function generateSeoAll(dist, sets, { siteUrl } = {}) {
 
     // ---- index pass: cities + companies (owner/architect) ----
     const cities = new Map();    // slug -> { name, items[] }
-    const companies = new Map(); // slug -> { name, variants, owned[], designed[] }
+    const companies = new Map(); // slug -> { name, variants, owned[], designed[], built[] }
     const valid = [];
     const addCo = (name, p, role) => {
       if (!isCompany(name)) return;
       const s = slug(companyKey(name));
-      if (!companies.has(s)) companies.set(s, { name: '', variants: new Map(), owned: [], designed: [] });
+      if (!companies.has(s)) companies.set(s, { name: '', variants: new Map(), owned: [], designed: [], built: [] });
       const c = companies.get(s);
       const raw = String(name).trim();
       c.variants.set(raw, (c.variants.get(raw) || 0) + 1);
@@ -105,10 +105,12 @@ export function generateSeoAll(dist, sets, { siteUrl } = {}) {
       if (cn) { if (!cities.has(cs)) cities.set(cs, { name: cn, items: [] }); cities.get(cs).items.push(p); }
       addCo(p.owner, p, 'owned');
       addCo(p.designFirm, p, 'designed');
+      addCo(p.contractor, p, 'built'); // Seattle-class sources name the GC and nobody else
     }
     // A merged company displays as its most frequent spelling.
     for (const c of companies.values()) c.name = [...c.variants.entries()].sort((a, b) => b[1] - a[1])[0][0];
-    const paged = new Set([...companies].filter(([, c]) => c.owned.length + c.designed.length >= MIN_COMPANY_PROJECTS).map(([s]) => s));
+    const coCount = (c) => c.owned.length + c.designed.length + c.built.length;
+    const paged = new Set([...companies].filter(([, c]) => coCount(c) >= MIN_COMPANY_PROJECTS).map(([s]) => s));
     const coLink = (name) => { const s = slug(companyKey(name)); return isCompany(name) && paged.has(s) ? `/${R.ns}/company/${s}` : null; };
 
     // URLs are EXTENSIONLESS everywhere (canonicals, sitemap, internal links):
@@ -118,7 +120,6 @@ export function generateSeoAll(dist, sets, { siteUrl } = {}) {
     const urls = [
       { loc: `${site}/${R.ns}/insights`, lastmod: today },
       { loc: `${site}/${R.ns}/`, lastmod: today },
-      { loc: `${site}/${R.ns}/companies`, lastmod: today },
     ];
 
     // ---- project render shards (the pages themselves render on demand in
@@ -131,7 +132,7 @@ export function generateSeoAll(dist, sets, { siteUrl } = {}) {
       const entry = {
         p, cname: cn, cslug: cs, r: R.id || 'texas',
         // company links resolved NOW, against the set that actually got pages
-        links: { owner: coLink(p.owner), arch: coLink(p.designFirm), tenant: coLink(p.tenantName), ras: coLink(p.rasName) },
+        links: { owner: coLink(p.owner), arch: coLink(p.designFirm), contractor: coLink(p.contractor), tenant: coLink(p.tenantName), ras: coLink(p.rasName) },
       };
       const sh = shardOf(file);
       if (!shards.has(sh)) shards.set(sh, {});
@@ -158,9 +159,13 @@ export function generateSeoAll(dist, sets, { siteUrl } = {}) {
     writeFileSync(join(nsDir, 'index.html'), directoryPage(cityList, site, R));
 
     // ---- company pages + directory ----
-    const coList = [...companies.entries()].filter(([s]) => paged.has(s)).sort((a, b) => (b[1].owned.length + b[1].designed.length) - (a[1].owned.length + a[1].designed.length));
+    const coList = [...companies.entries()].filter(([s]) => paged.has(s)).sort((a, b) => coCount(b[1]) - coCount(a[1]));
     for (const [cs, c] of coList) { writeFileSync(join(nsDir, 'company', `${cs}.html`), companyPage(c, cs, `${site}/${R.ns}/company/${cs}`, site, R)); urls.push({ loc: `${site}/${R.ns}/company/${cs}`, lastmod: today }); }
+    // A region with no companies yet (sparse party data — Seattle's contractor
+    // field fills in slowly) still gets the page so nav links resolve, but
+    // noindexed and out of the sitemap until it has content.
     writeFileSync(join(nsDir, 'companies.html'), companiesIndex(coList, site, R));
+    if (coList.length) urls.push({ loc: `${site}/${R.ns}/companies`, lastmod: today });
 
     // ---- market report ----
     writeFileSync(join(nsDir, 'insights.html'), insightsPage(valid, cityList, coList, site, R));
@@ -213,12 +218,12 @@ ${items.length > 250 ? `<p class="rel">Showing the 250 largest by value — see 
 }
 
 function companyPage(c, cslug, url, site, R) {
-  const all = [...new Map([...c.owned, ...c.designed].map((p) => [p.permitNumber, p])).values()];
+  const all = [...new Map([...c.owned, ...c.designed, ...c.built].map((p) => [p.permitNumber, p])).values()];
   const total = all.reduce((s, p) => s + val(p), 0);
-  const roles = [c.owned.length ? `owner on ${c.owned.length}` : null, c.designed.length ? `architect on ${c.designed.length}` : null].filter(Boolean).join(', ');
+  const roles = [c.owned.length ? `owner on ${c.owned.length}` : null, c.designed.length ? `architect on ${c.designed.length}` : null, c.built.length ? `contractor on ${c.built.length}` : null].filter(Boolean).join(', ');
   const title = `${c.name} — ${R.stateName} construction projects | SiteWatch`;
   const desc = `${c.name} is tracked on ${all.length} commercial construction projects in ${R.stateName} (${roles})${total ? `, ${usd(total)} in declared value` : ''}. Locations, value and status.`;
-  const role = (p) => c.owned.includes(p) ? (c.designed.includes(p) ? 'owner & architect' : 'owner') : 'architect';
+  const role = (p) => c.owned.includes(p) ? (c.designed.includes(p) ? 'owner & architect' : 'owner') : c.designed.includes(p) ? 'architect' : 'contractor';
   const list = all.sort((a, b) => val(b) - val(a)).slice(0, 300).map((p) =>
     `<li><a href="/project/${fileOf(p.permitNumber)}">${esc(p.facilityName || p.address || 'Project')}</a> <span class="m">${[short(p.valuation), cityOf(p.address), role(p)].filter(Boolean).join(' · ')}</span></li>`).join('');
   const breadcrumb = { '@context': 'https://schema.org', '@type': 'Organization', name: c.name, url };
@@ -235,13 +240,13 @@ function companyPage(c, cslug, url, site, R) {
 function companiesIndex(coList, site, R) {
   const title = `Top ${R.stateName} construction owners & architects | SiteWatch`;
   const desc = `The most active owners and architecture firms in ${R.stateName} commercial construction, by project count.`;
-  const links = coList.slice(0, 600).map(([s, c]) => `<li><a href="/${R.ns}/company/${s}">${esc(c.name)}</a> <span class="m">${c.owned.length + c.designed.length}</span></li>`).join('');
-  return head(title, desc, `${site}/${R.ns}/companies`, null) +
+  const links = coList.slice(0, 600).map(([s, c]) => `<li><a href="/${R.ns}/company/${s}">${esc(c.name)}</a> <span class="m">${c.owned.length + c.designed.length + c.built.length}</span></li>`).join('');
+  return head(title, desc, `${site}/${R.ns}/companies`, null, { noindex: coList.length === 0 }) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/${R.ns}/insights">Report</a></nav></header>
 <main>
 <h1>Most active companies in ${R.stateName} construction</h1>
 <p class="sub">Owners and architecture firms ranked by tracked projects.</p>
-<ul class="dirlist">${links}</ul>
+${coList.length ? `<ul class="dirlist">${links}</ul>` : `<p class="rel">No companies tracked yet — this region's permit feed names companies on only a slice of records, so rankings appear as data accrues.</p>`}
 </main>` + foot(site, R);
 }
 
@@ -256,6 +261,7 @@ function insightsPage(valid, cityList, coList, site, R) {
   const metros = cityList.slice(0, 12).map(([, c]) => ({ name: c.name, n: c.items.length, v: c.items.reduce((s, p) => s + val(p), 0) }));
   const owners = coList.filter(([, c]) => c.owned.length).sort((a, b) => b[1].owned.length - a[1].owned.length).slice(0, 12).map(([s, c]) => ({ s, name: c.name, n: c.owned.length }));
   const archs = coList.filter(([, c]) => c.designed.length).sort((a, b) => b[1].designed.length - a[1].designed.length).slice(0, 12).map(([s, c]) => ({ s, name: c.name, n: c.designed.length }));
+  const gcs = coList.filter(([, c]) => c.built.length).sort((a, b) => b[1].built.length - a[1].built.length).slice(0, 12).map(([s, c]) => ({ s, name: c.name, n: c.built.length }));
   const bars = (rows, max, fmt, link) => rows.map((r) => `<div class="bar"><span class="bl">${link && r.s ? `<a href="/${R.ns}/company/${r.s}">${esc(r.name)}</a>` : esc(r.name)}</span><span class="bt" style="width:${Math.max(4, Math.round((r._w / max) * 100))}%"></span><span class="bv">${fmt(r)}</span></div>`).join('');
   const withW = (rows, key) => rows.map((r) => ({ ...r, _w: r[key] }));
   const title = `${R.stateName} commercial construction report — ${short(totalVal)} across ${total.toLocaleString()} projects | SiteWatch`;
@@ -264,6 +270,14 @@ function insightsPage(valid, cityList, coList, site, R) {
   const maxCatV = Math.max(...catRows.map((r) => r.v), 1);
   const maxMetroV = Math.max(...metros.map((m) => m.v), 1);
   const maxOwn = Math.max(...owners.map((o) => o.n), 1), maxArch = Math.max(...archs.map((a) => a.n), 1);
+  // Party sections render only when the source names that party (Seattle has
+  // contractors and nothing else; TABS has owners + architects) — an empty
+  // "Most active owners" heading would read as a bug, not a capability.
+  const partySections = [
+    owners.length ? `<h2>Most active owners</h2><div class="bars">${bars(withW(owners, 'n'), maxOwn, (r) => `${r.n} projects`, true)}</div>` : null,
+    archs.length ? `<h2>Most active architecture firms</h2><div class="bars">${bars(withW(archs, 'n'), maxArch, (r) => `${r.n} projects`, true)}</div>` : null,
+    gcs.length ? `<h2>Most active contractors</h2><div class="bars">${bars(withW(gcs, 'n'), Math.max(...gcs.map((g) => g.n), 1), (r) => `${r.n} projects`, true)}</div>` : null,
+  ].filter(Boolean).join('\n');
   return head(title, desc, `${site}/${R.ns}/insights`, null) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav><a href="/${R.ns}/">Metros</a> · <a href="/${R.ns}/companies">Companies</a></nav></header>
 <main>
@@ -271,8 +285,7 @@ function insightsPage(valid, cityList, coList, site, R) {
 <p class="sub"><strong>${total.toLocaleString()}</strong> active projects · <strong>${usd(totalVal)}</strong> declared value · ${cityList.length} metros tracked${started ? ` · <strong>${started}</strong> just started construction` : ''}. From public ${R.sourceShort} permit records.</p>
 <h2>By category</h2><div class="bars">${bars(catRows, maxCatV, (r) => `${short(r.v)} · ${r.n}`, false)}</div>
 <h2>Top metros by value</h2><div class="bars">${bars(withW(metros, 'v'), maxMetroV, (r) => `${short(r.v)} · ${r.n}`, false)}</div>
-<h2>Most active owners</h2><div class="bars">${bars(withW(owners, 'n'), maxOwn, (r) => `${r.n} projects`, true)}</div>
-<h2>Most active architecture firms</h2><div class="bars">${bars(withW(archs, 'n'), maxArch, (r) => `${r.n} projects`, true)}</div>
+${partySections}
 <h2>Funding</h2><div class="bars">${bars([{ name: 'Private', _w: byFund.Private, n: byFund.Private }, { name: 'Public', _w: byFund.Public, n: byFund.Public }], Math.max(byFund.Private, byFund.Public, 1), (r) => `${r.n}`, false)}</div>
 <p class="cta"><a class="btn" href="/">Explore on the live map →</a></p>
 </main>` + foot(site, R);
