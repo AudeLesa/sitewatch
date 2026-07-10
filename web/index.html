@@ -549,7 +549,10 @@
     const TX_PERMIT_LINKS = [{ prefix: 'TABS', label: 'TDLR ↗', url: 'https://www.tdlr.texas.gov/TABS/Search/Project/{permit}' }];
     // The official source record for a permit, from the region's per-source
     // deep-link templates (prefix-matched against the permit number).
-    function permitLink(permitNumber) {
+    function permitLink(permitNumber, sourceUrl) {
+      // A record-computed sourceUrl (login-walled portals, BIN-keyed pages)
+      // beats the region's URL templates.
+      if (sourceUrl) return { label: `${REGION?.sourceShort || 'Source'} ↗`, url: sourceUrl };
       if (!permitNumber) return null;
       const links = REGION?.permitLinks?.length ? REGION.permitLinks : TX_PERMIT_LINKS;
       const l = links.find((x) => permitNumber.startsWith(x.prefix));
@@ -708,7 +711,7 @@
         ['Architect', p => p.designFirm], ['Architect phone', p => p.designFirmPhone], ['Contact', p => p.contactName],
         ['Tenant', p => p.tenantName], ['Tenant phone', p => p.tenantPhone], ['RAS', p => p.rasName], ['RAS phone', p => p.rasPhone], ['ZIP', p => p.zip],
         ['Lat', p => byId.get(p.permitNumber)?.ll.lat], ['Lng', p => byId.get(p.permitNumber)?.ll.lng],
-        ['Source page', p => permitLink(p.permitNumber)?.url || ''],
+        ['Source page', p => permitLink(p.permitNumber, p.sourceUrl)?.url || ''],
       ];
       const cell = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
       const lines = [cols.map(c => c[0]).join(',')];
@@ -870,7 +873,7 @@
       add('Permit', p.permitNumber);
       add('Source', (p.sources||[]).join(', '));
       document.getElementById('d-kv').innerHTML = rows.join('');
-      const src = permitLink(p.permitNumber), tdlr = document.getElementById('d-tdlr');
+      const src = permitLink(p.permitNumber, p.sourceUrl), tdlr = document.getElementById('d-tdlr');
       if (src) { tdlr.style.display = ''; tdlr.href = src.url; tdlr.textContent = src.label; }
       else tdlr.style.display = 'none';
       document.getElementById('d-page').href = '/project/' + (p.permitNumber||'').replace(/[^A-Za-z0-9_-]/g,'');

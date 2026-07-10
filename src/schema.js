@@ -101,6 +101,10 @@ export function makeRecord(partial) {
     scopeOfWork: partial.scopeOfWork ?? null,
     publicFunds: partial.publicFunds ?? null,
     facilityName: partial.facilityName ?? null,
+    // Full deep link to the official record, when the portal's URL can't be
+    // templated from the permit number alone (login-walled portals, BIN-keyed
+    // property pages). Takes precedence over the region's permitLinks.
+    sourceUrl: partial.sourceUrl ?? null,
     address,
     location: partial.location ?? null, // { lat, lng }
     geocode: partial.geocode ?? null, // { source, score, matched }

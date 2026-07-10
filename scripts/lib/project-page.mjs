@@ -103,14 +103,17 @@ export function renderProjectPage(entry, { site, region }) {
     { '@type': 'ListItem', position: 1, name: `${R.stateName} construction`, item: `${site}/${R.ns}/` },
     cname ? { '@type': 'ListItem', position: 2, name: `${cname}, ${R.state}`, item: `${site}/${R.ns}/${cslug}` } : null,
     { '@type': 'ListItem', position: cname ? 3 : 2, name, item: url }].filter(Boolean) };
-  const official = srcLink(p.permitNumber, R);
+  // sourceUrl (a full record link computed by the adapter) beats the region's
+  // URL templates; recordNoun lets city agencies read "Official …" while the
+  // Texas default stays byte-exactly "State TDLR record".
+  const official = p.sourceUrl || srcLink(p.permitNumber, R);
   return head(title, desc, url, breadcrumb) +
     `<header><a class="logo" href="/">● SiteWatch</a><nav>${cname ? `<a href="/${R.ns}/${cslug}">${esc(cname)}, ${R.state}</a> · ` : ''}<a href="/${R.ns}/insights">Report</a></nav></header>
 <main>
 <h1>${esc(name)}</h1>
 <p class="sub">${esc(work)}${cname ? ` in ${esc(cname)}, ${R.stateName}` : ''}${p.valuation ? ` — <strong>${usd(p.valuation)}</strong>` : ''}</p>
 <table>${rows.join('')}</table>
-<p class="cta"><a class="btn" href="/#p=${encodeURIComponent(p.permitNumber)}">View on the live map →</a>${official ? ` <a href="${official}" rel="nofollow">State ${R.sourceShort} record ↗</a>` : ''}</p>
+<p class="cta"><a class="btn" href="/#p=${encodeURIComponent(p.permitNumber)}">View on the live map →</a>${official ? ` <a href="${esc(official)}" rel="nofollow">${R.recordNoun || 'State'} ${R.sourceShort} record ↗</a>` : ''}</p>
 ${cname ? `<p class="rel">More <a href="/${R.ns}/${cslug}">commercial construction in ${esc(cname)}, ${R.state}</a>.</p>` : ''}
 </main>` + foot(site, R);
 }

@@ -25,6 +25,7 @@
     "sources": "node src/index.js sources",
     "geocode:test": "node src/index.js geocode-test",
     "probe:houston": "node scripts/probe-houston.mjs",
-    "pull:seattle": "node src/index.js pull seattle"
+    "pull:seattle": "node src/index.js pull seattle",
+    "pull:nyc": "node src/index.js pull nyc"
   }
 }

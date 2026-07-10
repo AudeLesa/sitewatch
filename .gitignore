@@ -18,8 +18,10 @@ data/*
 # other state files.
 !data/history-texas.json
 !data/history-seattle.json
+!data/history-nyc.json
 # Launch-gate artifact: the 50-record human-audit sample for the Seattle region.
 !data/seattle-audit-50.md
+!data/nyc-audit-50.md
 
 # wrangler's local cache (created by wrangler login/deploy)
 .wrangler/

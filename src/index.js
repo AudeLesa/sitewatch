@@ -4,6 +4,7 @@ import * as tdlrTabs from './sources/tdlrTabs.js';
 import * as shovels from './sources/shovels.js';
 import * as houston from './sources/houstonSoldPermits.js';
 import * as seattleSdci from './sources/seattleSdci.js';
+import * as nycDob from './sources/nycDob.js';
 import * as demo from './sources/demo.js';
 import { dedupe } from './pipeline/dedupe.js';
 import { applyLifecycle } from './pipeline/lifecycle.js';
@@ -16,7 +17,7 @@ const log = console.error; // keep stdout clean for piping
 
 // tdlrTabs is the primary Texas source; region-scoped sources (seattleSdci)
 // self-skip unless the active region declares their config block.
-const SOURCES = [tdlrTabs, shovels, houston, seattleSdci]; // demo is opt-in via the `demo` command
+const SOURCES = [tdlrTabs, shovels, houston, seattleSdci, nycDob]; // demo is opt-in via the `demo` command
 
 async function main() {
   const cmd = process.argv[2] || 'help';
@@ -48,11 +49,12 @@ async function pull(sources, { cityId, outputId } = {}) {
       const got = await src.fetchPermits({ log });
       // Permit-prefix contract: a prefixed source guarantees globally-unique
       // permit numbers (history keys + the DB unique constraint depend on it).
+      // Multi-feed sources (NYC) declare one prefix per feed — an array.
       // A record that breaks it means source drift — fail the run loudly.
-      const prefix = SOURCE_PERMIT_PREFIXES[src.id];
-      if (prefix) {
-        const bad = got.find((r) => r.permitNumber && !r.permitNumber.startsWith(prefix));
-        if (bad) throw new Error(`permit "${bad.permitNumber}" breaks the ${src.id} "${prefix}" prefix contract`);
+      const prefixes = [SOURCE_PERMIT_PREFIXES[src.id] || []].flat();
+      if (prefixes.length) {
+        const bad = got.find((r) => r.permitNumber && !prefixes.some((p) => r.permitNumber.startsWith(p)));
+        if (bad) throw new Error(`permit "${bad.permitNumber}" breaks the ${src.id} "${prefixes.join('|')}" prefix contract`);
       }
       records.push(...got);
     } catch (err) {

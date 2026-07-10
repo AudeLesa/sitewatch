@@ -123,6 +123,7 @@ function toFeature(rec) {
       rasPhone: rec.rasPhone,
       zip: rec.address.zip,
       valuationSuspect: rec.valuationSuspect || undefined,
+      sourceUrl: rec.sourceUrl || undefined,
       sources: rec.contributingSources,
     },
   };

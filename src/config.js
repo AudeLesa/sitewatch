@@ -135,19 +135,59 @@ export const REGIONS = {
     ],
     sourceShort: 'SDCI',
     sourceName: 'Seattle SDCI building permits',
+    recordNoun: 'Official', // "Official SDCI record ↗" (a city agency, not a state one)
     attribution: 'data: Seattle SDCI',
     // What this source actually provides — the UI degrades from these flags
     // (no owner/architect means no "owner" filters or empty company sections).
     capabilities: { valuation: true, contractor: true, owner: false, architect: false, squareFeet: false, publicFunds: false, tenant: false },
     sdci: { domain: 'data.seattle.gov', datasetId: '76t5-zqzr' },
   },
+
+  // New York City — dual-feed DOB source (src/sources/nycDob.js): DOB NOW
+  // job filings + GC-permit join, plus legacy BIS permits for pre-2021 jobs
+  // still building on renewals; BIN-keyed cross-feed merge. Non-residential
+  // New Building only (mixed-use towers with dwelling units = multifamily,
+  // out of scope like Texas).
+  nyc: {
+    id: 'nyc',
+    label: 'New York City',
+    state: 'NY',
+    stateName: 'New York',
+    public: false, // flips true at launch — after the quality gate + user sign-off
+    // NYC five-borough bounding box [W,S,E,N]
+    bbox: { minLng: -74.26, minLat: 40.49, maxLng: -73.69, maxLat: 40.92 },
+    map: { center: [40.71, -73.98], zoom: 11 },
+    metros: [
+      { name: 'Manhattan', lat: 40.776, lng: -73.971, zoom: 12 },
+      { name: 'Brooklyn', lat: 40.65, lng: -73.95, zoom: 12 },
+      { name: 'Queens', lat: 40.73, lng: -73.79, zoom: 12 },
+      { name: 'Bronx', lat: 40.85, lng: -73.87, zoom: 12 },
+      { name: 'Staten Island', lat: 40.58, lng: -74.15, zoom: 12 },
+    ],
+    zipPrefixes: ['10', '11'],
+    valuation: { floor: 1000, cap: 5e9 },
+    geocoder: {}, // rows carry lat/lon; Census picks up stragglers
+    permitLinks: [], // deep links are record-computed (sourceUrl) — the DOB NOW portal is login-walled
+    sourceShort: 'DOB',
+    sourceName: 'NYC DOB permit filings',
+    recordNoun: 'Official',
+    attribution: 'data: NYC DOB',
+    capabilities: { valuation: true, contractor: true, owner: true, architect: false, squareFeet: true, publicFunds: false, tenant: false },
+    nycDob: {
+      domain: 'data.cityofnewyork.us',
+      filingsDataset: 'w9ak-ipjd',  // DOB NOW: Build – Job Application Filings
+      permitsDataset: 'rbx6-tga4',  // DOB NOW: Build – Approved Permits (GC join)
+      bisDataset: 'ipu4-2q9a',      // legacy DOB Permit Issuance (BIS)
+    },
+  },
 };
 
 // Permit-number prefixes, by source id. A source that declares one guarantees
 // every permitNumber it emits carries it (asserted at pull time) — that is what
 // keeps history keys and the DB's permit_number collision-safe across regions.
-// Sources without a prefix get history-keyed by the source-scoped record id.
-export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS', sdci_seattle: 'SEA-' };
+// Multi-feed sources declare one prefix per feed (an array). Sources without
+// a prefix get history-keyed by the source-scoped record id.
+export const SOURCE_PERMIT_PREFIXES = { tdlr_tabs: 'TABS', sdci_seattle: 'SEA-', nyc_dob: ['NYCN-', 'NYCB-'] };
 
 const env = process.env;
 

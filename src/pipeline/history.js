@@ -30,7 +30,7 @@ const DONE_STAGES = new Set(['finishing', 'finished', 'closed']);
 // The pre-region store was one shared data/history.json; texas reads it once
 // as a seed so first-seen/started baselines survive the per-region split.
 const LEGACY_PATH = join(projectRoot, config.output.dir, 'history.json');
-const PERMIT_PREFIXES = Object.values(SOURCE_PERMIT_PREFIXES);
+const PERMIT_PREFIXES = Object.values(SOURCE_PERMIT_PREFIXES).flat(); // multi-feed sources declare arrays
 
 export function applyHistory(records, { regionId, now = new Date() } = {}) {
   const region = regionId || config.city;
