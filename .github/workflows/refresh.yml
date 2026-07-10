@@ -21,7 +21,10 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Each TDLR request now takes an extra hop through the Cloudflare proxy
+    # (TDLR blocks the runner's IP directly), so the statewide pull runs longer
+    # than the old 60. Headroom for a cold-cache day; warm runs finish well under.
+    timeout-minutes: 120
     env:
       # Backend (Supabase + Resend) — optional. The load/alert/digest steps
       # below self-skip while these secrets are unset, so the map refresh works
@@ -69,6 +72,10 @@ jobs:
           # Pages proxy (functions/tdlr) — Cloudflare's egress is not blocked.
           TABS_BASE_URL: https://sitewatch-eyt.pages.dev/tdlr/TABS
           TABS_PROXY_KEY: ${{ secrets.TABS_PROXY_KEY }}
+          # The proxy hop adds per-request latency; pull more in parallel to keep
+          # wall-time down. Cloudflare + TDLR handle this fine.
+          TABS_SEARCH_CONCURRENCY: '8'
+          TABS_DETAIL_CONCURRENCY: '8'
         run: npm run refresh
 
       - name: Load projects into Supabase
